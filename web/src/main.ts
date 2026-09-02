@@ -47,6 +47,9 @@ const map = new MlMap({
   ],
   minZoom: 14,
   maxZoom: 22,
+  // nosso bearing fixo é +4°, dentro da zona default de "snap para o norte"
+  // (7°) — sem isso, todo fim de gesto gira o mapa de volta pro torto
+  bearingSnap: 0,
   attributionControl: false,
 });
 
