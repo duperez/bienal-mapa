@@ -114,6 +114,38 @@ map.on("load", async () => {
     paint: { "fill-color": "#ddd6c8" },
   });
   map.addLayer({
+    id: "areas",
+    type: "fill",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "area"],
+    paint: {
+      "fill-color": [
+        "match", ["get", "cat"],
+        "alimentacao", "#ffdca8",
+        "cultural", "#b9e0f2",
+        "servico", "#e2ded6",
+        "infra", "#d5e6d0",
+        "#e2ded6",
+      ],
+    },
+  });
+  map.addLayer({
+    id: "areas-borda",
+    type: "line",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "area"],
+    paint: {
+      "line-color": [
+        "match", ["get", "cat"],
+        "alimentacao", "#b36b00",
+        "cultural", "#0072a8",
+        "#b9b4aa",
+      ],
+      "line-width": 1,
+      "line-opacity": 0.6,
+    },
+  });
+  map.addLayer({
     id: "quadras",
     type: "line",
     source: "mapa",
@@ -140,6 +172,31 @@ map.on("load", async () => {
   });
 
   // ---- rótulos: colisão e densidade por zoom são do motor ----
+  map.addLayer({
+    id: "areas-nome",
+    type: "symbol",
+    source: "mapa",
+    filter: ["all", ["==", ["get", "kind"], "area"], ["has", "name"]],
+    minzoom: 15.5,
+    layout: {
+      "text-field": ["get", "name"],
+      "text-font": ["Klokantech Noto Sans Bold"],
+      "text-size": ["interpolate", ["linear"], ["zoom"], 15.5, 10, 19, 13],
+      "text-max-width": 8,
+      "text-padding": 6,
+    },
+    paint: {
+      "text-color": [
+        "match", ["get", "cat"],
+        "alimentacao", "#7a4100",
+        "cultural", "#00516e",
+        "#474747",
+      ],
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.2,
+    },
+  });
+
   map.addLayer({
     id: "ruas-nome",
     type: "symbol",

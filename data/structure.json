@@ -51,7 +51,7 @@
        ]
       }
      ],
-     "offset_m": 53.89
+     "offset_m": 69.72
     },
     {
      "id": "norte-2",
@@ -68,7 +68,7 @@
        ]
       }
      ],
-     "offset_m": 61.46
+     "offset_m": 77.28
     },
     {
      "id": "norte-3",
@@ -96,7 +96,7 @@
        ]
       }
      ],
-     "offset_m": 79.64
+     "offset_m": 95.46
     },
     {
      "id": "norte-4",
@@ -135,7 +135,7 @@
        ]
       }
      ],
-     "offset_m": 104.25
+     "offset_m": 120.07
     },
     {
      "id": "norte-5",
@@ -163,7 +163,7 @@
        ]
       }
      ],
-     "offset_m": 144.72
+     "offset_m": 160.54
     },
     {
      "id": "norte-6",
@@ -180,7 +180,7 @@
        ]
       }
      ],
-     "offset_m": 166.34
+     "offset_m": 182.16
     },
     {
      "id": "norte-7",
@@ -197,7 +197,7 @@
        ]
       }
      ],
-     "offset_m": 179.96
+     "offset_m": 195.79
     }
    ]
   },
@@ -275,7 +275,7 @@
        ]
       }
      ],
-     "offset_m": 31.03
+     "offset_m": 46.85
     },
     {
      "id": "KJ-2",
@@ -320,7 +320,7 @@
        ]
       }
      ],
-     "offset_m": 73.22
+     "offset_m": 89.04
     },
     {
      "id": "KJ-3",
@@ -399,7 +399,7 @@
        ]
       }
      ],
-     "offset_m": 104.0
+     "offset_m": 119.82
     },
     {
      "id": "KJ-4",
@@ -472,7 +472,7 @@
        ]
       }
      ],
-     "offset_m": 149.29
+     "offset_m": 165.12
     },
     {
      "id": "KJ-5",
@@ -511,7 +511,7 @@
        ]
       }
      ],
-     "offset_m": 184.6
+     "offset_m": 200.42
     }
    ]
   },
@@ -595,7 +595,7 @@
        ]
       }
      ],
-     "offset_m": 31.03
+     "offset_m": 46.85
     },
     {
      "id": "JH-2",
@@ -612,7 +612,7 @@
        ]
       }
      ],
-     "offset_m": 73.22
+     "offset_m": 89.04
     },
     {
      "id": "JH-3",
@@ -662,7 +662,7 @@
        ]
       }
      ],
-     "offset_m": 104.0
+     "offset_m": 119.82
     },
     {
      "id": "JH-4",
@@ -707,7 +707,7 @@
        ]
       }
      ],
-     "offset_m": 149.32
+     "offset_m": 165.14
     }
    ]
   },
@@ -729,7 +729,7 @@
        ]
       }
      ],
-     "offset_m": 11.94
+     "offset_m": 27.76
     },
     {
      "id": "HG-2",
@@ -824,7 +824,7 @@
        ]
       }
      ],
-     "offset_m": 20.58
+     "offset_m": 36.4
     },
     {
      "id": "HG-3",
@@ -852,7 +852,7 @@
        ]
       }
      ],
-     "offset_m": 73.22
+     "offset_m": 89.04
     },
     {
      "id": "HG-4",
@@ -891,7 +891,7 @@
        ]
       }
      ],
-     "offset_m": 111.7
+     "offset_m": 127.52
     },
     {
      "id": "HG-5",
@@ -930,7 +930,7 @@
        ]
       }
      ],
-     "offset_m": 147.48
+     "offset_m": 163.3
     },
     {
      "id": "HG-6",
@@ -975,7 +975,7 @@
        ]
       }
      ],
-     "offset_m": 181.01
+     "offset_m": 196.83
     },
     {
      "id": "HG-7",
@@ -992,7 +992,7 @@
        ]
       }
      ],
-     "offset_m": 219.92
+     "offset_m": 235.75
     }
    ]
   },
@@ -1064,7 +1064,7 @@
        ]
       }
      ],
-     "offset_m": 20.58
+     "offset_m": 36.4
     },
     {
      "id": "GF-2",
@@ -1081,7 +1081,7 @@
        ]
       }
      ],
-     "offset_m": 73.22
+     "offset_m": 89.04
     },
     {
      "id": "GF-3",
@@ -1109,7 +1109,7 @@
        ]
       }
      ],
-     "offset_m": 104.0
+     "offset_m": 119.82
     },
     {
      "id": "GF-4",
@@ -1126,7 +1126,7 @@
        ]
       }
      ],
-     "offset_m": 149.32
+     "offset_m": 165.14
     },
     {
      "id": "GF-5",
@@ -1154,7 +1154,7 @@
        ]
       }
      ],
-     "offset_m": 181.01
+     "offset_m": 196.83
     },
     {
      "id": "GF-6",
@@ -1205,7 +1205,7 @@
        ]
       }
      ],
-     "offset_m": 209.99
+     "offset_m": 225.81
     }
    ]
   },
@@ -1260,7 +1260,7 @@
        ]
       }
      ],
-     "offset_m": 20.58
+     "offset_m": 36.4
     },
     {
      "id": "FE-2",
@@ -1277,7 +1277,7 @@
        ]
       }
      ],
-     "offset_m": 73.22
+     "offset_m": 89.04
     },
     {
      "id": "FE-3",
@@ -1294,7 +1294,7 @@
        ]
       }
      ],
-     "offset_m": 149.32
+     "offset_m": 165.14
     },
     {
      "id": "FE-4",
@@ -1311,7 +1311,7 @@
        ]
       }
      ],
-     "offset_m": 181.01
+     "offset_m": 196.83
     },
     {
      "id": "FE-5",
@@ -1345,7 +1345,7 @@
        ]
       }
      ],
-     "offset_m": 209.99
+     "offset_m": 225.81
     }
    ]
   },
@@ -1389,7 +1389,7 @@
        ]
       }
      ],
-     "offset_m": 20.58
+     "offset_m": 36.4
     },
     {
      "id": "ED-2",
@@ -1406,7 +1406,7 @@
        ]
       }
      ],
-     "offset_m": 73.22
+     "offset_m": 89.04
     },
     {
      "id": "ED-3",
@@ -1434,7 +1434,7 @@
        ]
       }
      ],
-     "offset_m": 104.0
+     "offset_m": 119.82
     },
     {
      "id": "ED-4",
@@ -1451,7 +1451,7 @@
        ]
       }
      ],
-     "offset_m": 149.32
+     "offset_m": 165.14
     },
     {
      "id": "ED-5",
@@ -1479,7 +1479,7 @@
        ]
       }
      ],
-     "offset_m": 196.04
+     "offset_m": 211.87
     },
     {
      "id": "ED-6",
@@ -1496,7 +1496,7 @@
        ]
       }
      ],
-     "offset_m": 209.99
+     "offset_m": 225.81
     }
    ]
   },
@@ -1518,7 +1518,7 @@
        ]
       }
      ],
-     "offset_m": 0.0
+     "offset_m": 15.82
     },
     {
      "id": "DC-2",
@@ -1535,7 +1535,7 @@
        ]
       }
      ],
-     "offset_m": 11.94
+     "offset_m": 27.76
     },
     {
      "id": "DC-3",
@@ -1608,7 +1608,7 @@
        ]
       }
      ],
-     "offset_m": 39.69
+     "offset_m": 55.51
     },
     {
      "id": "DC-4",
@@ -1625,7 +1625,7 @@
        ]
       }
      ],
-     "offset_m": 73.22
+     "offset_m": 89.04
     },
     {
      "id": "DC-5",
@@ -1642,7 +1642,7 @@
        ]
       }
      ],
-     "offset_m": 104.0
+     "offset_m": 119.82
     },
     {
      "id": "DC-6",
@@ -1659,7 +1659,7 @@
        ]
       }
      ],
-     "offset_m": 149.32
+     "offset_m": 165.14
     },
     {
      "id": "DC-7",
@@ -1687,7 +1687,7 @@
        ]
       }
      ],
-     "offset_m": 181.01
+     "offset_m": 196.83
     },
     {
      "id": "DC-8",
@@ -1704,7 +1704,7 @@
        ]
       }
      ],
-     "offset_m": 209.99
+     "offset_m": 225.81
     }
    ]
   },
@@ -1765,7 +1765,7 @@
        ]
       }
      ],
-     "offset_m": 20.58
+     "offset_m": 36.4
     },
     {
      "id": "CB-2",
@@ -1793,7 +1793,7 @@
        ]
       }
      ],
-     "offset_m": 73.22
+     "offset_m": 89.04
     },
     {
      "id": "CB-3",
@@ -1810,7 +1810,7 @@
        ]
       }
      ],
-     "offset_m": 104.0
+     "offset_m": 119.82
     },
     {
      "id": "CB-4",
@@ -1838,7 +1838,7 @@
        ]
       }
      ],
-     "offset_m": 149.32
+     "offset_m": 165.14
     },
     {
      "id": "CB-5",
@@ -1855,7 +1855,7 @@
        ]
       }
      ],
-     "offset_m": 181.01
+     "offset_m": 196.83
     }
    ]
   },
@@ -1944,7 +1944,7 @@
        ]
       }
      ],
-     "offset_m": 20.58
+     "offset_m": 36.4
     },
     {
      "id": "BA-2",
@@ -1983,7 +1983,7 @@
        ]
       }
      ],
-     "offset_m": 73.22
+     "offset_m": 89.04
     },
     {
      "id": "BA-3",
@@ -2022,7 +2022,7 @@
        ]
       }
      ],
-     "offset_m": 104.0
+     "offset_m": 119.82
     },
     {
      "id": "BA-4",
@@ -2039,7 +2039,7 @@
        ]
       }
      ],
-     "offset_m": 149.32
+     "offset_m": 165.14
     }
    ]
   },
@@ -2061,7 +2061,7 @@
        ]
       }
      ],
-     "offset_m": 21.39
+     "offset_m": 37.21
     },
     {
      "id": "Asul-2",
@@ -2089,7 +2089,7 @@
        ]
       }
      ],
-     "offset_m": 30.48
+     "offset_m": 46.3
     },
     {
      "id": "Asul-3",
@@ -2106,7 +2106,7 @@
        ]
       }
      ],
-     "offset_m": 46.05
+     "offset_m": 61.88
     },
     {
      "id": "Asul-4",
@@ -2134,7 +2134,7 @@
        ]
       }
      ],
-     "offset_m": 120.25
+     "offset_m": 136.07
     },
     {
      "id": "Asul-5",
@@ -2151,9 +2151,563 @@
        ]
       }
      ],
-     "offset_m": 137.79
+     "offset_m": 153.61
     }
    ]
+  }
+ ],
+ "ruas_y_pt": [
+  216.52,
+  273.52,
+  330.52,
+  387.52,
+  444.52,
+  501.52,
+  558.52,
+  615.52,
+  672.52,
+  729.52
+ ],
+ "areas": [
+  {
+   "code": "IF05",
+   "cat": "alimentacao",
+   "nome": "Praça De Alimentação",
+   "x_m": 7.34,
+   "y_m": 104.42,
+   "w_m": 22.7,
+   "h_m": 20.24
+  },
+  {
+   "code": "IF07",
+   "cat": "alimentacao",
+   "nome": "Praça De Alimentação",
+   "x_m": 7.34,
+   "y_m": 34.02,
+   "w_m": 35.75,
+   "h_m": 21.05
+  },
+  {
+   "code": "IF06",
+   "cat": "alimentacao",
+   "nome": "Praça De Alimentação",
+   "x_m": 7.34,
+   "y_m": 61.47,
+   "w_m": 22.7,
+   "h_m": 34.76
+  },
+  {
+   "code": "IF01",
+   "cat": "alimentacao",
+   "nome": "Praça De Alimentação",
+   "x_m": 225.69,
+   "y_m": 48.67,
+   "w_m": 25.74,
+   "h_m": 20.23
+  },
+  {
+   "code": "IF08",
+   "cat": "infra",
+   "nome": "Posto Médico",
+   "x_m": 135.58,
+   "y_m": 13.42,
+   "w_m": 11.8,
+   "h_m": 12.15
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 56.95,
+   "y_m": 9.11,
+   "w_m": 12.76,
+   "h_m": 16.55
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": "Pizza Hut",
+   "x_m": 6.18,
+   "y_m": 171.45,
+   "w_m": 15.61,
+   "h_m": 10.04
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 102.64,
+   "y_m": 9.08,
+   "w_m": 12.9,
+   "h_m": 16.57
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 7.55,
+   "y_m": 10.74,
+   "w_m": 12.76,
+   "h_m": 15.0
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 147.8,
+   "y_m": 9.11,
+   "w_m": 12.8,
+   "h_m": 16.55
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 239.49,
+   "y_m": 9.08,
+   "w_m": 13.18,
+   "h_m": 16.57
+  },
+  {
+   "code": null,
+   "cat": "infra",
+   "nome": "K20 K18",
+   "x_m": 212.7,
+   "y_m": 13.83,
+   "w_m": 38.93,
+   "h_m": 15.11
+  },
+  {
+   "code": "IF14",
+   "cat": "infra",
+   "nome": "Coordenação",
+   "x_m": 7.34,
+   "y_m": 146.89,
+   "w_m": 14.53,
+   "h_m": 15.9
+  },
+  {
+   "code": null,
+   "cat": "infra",
+   "nome": "Painel Painel Instagramável Instagramavel",
+   "x_m": 22.23,
+   "y_m": 138.9,
+   "w_m": 6.87,
+   "h_m": 1.19
+  },
+  {
+   "code": "IF03",
+   "cat": "infra",
+   "nome": "Transpo",
+   "x_m": 9.71,
+   "y_m": 162.72,
+   "w_m": 12.16,
+   "h_m": 5.26
+  },
+  {
+   "code": null,
+   "cat": "infra",
+   "nome": "Lockers",
+   "x_m": 45.2,
+   "y_m": 180.88,
+   "w_m": 21.33,
+   "h_m": 2.04
+  },
+  {
+   "code": null,
+   "cat": "infra",
+   "nome": "Indigo",
+   "x_m": 38.08,
+   "y_m": 180.88,
+   "w_m": 5.79,
+   "h_m": 2.04
+  },
+  {
+   "code": "IF02",
+   "cat": "infra",
+   "nome": "Caex",
+   "x_m": 119.82,
+   "y_m": 160.3,
+   "w_m": 13.41,
+   "h_m": 18.03
+  },
+  {
+   "code": "IF11",
+   "cat": "infra",
+   "nome": "Bilheteria",
+   "x_m": 149.22,
+   "y_m": 180.57,
+   "w_m": 10.01,
+   "h_m": 2.35
+  },
+  {
+   "code": null,
+   "cat": "infra",
+   "nome": null,
+   "x_m": 130.9,
+   "y_m": 180.57,
+   "w_m": 17.79,
+   "h_m": 2.35
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": "Johnny Rockets",
+   "x_m": 82.94,
+   "y_m": 171.53,
+   "w_m": 15.2,
+   "h_m": 10.06
+  },
+  {
+   "code": "IF09",
+   "cat": "alimentacao",
+   "nome": "Praça De Alimentação",
+   "x_m": 312.98,
+   "y_m": 128.96,
+   "w_m": 15.59,
+   "h_m": 32.45
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": "Spoleto",
+   "x_m": 98.17,
+   "y_m": 171.53,
+   "w_m": 15.83,
+   "h_m": 10.06
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": "Boali",
+   "x_m": 175.69,
+   "y_m": 171.45,
+   "w_m": 22.74,
+   "h_m": 10.03
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 37.06,
+   "y_m": 171.53,
+   "w_m": 31.09,
+   "h_m": 10.06
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 312.0,
+   "y_m": 103.7,
+   "w_m": 9.79,
+   "h_m": 18.54
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 129.14,
+   "y_m": 171.45,
+   "w_m": 30.61,
+   "h_m": 10.03
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 198.35,
+   "y_m": 171.45,
+   "w_m": 16.81,
+   "h_m": 10.03
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": "Casa Bauducco",
+   "x_m": 230.72,
+   "y_m": 171.45,
+   "w_m": 18.19,
+   "h_m": 10.04
+  },
+  {
+   "code": null,
+   "cat": "cultural",
+   "nome": "Praça",
+   "x_m": 248.82,
+   "y_m": 150.2,
+   "w_m": 58.58,
+   "h_m": 30.71
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": "Ext02",
+   "x_m": 252.02,
+   "y_m": 186.55,
+   "w_m": 56.43,
+   "h_m": 9.82
+  },
+  {
+   "code": "K19",
+   "cat": "infra",
+   "nome": "Lounge Dos Expositores",
+   "x_m": 225.69,
+   "y_m": 34.02,
+   "w_m": 8.27,
+   "h_m": 14.65
+  },
+  {
+   "code": "EXT02",
+   "cat": "infra",
+   "nome": "Van Sp Turis",
+   "x_m": 252.82,
+   "y_m": 188.21,
+   "w_m": 5.9,
+   "h_m": 5.9
+  },
+  {
+   "code": "K03",
+   "cat": "infra",
+   "nome": "Restaurante Dos Expositores",
+   "x_m": 233.96,
+   "y_m": 34.02,
+   "w_m": 17.47,
+   "h_m": 14.65
+  },
+  {
+   "code": null,
+   "cat": "infra",
+   "nome": "Painel Instagramável",
+   "x_m": 228.13,
+   "y_m": 146.89,
+   "w_m": 6.87,
+   "h_m": 1.31
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 0.77,
+   "y_m": 138.14,
+   "w_m": 5.44,
+   "h_m": 22.5
+  },
+  {
+   "code": null,
+   "cat": "servico",
+   "nome": null,
+   "x_m": 0.77,
+   "y_m": 30.87,
+   "w_m": 5.44,
+   "h_m": 22.54
+  },
+  {
+   "code": "K38",
+   "cat": "cultural",
+   "nome": "Espaço Bem-Estar",
+   "x_m": 164.7,
+   "y_m": 12.64,
+   "w_m": 7.85,
+   "h_m": 11.34
+  },
+  {
+   "code": "K86",
+   "cat": "cultural",
+   "nome": "Arena Cultural",
+   "x_m": 22.56,
+   "y_m": 11.94,
+   "w_m": 22.99,
+   "h_m": 16.57
+  },
+  {
+   "code": "C88",
+   "cat": "cultural",
+   "nome": "Espaço Infantil",
+   "x_m": 34.81,
+   "y_m": 118.45,
+   "w_m": 20.71,
+   "h_m": 7.38
+  },
+  {
+   "code": "A61",
+   "cat": "cultural",
+   "nome": "Praça De Histórias",
+   "x_m": 87.6,
+   "y_m": 160.3,
+   "w_m": 23.07,
+   "h_m": 9.32
+  },
+  {
+   "code": "C40",
+   "cat": "cultural",
+   "nome": "Salão De Idéias",
+   "x_m": 144.55,
+   "y_m": 118.45,
+   "w_m": 13.64,
+   "h_m": 7.38
+  },
+  {
+   "code": "D28",
+   "cat": "cultural",
+   "nome": "Praça Da Palavra",
+   "x_m": 195.62,
+   "y_m": 104.27,
+   "w_m": 16.24,
+   "h_m": 7.38
+  },
+  {
+   "code": "E40",
+   "cat": "cultural",
+   "nome": "Convidado De Honra - Espanha",
+   "x_m": 114.89,
+   "y_m": 88.72,
+   "w_m": 43.3,
+   "h_m": 8.65
+  },
+  {
+   "code": "H30",
+   "cat": "cultural",
+   "nome": "Espaço Prêmio Jabuti",
+   "x_m": 183.9,
+   "y_m": 46.12,
+   "w_m": 6.33,
+   "h_m": 8.97
+  },
+  {
+   "code": "K32",
+   "cat": "cultural",
+   "nome": "Papo De Mercado",
+   "x_m": 172.56,
+   "y_m": 12.64,
+   "w_m": 9.62,
+   "h_m": 11.34
+  },
+  {
+   "code": "G58",
+   "cat": "cultural",
+   "nome": "Espaço Educação",
+   "x_m": 118.28,
+   "y_m": 61.47,
+   "w_m": 9.25,
+   "h_m": 7.5
+  },
+  {
+   "code": "A39",
+   "cat": "cultural",
+   "nome": "Auditório",
+   "x_m": 158.52,
+   "y_m": 171.45,
+   "w_m": 8.65,
+   "h_m": 10.03
+  },
+  {
+   "code": "K26",
+   "cat": "cultural",
+   "nome": "Espaço Podcast",
+   "x_m": 198.79,
+   "y_m": 17.83,
+   "w_m": 4.83,
+   "h_m": 5.68
+  },
+  {
+   "code": "K24",
+   "cat": "cultural",
+   "nome": "Influenciadores By Skeelo",
+   "x_m": 198.79,
+   "y_m": 12.16,
+   "w_m": 4.83,
+   "h_m": 5.68
+  },
+  {
+   "code": null,
+   "cat": "cultural",
+   "nome": null,
+   "x_m": 250.81,
+   "y_m": 122.74,
+   "w_m": 46.22,
+   "h_m": 3.81
+  },
+  {
+   "code": "TL",
+   "cat": "cultural",
+   "nome": "Travessa Literária",
+   "x_m": 196.92,
+   "y_m": 39.48,
+   "w_m": 23.09,
+   "h_m": 15.26
+  },
+  {
+   "code": "K20",
+   "cat": "infra",
+   "nome": "Direção",
+   "x_m": 223.25,
+   "y_m": 18.97,
+   "w_m": 5.04,
+   "h_m": 4.97
+  },
+  {
+   "code": "K18",
+   "cat": "infra",
+   "nome": "Sala De Imprensa",
+   "x_m": 221.08,
+   "y_m": 23.63,
+   "w_m": 3.82,
+   "h_m": 4.31
+  },
+  {
+   "code": "IF04",
+   "cat": "infra",
+   "nome": "Fraldário",
+   "x_m": 16.58,
+   "y_m": 146.41,
+   "w_m": 5.02,
+   "h_m": 4.5
+  },
+  {
+   "code": "IF15",
+   "cat": "infra",
+   "nome": "Sala Rps",
+   "x_m": 13.35,
+   "y_m": 150.78,
+   "w_m": 5.02,
+   "h_m": 4.5
+  },
+  {
+   "code": "IF16",
+   "cat": "infra",
+   "nome": "Crianças Perdidas",
+   "x_m": 17.71,
+   "y_m": 150.78,
+   "w_m": 5.02,
+   "h_m": 4.5
+  },
+  {
+   "code": "IF04A",
+   "cat": "infra",
+   "nome": "Visitação Escolar",
+   "x_m": 11.38,
+   "y_m": 156.09,
+   "w_m": 6.45,
+   "h_m": 4.62
+  },
+  {
+   "code": null,
+   "cat": "infra",
+   "nome": "Painel Instagramável",
+   "x_m": 21.57,
+   "y_m": 138.54,
+   "w_m": 8.18,
+   "h_m": 2.83
+  },
+  {
+   "code": null,
+   "cat": "infra",
+   "nome": "Painel Instagramável",
+   "x_m": 227.66,
+   "y_m": 146.49,
+   "w_m": 8.18,
+   "h_m": 3.11
   }
  ],
  "directory": {

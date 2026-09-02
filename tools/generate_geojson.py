@@ -10,6 +10,8 @@ Nenhuma heurística: a geometria nasce das constantes de design + estrutura.
 import json
 import math
 
+import frame
+
 SRC = "data/structure.json"
 VENUE = "data/venue.geojson"
 OUT = "web/public/data/mapa.geojson"
@@ -32,8 +34,8 @@ norm = math.hypot(dx_m, dy_m)
 UX = (dx_m / norm, dy_m / norm)          # leste do prédio
 UY = (UX[1], -UX[0])                     # sul do prédio (perpendicular, y cresce p/ sul)
 
-# margem interna: o conteúdo não nasce colado na parede
-ORIGIN_OFFSET_M = (6.0, 6.0)
+# o frame já é relativo à parede NW do hall; margem mínima de segurança
+ORIGIN_OFFSET_M = (2.0, 2.0)
 
 
 def to_lnglat(x_m: float, y_m: float):
@@ -66,11 +68,21 @@ def main():
     respiro = C["respiro_m"]
     directory = s["directory"]
 
+    # eixo y pelas ruas do frame compartilhado (idêntico ao warp do importador)
+    _, ruas_y_m = frame.build_y_warp(s["ruas_y_pt"], banda_h, rua_h)
+    nomes_ruas = ["K", "J", "H", "G", "F", "E", "D", "C", "B", "A"]
+    rua_y_m = {n: ruas_y_m[i] for i, n in enumerate(nomes_ruas)}
+
     feats = []
-    y = 0.0
     for fileira in s["fileiras"]:
         banda = fileira["banda"]
         eh_rua_banda = len(banda) == 2  # "KJ", "JH"... têm rua acima
+        if banda == "norte":
+            y = rua_y_m["K"] - banda_h
+        elif eh_rua_banda:
+            y = rua_y_m[banda[0]]
+        else:  # "Asul"
+            y = rua_y_m["A"]
         quadras = fileira["quadras"]
         extent = [q["offset_m"] for q in quadras]
         fim = [q["offset_m"] + sum(col["largura_m"] for col in q["colunas"]) for q in quadras]
@@ -111,7 +123,15 @@ def main():
                 if 0.5 < prox - x <= 12.0:
                     feats.append(rect(x, y, prox, y + banda_h,
                                       {"kind": "rua", "name": None}))
-        y += banda_h
+
+    # ---- áreas ancoradas (praças, alimentação, cultural, serviços) ----
+    for a in s.get("areas", []):
+        feats.append(rect(a["x_m"], a["y_m"], a["x_m"] + a["w_m"], a["y_m"] + a["h_m"], {
+            "kind": "area",
+            "cat": a["cat"],
+            "code": a.get("code"),
+            "name": a.get("nome"),
+        }))
 
     gj = {"type": "FeatureCollection", "features": feats}
     json.dump(gj, open(OUT, "w"), ensure_ascii=False)

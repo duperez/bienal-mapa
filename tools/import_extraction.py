@@ -12,6 +12,8 @@ import json
 import re
 from collections import defaultdict
 
+import frame
+
 SRC = "legacy/data/map.json"
 OUT = "data/structure.json"
 REPORT = "data/import-report.md"
@@ -23,6 +25,18 @@ CODE_RE = re.compile(r"^([A-K])([0-9]+)$")
 
 warnings = []
 pending = []
+
+RESTAURANTES = re.compile(r"PIZZA HUT|JOHNNY|SPOLETO|BOALI|BAUDUCCO|LOCKERS|INDIGO", re.I)
+
+
+def directory_nome_area(directory, a):
+    code = a.get("code")
+    if code and directory.get(code):
+        return directory[code].title()
+    label = (a.get("label") or "").strip()
+    if RESTAURANTES.search(label) or (label and len(label.split()) <= 4 and not code):
+        return label.title() if label else None
+    return None
 
 
 def warn(msg):
@@ -199,14 +213,52 @@ def main():
                     c.pop("_x", None)
         fileiras.append({"banda": nome, "quadras": qs})
 
-    # offsets viram metros relativos à borda esquerda do conteúdo — as quadras
-    # ficam nas COLUNAS reais do pavilhão (alinhadas verticalmente entre
-    # fileiras), e os vãos entre elas são os corredores verticais
-    x0_global = min(q["offset_pt"] for f in fileiras for q in f["quadras"])
+    # offsets em metros no frame único (origem na parede NW do hall) — as
+    # quadras ficam nas COLUNAS reais do pavilhão, alinhadas entre fileiras
     for f in fileiras:
         for q in f["quadras"]:
-            q["offset_m"] = round((q["offset_pt"] - x0_global) * M_PER_PT, 2)
+            q["offset_m"] = round(frame.x_m(q["offset_pt"]), 2)
             del q["offset_pt"]
+
+    # ---- áreas: praças, alimentação, cultural, serviços, infra ----
+    # convertidas para o frame com o MESMO warp vertical que o gerador usa
+    banda_m, rua_m = 10.0, 4.2
+    ruas_y_pt = sorted(rua_y[n] for n in ordem_ruas)
+    warp, _ = frame.build_y_warp(ruas_y_pt, banda_m, rua_m)
+
+    AREA_CATS = {"cultural", "alimentacao", "servico", "infra"}
+    areas_out = []
+    seen_area_codes = set()
+    for a in m.get("areas", []):
+        if a["cat"] not in AREA_CATS:
+            continue
+        b = a["bbox"]
+        if b[0] >= MIOLO_X_MAX + 260:   # anexo fica para rodada própria
+            continue
+        w_m = (b[2] - b[0]) * M_PER_PT
+        h_m = warp(b[3]) - warp(b[1])
+        if w_m < 1.0 or h_m < 1.0:
+            pend(f"Área {a.get('code') or a.get('label', '?')[:20]}: degenerada "
+                 f"({w_m:.1f}x{h_m:.1f}m) — descartada, revisar")
+            continue
+        code = a.get("code")
+        if code and code in seen_area_codes:
+            pend(f"Área {code} duplicada — mantida a primeira")
+            continue
+        if code:
+            seen_area_codes.add(code)
+        nome = directory_nome_area(m.get("directory", {}), a)
+        if code and not nome:
+            warn(f"Área {code} sem nome no diretório")
+        areas_out.append({
+            "code": code,
+            "cat": a["cat"],
+            "nome": nome,
+            "x_m": round(frame.x_m(b[0]), 2),
+            "y_m": round(warp(b[1]), 2),
+            "w_m": round(w_m, 2),
+            "h_m": round(h_m, 2),
+        })
 
     # V4: diretório vs células
     directory = m.get("directory", {})
@@ -224,6 +276,8 @@ def main():
                             "corredor_vertical_m": 5.0, "respiro_m": 1.2},
         },
         "fileiras": fileiras,
+        "ruas_y_pt": [round(rua_y[n], 2) for n in ordem_ruas],
+        "areas": areas_out,
         "directory": directory,
         "travessa": m.get("travessa", {}),
         "pendencias": pending,
