@@ -1,0 +1,2434 @@
+{
+ "meta": {
+  "fonte": "importado da extração legada em 2026-09-02; validado por tools/import_extraction.py",
+  "escala_m_por_unidade": 1.0,
+  "constantes": {
+   "banda_m": 10.0,
+   "rua_m": 4.2,
+   "celula_profundidade_m": 7.4,
+   "corredor_vertical_m": 5.0,
+   "respiro_m": 1.2
+  }
+ },
+ "fileiras": [
+  {
+   "banda": "norte",
+   "quadras": [
+    {
+     "id": "norte-1",
+     "colunas": [
+      {
+       "largura_m": 2.49,
+       "celulas": [
+        {
+         "code": "K74",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 2.49
+        }
+       ]
+      },
+      {
+       "largura_m": 2.49,
+       "celulas": [
+        {
+         "code": "K76",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 2.49
+        }
+       ]
+      },
+      {
+       "largura_m": 2.49,
+       "celulas": [
+        {
+         "code": "K78",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 2.49
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "norte-2",
+     "colunas": [
+      {
+       "largura_m": 14.29,
+       "celulas": [
+        {
+         "code": "K70",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 14.29
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "norte-3",
+     "colunas": [
+      {
+       "largura_m": 2.53,
+       "celulas": [
+        {
+         "code": "K66",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 2.53
+        }
+       ]
+      },
+      {
+       "largura_m": 2.53,
+       "celulas": [
+        {
+         "code": "K68",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 2.53
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "norte-4",
+     "colunas": [
+      {
+       "largura_m": 7.67,
+       "celulas": [
+        {
+         "code": "K58",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 7.67
+        }
+       ]
+      },
+      {
+       "largura_m": 3.8,
+       "celulas": [
+        {
+         "code": "K54",
+         "cat": "entidade",
+         "lado": "cheia",
+         "largura_m": 3.8
+        }
+       ]
+      },
+      {
+       "largura_m": 3.8,
+       "celulas": [
+        {
+         "code": "K56",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 3.8
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "norte-5",
+     "colunas": [
+      {
+       "largura_m": 2.98,
+       "celulas": [
+        {
+         "code": "K40",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 2.98
+        }
+       ]
+      },
+      {
+       "largura_m": 2.98,
+       "celulas": [
+        {
+         "code": "K42",
+         "cat": "entidade",
+         "lado": "cheia",
+         "largura_m": 2.98
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "norte-6",
+     "colunas": [
+      {
+       "largura_m": 3.96,
+       "celulas": [
+        {
+         "code": "K30",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 3.96
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "norte-7",
+     "colunas": [
+      {
+       "largura_m": 4.65,
+       "celulas": [
+        {
+         "code": "K28",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 4.65
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "banda": "KJ",
+   "quadras": [
+    {
+     "id": "KJ-1",
+     "colunas": [
+      {
+       "largura_m": 8.04,
+       "celulas": [
+        {
+         "code": "J86",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 8.04
+        }
+       ]
+      },
+      {
+       "largura_m": 14.82,
+       "celulas": [
+        {
+         "code": "K77",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 14.82
+        },
+        {
+         "code": "J80",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 7.41
+        }
+       ]
+      },
+      {
+       "largura_m": 7.41,
+       "celulas": [
+        {
+         "code": "J76",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 7.41
+        }
+       ]
+      },
+      {
+       "largura_m": 4.15,
+       "celulas": [
+        {
+         "code": "K75",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 4.15
+        },
+        {
+         "code": "J74",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 4.15
+        }
+       ]
+      },
+      {
+       "largura_m": 10.26,
+       "celulas": [
+        {
+         "code": "J70",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 10.26
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "KJ-2",
+     "colunas": [
+      {
+       "largura_m": 10.4,
+       "celulas": [
+        {
+         "code": "J68",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 10.4
+        }
+       ]
+      },
+      {
+       "largura_m": 4.5,
+       "celulas": [
+        {
+         "code": "K67",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 4.5
+        },
+        {
+         "code": "J66",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 4.5
+        }
+       ]
+      },
+      {
+       "largura_m": 10.97,
+       "celulas": [
+        {
+         "code": "J60",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 10.97
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "KJ-3",
+     "colunas": [
+      {
+       "largura_m": 11.72,
+       "celulas": [
+        {
+         "code": "J58",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 11.72
+        }
+       ]
+      },
+      {
+       "largura_m": 6.16,
+       "celulas": [
+        {
+         "code": "J52",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 6.16
+        },
+        {
+         "code": "K51",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 6.16
+        }
+       ]
+      },
+      {
+       "largura_m": 9.85,
+       "celulas": [
+        {
+         "code": "K45",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 9.85
+        },
+        {
+         "code": "J48",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 6.89
+        }
+       ]
+      },
+      {
+       "largura_m": 7.54,
+       "celulas": [
+        {
+         "code": "J44",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 7.54
+        },
+        {
+         "code": "K43",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 4.58
+        }
+       ]
+      },
+      {
+       "largura_m": 7.65,
+       "celulas": [
+        {
+         "code": "J40",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 7.65
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "KJ-4",
+     "colunas": [
+      {
+       "largura_m": 7.59,
+       "celulas": [
+        {
+         "code": "J38",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 7.59
+        }
+       ]
+      },
+      {
+       "largura_m": 5.84,
+       "celulas": [
+        {
+         "code": "K37",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 5.84
+        },
+        {
+         "code": "J36",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 5.84
+        }
+       ]
+      },
+      {
+       "largura_m": 6.31,
+       "celulas": [
+        {
+         "code": "K35",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 3.16
+        },
+        {
+         "code": "J32",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 6.31
+        }
+       ]
+      },
+      {
+       "largura_m": 3.16,
+       "celulas": [
+        {
+         "code": "K33",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 3.16
+        }
+       ]
+      },
+      {
+       "largura_m": 6.99,
+       "celulas": [
+        {
+         "code": "J30",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 6.99
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "KJ-5",
+     "colunas": [
+      {
+       "largura_m": 9.84,
+       "celulas": [
+        {
+         "code": "J28",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 9.84
+        }
+       ]
+      },
+      {
+       "largura_m": 4.1,
+       "celulas": [
+        {
+         "code": "J26",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 4.1
+        }
+       ]
+      },
+      {
+       "largura_m": 6.62,
+       "celulas": [
+        {
+         "code": "J20",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 6.62
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "banda": "JH",
+   "quadras": [
+    {
+     "id": "JH-1",
+     "colunas": [
+      {
+       "largura_m": 7.72,
+       "celulas": [
+        {
+         "code": "H86",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 7.72
+        }
+       ]
+      },
+      {
+       "largura_m": 7.36,
+       "celulas": [
+        {
+         "code": "J81",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 7.36
+        },
+        {
+         "code": "H80",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 7.36
+        }
+       ]
+      },
+      {
+       "largura_m": 3.76,
+       "celulas": [
+        {
+         "code": "J79",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 3.76
+        },
+        {
+         "code": "H78",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 3.76
+        }
+       ]
+      },
+      {
+       "largura_m": 6.1,
+       "celulas": [
+        {
+         "code": "J75",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 6.1
+        },
+        {
+         "code": "H76",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 6.1
+        }
+       ]
+      },
+      {
+       "largura_m": 12.34,
+       "celulas": [
+        {
+         "code": "H70",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 12.34
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "JH-2",
+     "colunas": [
+      {
+       "largura_m": 25.85,
+       "celulas": [
+        {
+         "code": "H60",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 25.85
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "JH-3",
+     "colunas": [
+      {
+       "largura_m": 15.4,
+       "celulas": [
+        {
+         "code": "H58",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 15.4
+        }
+       ]
+      },
+      {
+       "largura_m": 4.57,
+       "celulas": [
+        {
+         "code": "H50",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 4.57
+        }
+       ]
+      },
+      {
+       "largura_m": 4.8,
+       "celulas": [
+        {
+         "code": "H48",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 4.8
+        }
+       ]
+      },
+      {
+       "largura_m": 15.19,
+       "celulas": [
+        {
+         "code": "H40",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 15.19
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "JH-4",
+     "colunas": [
+      {
+       "largura_m": 11.09,
+       "celulas": [
+        {
+         "code": "H38",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 11.09
+        }
+       ]
+      },
+      {
+       "largura_m": 9.29,
+       "celulas": [
+        {
+         "code": "J34",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 4.62
+        },
+        {
+         "code": "H34",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 9.29
+        }
+       ]
+      },
+      {
+       "largura_m": 4.67,
+       "celulas": [
+        {
+         "code": "J33",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 4.67
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "banda": "HG",
+   "quadras": [
+    {
+     "id": "HG-1",
+     "colunas": [
+      {
+       "largura_m": 2.28,
+       "celulas": [
+        {
+         "code": "BK02",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 2.28
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "HG-2",
+     "colunas": [
+      {
+       "largura_m": 9.33,
+       "celulas": [
+        {
+         "code": "G88",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 9.33
+        }
+       ]
+      },
+      {
+       "largura_m": 7.61,
+       "celulas": [
+        {
+         "code": "G84",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 7.61
+        },
+        {
+         "code": "H87",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 3.05
+        }
+       ]
+      },
+      {
+       "largura_m": 4.56,
+       "celulas": [
+        {
+         "code": "H85",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 4.56
+        }
+       ]
+      },
+      {
+       "largura_m": 3.13,
+       "celulas": [
+        {
+         "code": "G82",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 3.13
+        },
+        {
+         "code": "H83",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 3.13
+        }
+       ]
+      },
+      {
+       "largura_m": 4.55,
+       "celulas": [
+        {
+         "code": "G80",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 4.55
+        }
+       ]
+      },
+      {
+       "largura_m": 7.72,
+       "celulas": [
+        {
+         "code": "G76",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 7.72
+        }
+       ]
+      },
+      {
+       "largura_m": 15.39,
+       "celulas": [
+        {
+         "code": "G70",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 15.39
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "HG-3",
+     "colunas": [
+      {
+       "largura_m": 10.4,
+       "celulas": [
+        {
+         "code": "G68",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 10.4
+        }
+       ]
+      },
+      {
+       "largura_m": 13.84,
+       "celulas": [
+        {
+         "code": "G60",
+         "cat": "patrocinador",
+         "lado": "cheia",
+         "largura_m": 13.84
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "HG-4",
+     "colunas": [
+      {
+       "largura_m": 3.49,
+       "celulas": [
+        {
+         "code": "G52",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 3.49
+        }
+       ]
+      },
+      {
+       "largura_m": 9.76,
+       "celulas": [
+        {
+         "code": "G50",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 9.76
+        }
+       ]
+      },
+      {
+       "largura_m": 19.01,
+       "celulas": [
+        {
+         "code": "G40",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 19.01
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "HG-5",
+     "colunas": [
+      {
+       "largura_m": 9.03,
+       "celulas": [
+        {
+         "code": "G38",
+         "cat": "patrocinador",
+         "lado": "cheia",
+         "largura_m": 9.03
+        }
+       ]
+      },
+      {
+       "largura_m": 6.17,
+       "celulas": [
+        {
+         "code": "G36",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 6.17
+        }
+       ]
+      },
+      {
+       "largura_m": 11.73,
+       "celulas": [
+        {
+         "code": "G30",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 11.73
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "HG-6",
+     "colunas": [
+      {
+       "largura_m": 9.25,
+       "celulas": [
+        {
+         "code": "G28",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 9.25
+        }
+       ]
+      },
+      {
+       "largura_m": 6.48,
+       "celulas": [
+        {
+         "code": "H25",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 6.48
+        },
+        {
+         "code": "G26",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 6.48
+        }
+       ]
+      },
+      {
+       "largura_m": 8.42,
+       "celulas": [
+        {
+         "code": "G20",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 8.42
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "HG-7",
+     "colunas": [
+      {
+       "largura_m": 5.74,
+       "celulas": [
+        {
+         "code": "G12",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 5.74
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "banda": "GF",
+   "quadras": [
+    {
+     "id": "GF-1",
+     "colunas": [
+      {
+       "largura_m": 11.67,
+       "celulas": [
+        {
+         "code": "F88",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 11.67
+        }
+       ]
+      },
+      {
+       "largura_m": 6.83,
+       "celulas": [
+        {
+         "code": "G81",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 6.83
+        },
+        {
+         "code": "F82",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 6.83
+        }
+       ]
+      },
+      {
+       "largura_m": 5.33,
+       "celulas": [
+        {
+         "code": "F80",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 5.33
+        }
+       ]
+      },
+      {
+       "largura_m": 8.51,
+       "celulas": [
+        {
+         "code": "F76",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 8.51
+        }
+       ]
+      },
+      {
+       "largura_m": 15.39,
+       "celulas": [
+        {
+         "code": "F70",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 15.39
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "GF-2",
+     "colunas": [
+      {
+       "largura_m": 25.85,
+       "celulas": [
+        {
+         "code": "F60",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 25.85
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "GF-3",
+     "colunas": [
+      {
+       "largura_m": 30.45,
+       "celulas": [
+        {
+         "code": "F58",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 30.45
+        }
+       ]
+      },
+      {
+       "largura_m": 9.51,
+       "celulas": [
+        {
+         "code": "F40",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 9.51
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "GF-4",
+     "colunas": [
+      {
+       "largura_m": 26.71,
+       "celulas": [
+        {
+         "code": "F30",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 26.71
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "GF-5",
+     "colunas": [
+      {
+       "largura_m": 13.36,
+       "celulas": [
+        {
+         "code": "F20",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 13.36
+        }
+       ]
+      },
+      {
+       "largura_m": 10.79,
+       "celulas": [
+        {
+         "code": "F28",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 10.79
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "GF-6",
+     "colunas": [
+      {
+       "largura_m": 7.61,
+       "celulas": [
+        {
+         "code": "F18",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 7.61
+        }
+       ]
+      },
+      {
+       "largura_m": 3.88,
+       "celulas": [
+        {
+         "code": "G15",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 3.88
+        },
+        {
+         "code": "F14",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 3.88
+        }
+       ]
+      },
+      {
+       "largura_m": 7.62,
+       "celulas": [
+        {
+         "code": "G11",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 7.62
+        },
+        {
+         "code": "F10",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 7.62
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "banda": "FE",
+   "quadras": [
+    {
+     "id": "FE-1",
+     "colunas": [
+      {
+       "largura_m": 13.77,
+       "celulas": [
+        {
+         "code": "E88",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 13.77
+        }
+       ]
+      },
+      {
+       "largura_m": 7.78,
+       "celulas": [
+        {
+         "code": "E82",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 7.78
+        }
+       ]
+      },
+      {
+       "largura_m": 3.06,
+       "celulas": [
+        {
+         "code": "E80",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 3.06
+        }
+       ]
+      },
+      {
+       "largura_m": 23.11,
+       "celulas": [
+        {
+         "code": "E70",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 23.11
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "FE-2",
+     "colunas": [
+      {
+       "largura_m": 25.85,
+       "celulas": [
+        {
+         "code": "E60",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 25.85
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "FE-3",
+     "colunas": [
+      {
+       "largura_m": 26.71,
+       "celulas": [
+        {
+         "code": "E30",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 26.71
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "FE-4",
+     "colunas": [
+      {
+       "largura_m": 24.15,
+       "celulas": [
+        {
+         "code": "E20",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 24.15
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "FE-5",
+     "colunas": [
+      {
+       "largura_m": 13.78,
+       "celulas": [
+        {
+         "code": "E18",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 13.78
+        }
+       ]
+      },
+      {
+       "largura_m": 5.33,
+       "celulas": [
+        {
+         "code": "F11",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 5.33
+        },
+        {
+         "code": "E10",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 5.33
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "banda": "ED",
+   "quadras": [
+    {
+     "id": "ED-1",
+     "colunas": [
+      {
+       "largura_m": 9.28,
+       "celulas": [
+        {
+         "code": "D88",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 9.28
+        }
+       ]
+      },
+      {
+       "largura_m": 17.28,
+       "celulas": [
+        {
+         "code": "D80",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 17.28
+        }
+       ]
+      },
+      {
+       "largura_m": 21.16,
+       "celulas": [
+        {
+         "code": "D70",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 21.16
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ED-2",
+     "colunas": [
+      {
+       "largura_m": 25.85,
+       "celulas": [
+        {
+         "code": "D60",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 25.85
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ED-3",
+     "colunas": [
+      {
+       "largura_m": 34.42,
+       "celulas": [
+        {
+         "code": "D58",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 34.42
+        }
+       ]
+      },
+      {
+       "largura_m": 5.53,
+       "celulas": [
+        {
+         "code": "D40",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 5.53
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ED-4",
+     "colunas": [
+      {
+       "largura_m": 26.71,
+       "celulas": [
+        {
+         "code": "D30",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 26.71
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ED-5",
+     "colunas": [
+      {
+       "largura_m": 7.4,
+       "celulas": [
+        {
+         "code": "D20",
+         "cat": "patrocinador",
+         "lado": "cheia",
+         "largura_m": 7.4
+        }
+       ]
+      },
+      {
+       "largura_m": 7.41,
+       "celulas": [
+        {
+         "code": "E21",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 7.41
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ED-6",
+     "colunas": [
+      {
+       "largura_m": 19.11,
+       "celulas": [
+        {
+         "code": "D10",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 19.11
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "banda": "DC",
+   "quadras": [
+    {
+     "id": "DC-1",
+     "colunas": [
+      {
+       "largura_m": 5.74,
+       "celulas": [
+        {
+         "code": "C90",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 5.74
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "DC-2",
+     "colunas": [
+      {
+       "largura_m": 2.28,
+       "celulas": [
+        {
+         "code": "BK01",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 2.28
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "DC-3",
+     "colunas": [
+      {
+       "largura_m": 4.73,
+       "celulas": [
+        {
+         "code": "C82",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 4.73
+        }
+       ]
+      },
+      {
+       "largura_m": 3.29,
+       "celulas": [
+        {
+         "code": "D81",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 3.29
+        },
+        {
+         "code": "C80",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 3.29
+        }
+       ]
+      },
+      {
+       "largura_m": 9.04,
+       "celulas": [
+        {
+         "code": "D77",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 9.04
+        },
+        {
+         "code": "C76",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 9.04
+        }
+       ]
+      },
+      {
+       "largura_m": 7.77,
+       "celulas": [
+        {
+         "code": "C72",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 7.77
+        }
+       ]
+      },
+      {
+       "largura_m": 3.79,
+       "celulas": [
+        {
+         "code": "C70",
+         "cat": "patrocinador",
+         "lado": "cheia",
+         "largura_m": 3.79
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "DC-4",
+     "colunas": [
+      {
+       "largura_m": 25.85,
+       "celulas": [
+        {
+         "code": "C60",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 25.85
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "DC-5",
+     "colunas": [
+      {
+       "largura_m": 24.73,
+       "celulas": [
+        {
+         "code": "C58",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 24.73
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "DC-6",
+     "colunas": [
+      {
+       "largura_m": 26.71,
+       "celulas": [
+        {
+         "code": "C30",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 26.71
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "DC-7",
+     "colunas": [
+      {
+       "largura_m": 8.37,
+       "celulas": [
+        {
+         "code": "C28",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 8.37
+        }
+       ]
+      },
+      {
+       "largura_m": 15.78,
+       "celulas": [
+        {
+         "code": "C20",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 15.78
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "DC-8",
+     "colunas": [
+      {
+       "largura_m": 11.49,
+       "celulas": [
+        {
+         "code": "C10",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 11.49
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "banda": "CB",
+   "quadras": [
+    {
+     "id": "CB-1",
+     "colunas": [
+      {
+       "largura_m": 23.04,
+       "celulas": [
+        {
+         "code": "B88",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 23.04
+        }
+       ]
+      },
+      {
+       "largura_m": 9.4,
+       "celulas": [
+        {
+         "code": "C77",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 9.4
+        },
+        {
+         "code": "B80",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 5.46
+        }
+       ]
+      },
+      {
+       "largura_m": 3.94,
+       "celulas": [
+        {
+         "code": "B78",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 3.94
+        }
+       ]
+      },
+      {
+       "largura_m": 15.28,
+       "celulas": [
+        {
+         "code": "B70",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 15.28
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "CB-2",
+     "colunas": [
+      {
+       "largura_m": 15.65,
+       "celulas": [
+        {
+         "code": "B68",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 15.65
+        }
+       ]
+      },
+      {
+       "largura_m": 10.2,
+       "celulas": [
+        {
+         "code": "B60",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 10.2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "CB-3",
+     "colunas": [
+      {
+       "largura_m": 39.96,
+       "celulas": [
+        {
+         "code": "B40",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 39.96
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "CB-4",
+     "colunas": [
+      {
+       "largura_m": 11.54,
+       "celulas": [
+        {
+         "code": "B38",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 11.54
+        }
+       ]
+      },
+      {
+       "largura_m": 13.55,
+       "celulas": [
+        {
+         "code": "B30",
+         "cat": "patrocinador",
+         "lado": "cheia",
+         "largura_m": 13.55
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "CB-5",
+     "colunas": [
+      {
+       "largura_m": 24.15,
+       "celulas": [
+        {
+         "code": "B20",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 24.15
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "banda": "BA",
+   "quadras": [
+    {
+     "id": "BA-1",
+     "colunas": [
+      {
+       "largura_m": 11.52,
+       "celulas": [
+        {
+         "code": "A88",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 11.52
+        }
+       ]
+      },
+      {
+       "largura_m": 6.22,
+       "celulas": [
+        {
+         "code": "A86",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 6.22
+        }
+       ]
+      },
+      {
+       "largura_m": 9.37,
+       "celulas": [
+        {
+         "code": "B81",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 9.37
+        },
+        {
+         "code": "A80",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 9.37
+        }
+       ]
+      },
+      {
+       "largura_m": 7.56,
+       "celulas": [
+        {
+         "code": "B79",
+         "cat": "expositor",
+         "lado": "norte",
+         "largura_m": 7.56
+        },
+        {
+         "code": "A78",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 7.56
+        }
+       ]
+      },
+      {
+       "largura_m": 3.83,
+       "celulas": [
+        {
+         "code": "A76",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 3.83
+        }
+       ]
+      },
+      {
+       "largura_m": 9.22,
+       "celulas": [
+        {
+         "code": "A70",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 9.22
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "BA-2",
+     "colunas": [
+      {
+       "largura_m": 9.27,
+       "celulas": [
+        {
+         "code": "A68",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 9.27
+        }
+       ]
+      },
+      {
+       "largura_m": 4.9,
+       "celulas": [
+        {
+         "code": "A66",
+         "cat": "expositor",
+         "lado": "sul",
+         "largura_m": 4.9
+        }
+       ]
+      },
+      {
+       "largura_m": 11.68,
+       "celulas": [
+        {
+         "code": "A60",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 11.68
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "BA-3",
+     "colunas": [
+      {
+       "largura_m": 15.55,
+       "celulas": [
+        {
+         "code": "A58",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 15.55
+        }
+       ]
+      },
+      {
+       "largura_m": 9.18,
+       "celulas": [
+        {
+         "code": "A50",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 9.18
+        }
+       ]
+      },
+      {
+       "largura_m": 15.24,
+       "celulas": [
+        {
+         "code": "A40",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 15.24
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "BA-4",
+     "colunas": [
+      {
+       "largura_m": 26.71,
+       "celulas": [
+        {
+         "code": "A30",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 26.71
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "banda": "Asul",
+   "quadras": [
+    {
+     "id": "Asul-1",
+     "colunas": [
+      {
+       "largura_m": 5.79,
+       "celulas": [
+        {
+         "code": "A89",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 5.79
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Asul-2",
+     "colunas": [
+      {
+       "largura_m": 5.18,
+       "celulas": [
+        {
+         "code": "A85",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 5.18
+        }
+       ]
+      },
+      {
+       "largura_m": 6.66,
+       "celulas": [
+        {
+         "code": "A81",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 6.66
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Asul-3",
+     "colunas": [
+      {
+       "largura_m": 5.79,
+       "celulas": [
+        {
+         "code": "A79",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 5.79
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Asul-4",
+     "colunas": [
+      {
+       "largura_m": 8.75,
+       "celulas": [
+        {
+         "code": "A55",
+         "cat": "patrocinador",
+         "lado": "cheia",
+         "largura_m": 8.75
+        }
+       ]
+      },
+      {
+       "largura_m": 4.4,
+       "celulas": [
+        {
+         "code": "A47",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 4.4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Asul-5",
+     "colunas": [
+      {
+       "largura_m": 6.17,
+       "celulas": [
+        {
+         "code": "A41",
+         "cat": "expositor",
+         "lado": "cheia",
+         "largura_m": 6.17
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "directory": {
+  "A60": "GRUPO NOVO SÉCULO",
+  "AA43": "HADASH",
+  "E21": "EDITORA BOC",
+  "G03": "AVEC EDITORA",
+  "H48": "TERTÚLIA",
+  "K77": "BOOK OUTLET",
+  "TI26": "FÁBIO YABU",
+  "A61": "PRAÇA DE HISTÓRIAS",
+  "AA45": "IMPACTO LITERÁRIO",
+  "E30": "INTRÍNSECA",
+  "G11": "NOVOS AUTORES DO BRASIL",
+  "H50": "EDITORA LITERATURA CLÁSSICA",
+  "K78": "DEPÓSITO CINEMARK",
+  "TI27": "MAGENTA",
+  "A66": "TURMA DO CABEÇA OCA",
+  "E40": "CONVIDADO DE HONRA - ESPANHA",
+  "G12": "CINEMARK",
+  "H58": "EDITORA VELOS",
+  "K86": "ARENA CULTURAL",
+  "TI28": "MARINA V & LUCAS MEYER",
+  "A68": "REINO DOS BRINQUEDOS",
+  "C10": "CIRANDA CULTURAL",
+  "D10": "PAE EDITORA",
+  "E60": "COMPANHIA DAS LETRAS",
+  "G15": "EDITORA CRAS",
+  "H60": "UNIVERSO DOS LIVROS",
+  "J20": "BIBLIEX",
+  "K03": "RESTAURANTE DOS EXPOSITORES",
+  "TI29": "ISADORA ZEFERINO",
+  "J26": "LELUME",
+  "K18": "SALA DE IMPRENSA",
+  "A70": "COOPERBOOK",
+  "C20": "FARO EDITORIAL",
+  "D20": "CHAMBRIL",
+  "E70": "GLOBO LIVROS",
+  "G20": "SHOPPING DOS LIVROS",
+  "H70": "BUZZ EDITORA",
+  "TI30": "PICOLO",
+  "A73": "LOJA OFICIAL",
+  "E80": "MALÉ EDITORA",
+  "G26": "EDITORA CORTEZ",
+  "H76": "PALLAS EDITORA",
+  "J28": "FÁBRICA DO LIVRO",
+  "K19": "LOUNGE DOS EXPOSITORES",
+  "TI31": "BIC",
+  "B20": "CIRANDA CULTURAL",
+  "C28": "DRUMMOND LIVRARIA",
+  "D28": "PRAÇA DA PALAVRA",
+  "A76": "GRUPO EDITORIAL COERÊNCIA",
+  "C30": "DISTRIBUIDORA & LIVRARIA LOYOLA",
+  "D30": "SEXTANTE E ARQUEIRO",
+  "E82": "MUNDO DOS COLECIONÁVEIS",
+  "G28": "EDSON SOUSA LIVROS",
+  "H78": "UNIVERSO PARALELO",
+  "J30": "EDITORA UNICORN",
+  "K20": "DIREÇÃO",
+  "TI01": "TÉO & O MINI MUNDO",
+  "B30": "SKEELO",
+  "J32": "SCORTECCI",
+  "K24": "INFLUENCIADORES BY SKEELO",
+  "A78": "APPRIS",
+  "C40": "SALÃO DE IDÉIAS",
+  "D40": "TODAVIA",
+  "E88": "TAVERNA DO REI",
+  "G30": "EDITORA VOZES",
+  "H80": "URUTAU",
+  "TI02": "BATATINHA FANTASMA",
+  "A79": "SHARJAH BOOK AUTHORITY",
+  "B38": "PAULUS",
+  "EXT02": "VAN SP TURIS",
+  "G36": "ALEPH",
+  "H83": "NERD DUCKS",
+  "J33": "ABERST",
+  "K26": "ESPAÇO PODCAST",
+  "B40": "PROMOLIVROS",
+  "C58": "GRUPO ONLINE EDITORA",
+  "D58": "HARPERCOLLINS",
+  "TI03": "QUADRINHOS A2",
+  "A80": "FLYVE",
+  "C60": "CIRANDA CULTURAL",
+  "D60": "COMPANHIA DAS LETRAS",
+  "G38": "MERCADO LIVRE",
+  "H85": "CRUSH LITERÁRIO",
+  "J34": "EDITORA ARDANE",
+  "K28": "CABANA VERMELHA",
+  "TI04": "LARK",
+  "B60": "EDITORA MOSTARDA",
+  "J36": "TELOS EDITORA",
+  "K29": "ANTENA CLARO",
+  "A81": "GRUPO ONLINE EDITORA",
+  "C70": "FABER-CASTELL",
+  "D70": "EDIÇÕES SESC",
+  "G40": "EDITORA PLANETA",
+  "H86": "BOOK ONE",
+  "TI05": "MONGE HAN",
+  "A85": "EDITORA DCL",
+  "B65": "EDITORA IN HOUSE",
+  "G50": "VR EDITORA",
+  "H87": "LENDARI",
+  "J38": "SECRETARIA MUNICIPAL DA CULTURA",
+  "K30": "AMIGOS DO BEM",
+  "B68": "MUNDO GOSPEL",
+  "C72": "GIRASSOL",
+  "D77": "EDITORA PAULINAS",
+  "TI06": "PAULO MOREIRA",
+  "A86": "TOQUE MÁGICO",
+  "C76": "Y.A. BOOKS",
+  "D80": "SENAC",
+  "F02": "ALL PRINT",
+  "G52": "ASES DA LITERATURA",
+  "J40": "AQUARELA LIVROS",
+  "K32": "PAPO DE MERCADO",
+  "TI07": "HIRO KAWAHARA",
+  "B70": "BOA NOVA LIVROS ESPÍRITAS",
+  "J44": "EDITORA LABRADOR",
+  "K33": "SUNBEE",
+  "A88": "CIRANDA CULTURAL",
+  "C77": "BAGGAGIO",
+  "D81": "CHIADO EDITORA",
+  "F10": "LIVRARIA PAISAGEM",
+  "G58": "ESPAÇO EDUCAÇÃO",
+  "TI08": "NIMBO QUINTAL",
+  "A89": "CIRANDA CULTURAL",
+  "B78": "BUSCA LIVROS",
+  "F11": "FRATERNIDADE DE ESCRITORES",
+  "G60": "CLARO",
+  "J48": "EDITORA AVE MARIA",
+  "K35": "EDITORA ARTICULE",
+  "B79": "UICLAP",
+  "C80": "PANINI EDITORA",
+  "D88": "CULTURAMA EDITORA",
+  "TI09": "MAGÔ POOL",
+  "AA01": "EDITORA MARRAKESH",
+  "C82": "FUSÃO DO LIVRO",
+  "DD10": "CORDEL E REPENTE",
+  "F14": "EDITORA CALÍOPE",
+  "G68": "PROMOLIVROS",
+  "IF01": "PRAÇA DE ALIMENTAÇÃO",
+  "J52": "EDITORA VISEU",
+  "K37": "LITTERIS EDITORA",
+  "TI10": "HELENA CUNHA",
+  "B80": "VIAJANTE DO TEMPO",
+  "J58": "EDITORA GENTE",
+  "K38": "ESPAÇO BEM-ESTAR",
+  "AA03": "BKCC LIVROS",
+  "C88": "ESPAÇO INFANTIL",
+  "DD11": "CIRANDA CULTURAL",
+  "F18": "GRUPO EDITORIAL PORTAL",
+  "G70": "CITADEL",
+  "IF02": "CAEX",
+  "TI11": "HELÔ D'ANGELO",
+  "AA05": "CIRANDINHA DO PEQUENO",
+  "B81": "EDITORA MUNDO CRISTÃO",
+  "F20": "EDITORA SEI",
+  "G76": "BARCA",
+  "IF03": "TRANSPO",
+  "J60": "GRUPO EDITORIAL PENSAMENTO",
+  "K40": "EDITORA BEZZ",
+  "B88": "SECRETARIA MUNICIPAL DA EDUCAÇÃO",
+  "C90": "CINEMARK",
+  "DD20": "AUTÓGRAFOS 1, 2 e 3",
+  "TI12": "ZAPATA EDIÇÕES",
+  "AA07": "LIANA PRODUÇÕES",
+  "C92": "INFLÁVEL SUPER CAPIVARA",
+  "DD21": "PANINI EDITORA",
+  "F28": "GLOBAL EDITORA",
+  "G80": "ESCREVA GAROTA",
+  "IF04": "FRALDÁRIO",
+  "J66": "LURA EDITORIAL",
+  "K42": "ABIGRAF",
+  "TI13": "ANDRÉ FREITAS",
+  "BB10": "LITERARTE/MÁGICO DE OZ",
+  "J68": "CHAVE MESTRA",
+  "K43": "EDITORA IDENTIDADE",
+  "AA09": "TRANSFORMAR EDITORA",
+  "CC11": "LITERARUA",
+  "DD27": "CÂMARA PERIFÉRICA",
+  "F30": "CIRANDA CULTURAL",
+  "G81": "PEDRAZUL EDITORA",
+  "IF04A": "VISITAÇÃO ESCOLAR",
+  "TI14": "LINHADOTREM",
+  "AA10": "PILOT PEN",
+  "BB16": "EDITORA MINSKI",
+  "F40": "AUTÊNTICA GRUPO",
+  "G82": "PIOVESAN",
+  "IF05": "PRAÇA DE ALIMENTAÇÃO",
+  "J70": "EDITORA VIDA",
+  "K45": "EDITORA PATUÁ",
+  "BB18": "CLUBE DO MEDO",
+  "CC17": "DIVERSA LIVRARIA",
+  "DD29": "CASA DO NOVO AUTOR",
+  "TI15": "LAERTE & RAFAEL COUTINHO",
+  "AA11": "LITERABOOKS",
+  "CC19": "EDITORA DEMÓCRITOS",
+  "F58": "PANINI",
+  "G84": "LEGIÃO NERD",
+  "IF06": "PRAÇA DE ALIMENTAÇÃO",
+  "J74": "LVM EDITORA",
+  "K51": "ESTANTE VIRTUAL",
+  "TI16": "MÁRIO CÉSAR",
+  "BB20": "JINHAO COLOR PRINTING",
+  "J75": "MATRIX EDITORA",
+  "K54": "ABDL",
+  "AA13": "CACAROL EDITORA",
+  "CC20": "EDITORA CAXINGUELÊ",
+  "F60": "GRUPO EDITORIAL RECORD",
+  "G88": "SENADO FEDERAL",
+  "IF07": "PRAÇA DE ALIMENTAÇÃO",
+  "TI17": "GERMANA VIANA",
+  "A30": "CIRANDA CULTURAL",
+  "AA18": "ITA BRASIL",
+  "BB28": "LITERATURA SUPERPODEROSA",
+  "F70": "ROCCO",
+  "IF08": "POSTO MÉDICO",
+  "J76": "AUTORES INDEPENDENTES DO BRASIL",
+  "K56": "EDITORA EUROPA",
+  "A37": "SKELPE - MEU LIVRO MEU ESTILO",
+  "BB29": "JAMBO EDITORIAL",
+  "CC21": "EXPRESSÃO POPULAR",
+  "TI18": "LAUDO",
+  "AA20": "EDITORA LEADER",
+  "CC26": "FLINKSAMPA",
+  "E02": "EDITORA CONEJO",
+  "F76": "CATAPULTA",
+  "IF09": "PRAÇA DE ALIMENTAÇÃO",
+  "J79": "EXPLOSÃO CRIATIVA",
+  "K58": "FRUTO PROIBIDO",
+  "TI19": "FRANCO DE ROSA",
+  "A39": "AUDITÓRIO",
+  "BK01": "BIKE PÉ DA LETRA",
+  "J80": "SEBO DO MESSIAS",
+  "K66": "EDITORA EUPHORIA",
+  "AA27": "EDITORA ELIXIR",
+  "CC27": "FUNDAÇÃO JAPÃO",
+  "E10": "ESPAÇO LEIA MAIS",
+  "F80": "SEICHO-NO-IE",
+  "IF10": "PRAÇA DE ALIMENTAÇÃO",
+  "TI20": "HUGO CANUTO",
+  "A40": "MUNDO GOSPEL",
+  "AA28": "COMPACTOR",
+  "BK02": "BIKE PÉ DA LETRA",
+  "F82": "CAIXA DE QUADRINHOS",
+  "H25": "AUTOGRAFIA EDITORA",
+  "IF11": "BILHETERIA",
+  "J81": "GRÁFICA VIENA",
+  "K67": "GIFT BOX",
+  "A41": "PROMOLIVROS",
+  "CC28": "CRB",
+  "E18": "QUALIS EDITORA",
+  "TI21": "GIDALTI JR.",
+  "AA29": "CRISTINA BARRETTO",
+  "CC29": "EDITORA OCEANDO",
+  "E20": "PÉ DA LETRA EDITORA",
+  "F88": "WMF MARTINS FONTES",
+  "H30": "ESPAÇO PRÊMIO JABUTI",
+  "IF12": "CREDENCIAMENTO",
+  "J86": "MAQUINARIA SANKTO EDITORIAL",
+  "K68": "RECORD",
+  "TI22": "ROBSON MOURA",
+  "A47": "PÉ DA LETRA",
+  "K70": "NEW POP",
+  "AA31": "DAIANA PAIXÃO",
+  "H34": "ABEU",
+  "IF13": "CREDENCIAMENTO",
+  "TI23": "GEOVAN MOTTER",
+  "A50": "EDITORA MELHORAMENTOS",
+  "AA33": "PIPOCA E NANQUIM",
+  "H38": "FNDE",
+  "IF14": "COORDENAÇÃO",
+  "K74": "LER EDITORIAL",
+  "A55": "ITAÚ",
+  "TI24": "KAIJU",
+  "AA41": "FLAVIO_FRM",
+  "H40": "MADRAS",
+  "IF15": "SALA RPS",
+  "K75": "GUARDERIA SOUVENIRS",
+  "TI25": "DANIEL HDR",
+  "A58": "AMAZON",
+  "K76": "EDITORA GLOBO",
+  "IF16": "CRIANÇAS PERDIDAS",
+  "TL": "TRAVESSA LITERÁRIA"
+ },
+ "travessa": {
+  "30": "ARTESANATO SANTISTA",
+  "31": "LUA LINS",
+  "32": "EDITORA NUA",
+  "1": "GAEB",
+  "2": "EDITORA SINNA",
+  "33": "EDITORA HIPOCRATES",
+  "3": "EDITORA MADAME HOUDINI",
+  "34": "INSTITUTO ROBERTO LUZ",
+  "35": "ARKHONS",
+  "4": "LILY A.",
+  "5": "RELATOS SOBRE MUNIQUE",
+  "36": "ENCANTOS DA KALY",
+  "6": "EDITORA ARPILLERA",
+  "37": "A RUÍNA DOURADA",
+  "38": "CARTOLA EDITORA",
+  "7": "SABERES NO PANO",
+  "8": "EDITORA GUEDES",
+  "39": "PAPELARIA CRIATIVA",
+  "9": "ESTANTE VOLANTE",
+  "40": "JASON CÉSAR",
+  "41": "DL BOOKS",
+  "10": "DIÁRIOS EMBU",
+  "11": "GAEB",
+  "42": "STEFANIE CABANELAS",
+  "12": "LABUCK",
+  "43": "COLETIVO PARÊNTESIS DE TEATRO",
+  "44": "LOTE 42",
+  "13": "AMANDA ILUSTRAA",
+  "14": "KITEMBO",
+  "45": "EDITORA ELEVAÇÃO",
+  "15": "EDITORA PULO DO GATO",
+  "46": "BARRACO EDITORIAL",
+  "47": "ESTÚDIO TON",
+  "16": "O LIVRO DO CONHECIMENTO",
+  "17": "VITÓRIA GABRIELI",
+  "48": "SARAU DO MANOÉLIO",
+  "18": "EDITORA EFICAZ",
+  "19": "GAEB",
+  "20": "CÍNTIA RIBEIRO SANTANA",
+  "21": "SANDRA BRAIK",
+  "22": "BELLA EDITORA",
+  "23": "ALINE SANTOS",
+  "24": "LITERUNICO",
+  "25": "LIGULLO STORE",
+  "26": "COMPARTILHAGEM",
+  "27": "GAEB",
+  "28": "IRONITA MOTA",
+  "29": "ZUUWAII EDITORA"
+ },
+ "pendencias": [
+  "Código A70 aparece em 2 formas — mantida a primeira, revisar",
+  "Células fora de qualquer banda do miolo (revisar): ['A37', 'A73', 'C92']"
+ ]
+}

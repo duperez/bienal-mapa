@@ -53,6 +53,14 @@ map.addControl(
   "bottom-right",
 );
 
+// mapa de pavilhão: rotação e inclinação livres só desorientam — travadas.
+// O bearing fixo "endireita" o prédio (ele é ~4° torto em relação ao norte).
+map.dragRotate.disable();
+map.touchZoomRotate.disableRotation();
+map.touchPitch.disable();
+map.keyboard.disableRotation();
+map.setBearing(VENUE_BEARING);
+
 // o container pode medir 0x0 no primeiro paint (webview/painel abrindo);
 // garante que o canvas acompanhe o tamanho real assim que ele existir
 new ResizeObserver(() => map.resize()).observe(document.getElementById("map")!);
@@ -65,8 +73,13 @@ declare global {
 }
 window.__map = map;
 
+const MAPA_URL = `${import.meta.env.BASE_URL}data/mapa.geojson`;
+
 map.on("load", async () => {
-  const venue = await fetch(VENUE_URL).then((r) => r.json());
+  const [venue, mapa] = await Promise.all([
+    fetch(VENUE_URL).then((r) => r.json()),
+    fetch(MAPA_URL).then((r) => r.json()),
+  ]);
 
   map.addSource("venue", { type: "geojson", data: venue });
   map.addLayer({
@@ -80,5 +93,40 @@ map.on("load", async () => {
     type: "line",
     source: "venue",
     paint: { "line-color": "#9b968c", "line-width": 2 },
+  });
+
+  map.addSource("mapa", { type: "geojson", data: mapa });
+
+  map.addLayer({
+    id: "ruas",
+    type: "fill",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "rua"],
+    paint: { "fill-color": "#ddd6c8" },
+  });
+  map.addLayer({
+    id: "quadras",
+    type: "line",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "quadra"],
+    paint: { "line-color": "#b9b4aa", "line-width": 1.2 },
+  });
+  map.addLayer({
+    id: "estandes",
+    type: "fill",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "estande"],
+    paint: { "fill-color": "#ffffff" },
+  });
+  map.addLayer({
+    id: "estandes-borda",
+    type: "line",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "estande"],
+    paint: {
+      "line-color": "#d3cfc7",
+      // borda hairline que só engrossa de leve com o zoom
+      "line-width": ["interpolate", ["linear"], ["zoom"], 16, 0.4, 20, 1.2],
+    },
   });
 });
