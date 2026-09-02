@@ -61,7 +61,6 @@ map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
 map.touchPitch.disable();
 map.keyboard.disableRotation();
-map.setBearing(VENUE_BEARING);
 
 // o container pode medir 0x0 no primeiro paint (webview/painel abrindo);
 // garante que o canvas acompanhe o tamanho real assim que ele existir
@@ -78,6 +77,10 @@ window.__map = map;
 const MAPA_URL = `${import.meta.env.BASE_URL}data/mapa.geojson`;
 
 map.on("load", async () => {
+  // o `bounds` do construtor aplica a câmera com bearing 0 (reset assíncrono);
+  // reenquadra com o bearing que endireita o prédio, sem animação
+  map.fitBounds(VENUE_BOUNDS, { padding: 24, bearing: VENUE_BEARING, animate: false });
+
   const [venue, mapa] = await Promise.all([
     fetch(VENUE_URL).then((r) => r.json()),
     fetch(MAPA_URL).then((r) => r.json()),
