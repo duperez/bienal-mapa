@@ -32,10 +32,17 @@ RESTAURANTES = re.compile(r"PIZZA HUT|JOHNNY|SPOLETO|BOALI|BAUDUCCO|LOCKERS|INDI
 def directory_nome_area(directory, a):
     code = a.get("code")
     if code and directory.get(code):
-        return directory[code].title()
+        return frame.title_pt(directory[code])
     label = (a.get("label") or "").strip()
+    # faixa da Alameda: o label é a sequência de códigos TI
+    if label.startswith("TI01"):
+        return "Alameda dos Artistas"
+    # tokens de código não fazem parte do nome ("VAN SP TURIS EXT02" -> Van Sp
+    # Turis; "K20 K18" -> nada)
+    label = " ".join(p for p in label.split()
+                     if not re.match(r"^[A-Z]{1,3}[0-9]{1,3}[A-Z]?$", p))
     if RESTAURANTES.search(label) or (label and len(label.split()) <= 4 and not code):
-        return label.title() if label else None
+        return frame.title_pt(label) if label else None
     return None
 
 

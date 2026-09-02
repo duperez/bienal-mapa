@@ -2172,7 +2172,7 @@
   {
    "code": "IF05",
    "cat": "alimentacao",
-   "nome": "Praça De Alimentação",
+   "nome": "Praça de Alimentação",
    "x_m": 7.34,
    "y_m": 104.42,
    "w_m": 22.7,
@@ -2181,7 +2181,7 @@
   {
    "code": "IF07",
    "cat": "alimentacao",
-   "nome": "Praça De Alimentação",
+   "nome": "Praça de Alimentação",
    "x_m": 7.34,
    "y_m": 34.02,
    "w_m": 35.75,
@@ -2190,7 +2190,7 @@
   {
    "code": "IF06",
    "cat": "alimentacao",
-   "nome": "Praça De Alimentação",
+   "nome": "Praça de Alimentação",
    "x_m": 7.34,
    "y_m": 61.47,
    "w_m": 22.7,
@@ -2199,7 +2199,7 @@
   {
    "code": "IF01",
    "cat": "alimentacao",
-   "nome": "Praça De Alimentação",
+   "nome": "Praça de Alimentação",
    "x_m": 225.69,
    "y_m": 48.67,
    "w_m": 25.74,
@@ -2271,7 +2271,7 @@
   {
    "code": null,
    "cat": "infra",
-   "nome": "K20 K18",
+   "nome": null,
    "x_m": 212.7,
    "y_m": 13.83,
    "w_m": 38.93,
@@ -2361,7 +2361,7 @@
   {
    "code": "IF09",
    "cat": "alimentacao",
-   "nome": "Praça De Alimentação",
+   "nome": "Praça de Alimentação",
    "x_m": 312.98,
    "y_m": 128.96,
    "w_m": 15.59,
@@ -2370,7 +2370,7 @@
   {
    "code": "IF10",
    "cat": "alimentacao",
-   "nome": "Praça De Alimentação",
+   "nome": "Praça de Alimentação",
    "x_m": 361.6,
    "y_m": 104.91,
    "w_m": 15.59,
@@ -2451,7 +2451,7 @@
   {
    "code": null,
    "cat": "servico",
-   "nome": "Ext02",
+   "nome": null,
    "x_m": 252.02,
    "y_m": 186.55,
    "w_m": 56.43,
@@ -2460,7 +2460,7 @@
   {
    "code": "K19",
    "cat": "infra",
-   "nome": "Lounge Dos Expositores",
+   "nome": "Lounge dos Expositores",
    "x_m": 225.69,
    "y_m": 34.02,
    "w_m": 8.27,
@@ -2478,7 +2478,7 @@
   {
    "code": "K03",
    "cat": "infra",
-   "nome": "Restaurante Dos Expositores",
+   "nome": "Restaurante dos Expositores",
    "x_m": 233.96,
    "y_m": 34.02,
    "w_m": 17.47,
@@ -2514,7 +2514,7 @@
   {
    "code": "K38",
    "cat": "cultural",
-   "nome": "Espaço Bem-Estar",
+   "nome": "Espaço Bem-estar",
    "x_m": 164.7,
    "y_m": 12.64,
    "w_m": 7.85,
@@ -2541,7 +2541,7 @@
   {
    "code": "A61",
    "cat": "cultural",
-   "nome": "Praça De Histórias",
+   "nome": "Praça de Histórias",
    "x_m": 87.6,
    "y_m": 160.3,
    "w_m": 23.07,
@@ -2550,7 +2550,7 @@
   {
    "code": "C40",
    "cat": "cultural",
-   "nome": "Salão De Idéias",
+   "nome": "Salão de Idéias",
    "x_m": 144.55,
    "y_m": 118.45,
    "w_m": 13.64,
@@ -2559,7 +2559,7 @@
   {
    "code": "D28",
    "cat": "cultural",
-   "nome": "Praça Da Palavra",
+   "nome": "Praça da Palavra",
    "x_m": 195.62,
    "y_m": 104.27,
    "w_m": 16.24,
@@ -2568,7 +2568,7 @@
   {
    "code": "E40",
    "cat": "cultural",
-   "nome": "Convidado De Honra - Espanha",
+   "nome": "Convidado de Honra - Espanha",
    "x_m": 114.89,
    "y_m": 88.72,
    "w_m": 43.3,
@@ -2586,7 +2586,7 @@
   {
    "code": "DD20",
    "cat": "cultural",
-   "nome": "Autógrafos 1, 2 E 3",
+   "nome": "Autógrafos 1, 2 e 3",
    "x_m": 342.56,
    "y_m": 105.88,
    "w_m": 20.14,
@@ -2595,7 +2595,7 @@
   {
    "code": "DD10",
    "cat": "cultural",
-   "nome": "Cordel E Repente",
+   "nome": "Cordel e Repente",
    "x_m": 328.45,
    "y_m": 102.35,
    "w_m": 7.82,
@@ -2604,7 +2604,7 @@
   {
    "code": "K32",
    "cat": "cultural",
-   "nome": "Papo De Mercado",
+   "nome": "Papo de Mercado",
    "x_m": 172.56,
    "y_m": 12.64,
    "w_m": 9.62,
@@ -2649,7 +2649,7 @@
   {
    "code": null,
    "cat": "cultural",
-   "nome": null,
+   "nome": "Alameda dos Artistas",
    "x_m": 250.81,
    "y_m": 122.74,
    "w_m": 46.22,
@@ -2676,7 +2676,7 @@
   {
    "code": "K18",
    "cat": "infra",
-   "nome": "Sala De Imprensa",
+   "nome": "Sala de Imprensa",
    "x_m": 221.08,
    "y_m": 23.63,
    "w_m": 3.82,

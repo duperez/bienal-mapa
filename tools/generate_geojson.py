@@ -132,7 +132,7 @@ def main():
                         "kind": "estande",
                         "cat": c["cat"],
                         "code": c["code"],
-                        "name": (directory.get(c["code"]) or "").title() or None,
+                        "name": frame.title_pt(directory.get(c["code"])) or None,
                     }))
                 x += w
             feats.append(rect(qx0, top, x, top + cel_prof,
@@ -158,6 +158,8 @@ def main():
             "cat": a["cat"],
             "code": a.get("code"),
             "name": a.get("nome"),
+            # rótulo de área maior ganha a disputa de espaço (sort-key no app)
+            "peso": round(a["w_m"] * a["h_m"], 1),
         }))
 
     # ---- estandes ancorados: anexo (AA-DD), Alameda (TI), Travessa (TL),
@@ -167,9 +169,18 @@ def main():
     def nome_de(code):
         if code and code.startswith("TL"):
             n = travessa.get(str(int(code[2:])))
-            return n.title() if n else None
+            return frame.title_pt(n) if n else None
         n = directory.get(code)
-        return n.title() if n else None
+        return frame.title_pt(n) if n else None
+
+    # piso da tenda do anexo: os ancorados de lá não podem flutuar no vazio
+    anexo = [a for a in s.get("ancorados", []) if a["x_m"] > 255]
+    if anexo:
+        ax0 = min(a["x_m"] for a in anexo) - 4
+        ay0 = min(a["y_m"] for a in anexo) - 4
+        ax1 = max(a["x_m"] + a["w_m"] for a in anexo) + 4
+        ay1 = max(a["y_m"] + a["h_m"] for a in anexo) + 4
+        feats.append(rect(ax0, ay0, ax1, ay1, {"kind": "piso", "name": None}))
 
     for a in s.get("ancorados", []):
         feats.append(rect(a["x_m"], a["y_m"], a["x_m"] + a["w_m"], a["y_m"] + a["h_m"], {
@@ -177,6 +188,9 @@ def main():
             "cat": a["cat"],
             "code": a["code"],
             "name": nome_de(a["code"]),
+            # cabines minúsculas (Travessa, Alameda, fileira AA): rótulo só no
+            # zoom bem fechado, senão viram poluição quadriculada
+            "mini": a["w_m"] < 2.5 or a["h_m"] < 2.5,
         }))
 
     # ruas do anexo (AA-DD)

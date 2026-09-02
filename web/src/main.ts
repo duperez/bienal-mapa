@@ -152,6 +152,22 @@ map.on("load", async () => {
 
   map.addSource("mapa", { type: "geojson", data: mapa });
 
+  // piso da tenda do anexo (mesma linguagem visual do prédio)
+  map.addLayer({
+    id: "piso",
+    type: "fill",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "piso"],
+    paint: { "fill-color": "#edebe7" },
+  });
+  map.addLayer({
+    id: "piso-borda",
+    type: "line",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "piso"],
+    paint: { "line-color": "#9b968c", "line-width": 1.5 },
+  });
+
   map.addLayer({
     id: "ruas",
     type: "fill",
@@ -230,6 +246,8 @@ map.on("load", async () => {
       "text-size": ["interpolate", ["linear"], ["zoom"], 15.5, 10, 19, 13],
       "text-max-width": 8,
       "text-padding": 6,
+      // área maior ganha a disputa por espaço de rótulo
+      "symbol-sort-key": ["-", 0, ["coalesce", ["get", "peso"], 0]],
     },
     paint: {
       "text-color": [
@@ -266,7 +284,7 @@ map.on("load", async () => {
     id: "estandes-nome",
     type: "symbol",
     source: "mapa",
-    filter: ["==", ["get", "kind"], "estande"],
+    filter: ["all", ["==", ["get", "kind"], "estande"], ["!=", ["get", "mini"], true]],
     minzoom: 17.5,
     layout: {
       "text-field": ["coalesce", ["get", "name"], ["get", "code"]],
@@ -302,6 +320,27 @@ map.on("load", async () => {
     },
     "areas-nome",
   );
+
+  // cabines minúsculas (Travessa/Alameda/fileira AA): nome só bem de perto
+  map.addLayer({
+    id: "estandes-nome-mini",
+    type: "symbol",
+    source: "mapa",
+    filter: ["all", ["==", ["get", "kind"], "estande"], ["==", ["get", "mini"], true]],
+    minzoom: 19.6,
+    layout: {
+      "text-field": ["coalesce", ["get", "name"], ["get", "code"]],
+      "text-font": ["Klokantech Noto Sans Regular"],
+      "text-size": 10,
+      "text-max-width": 6,
+      "text-padding": 2,
+    },
+    paint: {
+      "text-color": "#202124",
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.4,
+    },
+  });
 
   map.addLayer({
     id: "estandes-codigo",

@@ -47,3 +47,17 @@ def build_y_warp(ruas_y_pt: list, banda_m: float, rua_m: float):
         return v_pt
 
     return warp, ruas_y_m
+
+
+PARTICULAS = {"de", "da", "do", "das", "dos", "e", "em", "a", "o", "à", "por"}
+
+
+def title_pt(s):
+    """Title case respeitando partículas do português (de/da/do/e...)."""
+    if not s:
+        return s
+    palavras = s.lower().split()
+    out = []
+    for i, p in enumerate(palavras):
+        out.append(p if i > 0 and p in PARTICULAS else p.capitalize())
+    return " ".join(out)
