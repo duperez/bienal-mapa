@@ -86,6 +86,14 @@ def main():
     nomes_ruas = ["K", "J", "H", "G", "F", "E", "D", "C", "B", "A"]
     rua_y_m = {n: ruas_y_m[i] for i, n in enumerate(nomes_ruas)}
 
+    # malha de circulação fechada: no pavilhão real corredor não morre no nada.
+    # As ruas horizontais estendem até um anel perimetral conservador (nada de
+    # atalhos inventados — só completar a circulação que fisicamente existe).
+    todas_q = [q for f in s["fileiras"] for q in f["quadras"]]
+    WEST = min(q["offset_m"] for q in todas_q) - corr_w
+    EAST = max(q["offset_m"] + sum(col["largura_m"] for col in q["colunas"])
+               for q in todas_q) + corr_w
+
     feats = []
     for fileira in s["fileiras"]:
         banda = fileira["banda"]
@@ -102,7 +110,7 @@ def main():
 
         if eh_rua_banda or banda.endswith("sul"):
             rua_nome = banda[0]
-            feats.append(rect(min(extent), y, max(fim), y + rua_h,
+            feats.append(rect(WEST, y, EAST, y + rua_h,
                               {"kind": "rua", "name": f"RUA {rua_nome}"}))
             y += rua_h
 
@@ -136,6 +144,12 @@ def main():
                 if 0.5 < prox - x <= 12.0:
                     feats.append(rect(x, y, prox, y + banda_h,
                                       {"kind": "rua", "name": None}))
+
+    # anel perimetral lateral: liga as pontas de todas as ruas horizontais
+    y_topo = rua_y_m["K"] - banda_h
+    y_fundo = rua_y_m["A"] + rua_h + banda_h
+    feats.append(rect(WEST - corr_w, y_topo, WEST, y_fundo, {"kind": "rua", "name": None}))
+    feats.append(rect(EAST, y_topo, EAST + corr_w, y_fundo, {"kind": "rua", "name": None}))
 
     # ---- áreas ancoradas (praças, alimentação, cultural, serviços) ----
     for a in s.get("areas", []):

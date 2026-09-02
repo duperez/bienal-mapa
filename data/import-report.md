@@ -9,7 +9,7 @@
 - [ ] Código A70 aparece em 2 formas — mantida a primeira, revisar
 - [ ] Células fora de qualquer banda do miolo (revisar): ['A37', 'A73', 'C92']
 
-## Avisos (observações, não bloqueiam) — 9
+## Avisos (observações, não bloqueiam) — 10
 
 - Banda norte/cheia: sequência quebra em 74->76 (dominante desc)
 - Banda norte/cheia: sequência quebra em 76->78 (dominante desc)
@@ -20,6 +20,7 @@
 - J26 (norte da banda KJ): prefixo sugere lado sul
 - J20 (norte da banda KJ): prefixo sugere lado sul
 - Banda GF/cheia: sequência quebra em 20->28 (dominante desc)
+- Área duplicada no PDF: 'Painel Instagramável' — mantida uma
 
 ## Fora do escopo desta importação (entram em rodadas próprias)
 

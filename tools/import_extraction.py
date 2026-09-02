@@ -260,6 +260,25 @@ def main():
             "h_m": round(h_m, 2),
         })
 
+    # dedup de áreas quase-idênticas: o PDF tem elementos duplicados sobrepostos
+    # (ex. "PAINEL INSTAGRAMÁVEL" impresso 2x, com e sem acento)
+    def _norm(s):
+        import unicodedata
+        return unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode().lower()
+
+    dedup_areas = []
+    for a in areas_out:
+        cx, cy = a["x_m"] + a["w_m"] / 2, a["y_m"] + a["h_m"] / 2
+        dup = next((b for b in dedup_areas
+                    if _norm(b["nome"]) == _norm(a["nome"]) and b["nome"]
+                    and abs(b["x_m"] + b["w_m"] / 2 - cx) < 8
+                    and abs(b["y_m"] + b["h_m"] / 2 - cy) < 8), None)
+        if dup:
+            warn(f"Área duplicada no PDF: {a['nome']!r} — mantida uma")
+            continue
+        dedup_areas.append(a)
+    areas_out = dedup_areas
+
     # V4: diretório vs células
     directory = m.get("directory", {})
     ids = {c["code"] for f in fileiras for q in f["quadras"]
