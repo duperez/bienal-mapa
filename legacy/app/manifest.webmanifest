@@ -1,0 +1,16 @@
+{
+  "name": "Mapa Bienal do Livro SP 2026",
+  "short_name": "Bienal 2026",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#EDEBE7",
+  "theme_color": "#FFD200",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

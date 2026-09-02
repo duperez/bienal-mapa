@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#FFD200">
+<title>Mapa Bienal 2026</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root {
+  --map-canvas:#E4E1DB; --map-hall:#EDEBE7;
+  --booth-fill:#FFFFFF; --booth-stroke:#D3CFC7; --block-stroke:#B9B4AA; --wall:#9B968C;
+  --street-fill:#DDD6C8; --street-stroke:#C2B9A4; --street-text:#565A5F;
+  --sel-fill:#FFD200; --sel-stroke:#8A7000; --sel-text:#202124;
+  --shadow-up:0 -2px 12px rgba(0,0,0,.25);
+  --res-fill:#FFF3BF; --res-stroke:#D9B200;
+  --food-fill:#FFDCA8; --food-stroke:#B36B00; --food-text:#7A4100;
+  --cult-fill:#B9E0F2; --cult-stroke:#0072A8; --cult-text:#00516E;
+  --svc-fill:#7C64AC; --svc-text:#FFFFFF; --svc-area:#E2DED6;
+  --you:#1A73E8; --you-ring:#FFFFFF;
+  --surface:#FFFFFF; --shadow:0 1px 3px rgba(0,0,0,.18);
+  --text-1:#202124; --text-2:#5F6368; --divider:#E8E6E1;
+  --accent:#0B57D0; --halo:#FFFFFF;
+  --graph:#C026D3;
+}
+:root[data-theme="dark"] {
+  --map-canvas:#0C0D10; --map-hall:#111214;
+  --booth-fill:#26282E; --booth-stroke:#3A3D45; --block-stroke:#4A4E58; --wall:#565B66;
+  --street-fill:#1B1D21; --street-stroke:#33363D; --street-text:#9AA0A6;
+  --res-fill:#4A4020;
+  --food-fill:#4A3013; --food-stroke:#D98C2B; --food-text:#F5B942;
+  --cult-fill:#123244; --cult-stroke:#4FA9D6; --cult-text:#7FCBEF;
+  --svc-fill:#9A82CF; --svc-text:#17121F; --svc-area:#1A1C21;
+  --you:#8AB4F8; --you-ring:#111214;
+  --surface:#1E2025; --shadow:0 1px 3px rgba(0,0,0,.55);
+  --shadow-up:0 -2px 12px rgba(0,0,0,.6);
+  --text-1:#E8EAED; --text-2:#9AA0A6; --divider:#33363D;
+  --accent:#8AB4F8; --halo:#26282E;
+  --graph:#E879F9;
+}
+* { box-sizing:border-box; margin:0; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; overflow:hidden; overscroll-behavior:none; }
+body {
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:var(--map-canvas); color:var(--text-1);
+  touch-action:none; user-select:none; -webkit-user-select:none;
+}
+#map { position:fixed; inset:0; width:100%; height:100%; cursor:grab; }
+#map:active { cursor:grabbing; }
+
+/* camadas do mapa */
+.hall { fill:var(--map-hall); stroke:var(--wall); stroke-width:2; }
+.street { fill:var(--street-fill); stroke:var(--street-stroke); stroke-width:1; }
+.block { fill:none; stroke:var(--block-stroke); stroke-width:1.1; pointer-events:none; }
+.booth { fill:var(--booth-fill); stroke:var(--booth-stroke); stroke-width:.6; }
+.booth.entidade, .booth.patrocinador { stroke:var(--block-stroke); }
+.area-cultural { fill:var(--cult-fill); stroke:var(--cult-stroke); stroke-width:1.2; stroke-opacity:.8; }
+.area-alimentacao { fill:var(--food-fill); stroke:var(--food-stroke); stroke-width:1.2; stroke-opacity:.8; }
+.area-servico, .area-infra { fill:var(--svc-area); stroke:none; }
+.area-externo { fill:var(--street-fill); fill-opacity:.45; stroke:none; pointer-events:none; }
+.area-marcador { stroke:none; pointer-events:none; }
+.booth.sel { fill:var(--sel-fill); stroke:var(--sel-stroke); stroke-width:1.4; }
+.booth.hit { fill:var(--res-fill); stroke:var(--res-stroke); stroke-width:1; }
+.area-hit { stroke:var(--res-stroke); stroke-width:1.5; stroke-opacity:1; }
+svg.searching .booth:not(.hit):not(.sel) { opacity:.45; }
+svg.searching .area-cultural, svg.searching .area-alimentacao { opacity:.5; }
+svg.searching .icon-bg, svg.searching .icon-glyph { opacity:.45; }
+svg.searching .icon-hit .icon-bg, svg.searching .icon-hit .icon-glyph { opacity:1; }
+
+/* marcador de serviço/infra: ponto sempre visível (a área não tem preenchimento
+ * próprio — cor de categoria fica só nesse círculo, dual-coded com o glifo) */
+.icon-bg { fill:var(--svc-fill); pointer-events:none; }
+.icon-glyph { font-size:calc(9px * var(--ik,1)); font-weight:700; fill:var(--svc-text);
+              text-anchor:middle; dominant-baseline:central; pointer-events:none; stroke:none; }
+
+/* rótulos: contra-escala via --ik (1/k), atualizada no zoom */
+text { paint-order:stroke; stroke:var(--halo); stroke-linejoin:round; pointer-events:none;
+       text-anchor:middle; fill:var(--text-1); }
+.lbl-rua   { font-size:calc(12px * var(--ik,1)); stroke-width:calc(2.5px * var(--ik,1));
+             fill:var(--street-text); letter-spacing:.08em; font-weight:600; }
+.lbl-area  { font-size:calc(12px * var(--ik,1)); stroke-width:calc(2.5px * var(--ik,1));
+             font-weight:600; letter-spacing:.05em; }
+.lbl-area.cultural { fill:var(--cult-text); }
+.lbl-area.alimentacao { fill:var(--food-text); }
+.lbl-area.servico, .lbl-area.infra { fill:var(--text-2); }
+.lbl-anchor{ font-size:calc(13px * var(--ik,1)); stroke-width:calc(2.6px * var(--ik,1)); font-weight:600; }
+.lbl-name  { font-size:calc(11px * var(--ik,1)); stroke-width:calc(2.2px * var(--ik,1)); font-weight:500; }
+.lbl-code  { font-size:calc(9px * var(--ik,1));  stroke-width:calc(1.8px * var(--ik,1));
+             fill:var(--text-2); font-weight:400; font-variant-numeric:tabular-nums; }
+
+/* tiers de zoom */
+svg.z0 .booth { stroke:none; }
+svg.z0 .lbl-anchor, svg.z0 .lbl-name, svg.z0 .lbl-code, svg.z0 .lbl-rua,
+svg.z0 .lbl-area-sm { display:none; }
+/* overview limpo: no zoom inicial só ficam os marcadores de serviço essenciais
+ * (banheiros/restaurantes); salas de infra menores entram a partir do Z1 */
+svg.z0 .icon-infra { display:none; }
+svg.z1 .lbl-name, svg.z1 .lbl-code { display:none; }
+/* "não cabe" é dinâmico por zoom (refreshLabelFits): esconde o nome enquanto a
+ * caixa em pixels de tela ainda não comporta o texto naquele nível de zoom */
+svg g.no-fit { display:none; }
+/* exceção do design system: selecionado/resultado mostra label em qualquer tier */
+svg .force { display:inline !important; }
+
+/* grafo */
+#graphLayer, #youLayer { pointer-events:none; }
+#graphLayer { display:none; }
+svg.show-graph #graphLayer { display:block; }
+#graphLayer line { stroke:var(--graph); stroke-width:calc(1.2px * var(--ik,1)); stroke-opacity:.75; }
+#graphLayer circle { fill:var(--graph); }
+
+/* GPS */
+#youLayer { display:none; }
+#youLayer.on { display:block; }
+#youHalo { fill:var(--you); fill-opacity:.15; stroke:var(--you); stroke-opacity:.3;
+           stroke-width:calc(1px * var(--ik,1)); }
+#youDot  { fill:var(--you); stroke:var(--you-ring); stroke-width:calc(2px * var(--ik,1)); }
+
+/* ---------- UI ---------- */
+#topbar { position:fixed; top:calc(env(safe-area-inset-top) + 10px); left:12px; right:12px; z-index:10; }
+#searchPill { display:flex; align-items:center; gap:10px; height:52px; border-radius:26px;
+  background:var(--surface); box-shadow:var(--shadow); padding:0 18px; }
+#searchPill svg { flex:none; }
+#searchInput { flex:1; border:0; outline:0; background:none; font-size:16px; color:var(--text-1);
+  font-family:inherit; min-width:0; }
+#searchInput::placeholder { color:var(--text-2); }
+#clearBtn { display:none; border:0; background:none; color:var(--text-2); font-size:18px;
+  width:44px; height:44px; margin-right:-14px; align-items:center; justify-content:center; cursor:pointer; }
+#chips { display:flex; gap:8px; margin-top:10px; overflow-x:auto; scrollbar-width:none; }
+#chips::-webkit-scrollbar { display:none; }
+.chip { flex:none; height:36px; padding:0 14px; border-radius:18px; border:0; cursor:pointer;
+  background:var(--surface); box-shadow:var(--shadow); color:var(--text-1);
+  font-size:13px; font-weight:500; font-family:inherit;
+  display:inline-flex; align-items:center; gap:7px; }
+.chip.on { background:var(--sel-fill); color:var(--sel-text); }
+.chip .swatch { width:10px; height:10px; border-radius:50%; flex:none; }
+.chip[data-filter="alimentacao"] .swatch { background:var(--food-stroke); }
+.chip[data-filter="cultural"] .swatch { background:var(--cult-stroke); }
+.chip[data-filter="servico"] .swatch { background:var(--svc-fill); }
+
+#results { position:fixed; top:calc(env(safe-area-inset-top) + 70px); left:12px; right:12px;
+  max-height:45vh; overflow-y:auto; z-index:11; background:var(--surface); border-radius:16px;
+  box-shadow:var(--shadow); display:none; }
+#results .row { padding:12px 18px; border-bottom:1px solid var(--divider); cursor:pointer; }
+#results .row:last-child { border-bottom:0; }
+#results .row b { display:block; font-size:15px; font-weight:600; }
+#results .row span { font-size:13px; color:var(--text-2); }
+
+.fab { position:fixed; width:48px; height:48px; border-radius:50%; border:0; cursor:pointer;
+  background:var(--surface); box-shadow:var(--shadow); color:var(--text-2);
+  display:flex; align-items:center; justify-content:center; z-index:10; }
+.fab.on { color:var(--accent); }
+#gpsBtn   { right:16px; bottom:calc(env(safe-area-inset-bottom) + 16px); }
+#graphBtn { right:16px; bottom:calc(env(safe-area-inset-bottom) + 76px); }
+#themeBtn { right:16px; top:calc(env(safe-area-inset-top) + 10px); display:none; }
+
+#sheet { position:fixed; left:0; right:0; bottom:0; z-index:12; background:var(--surface);
+  border-radius:16px 16px 0 0; box-shadow:var(--shadow-up);
+  padding:8px 20px calc(env(safe-area-inset-bottom) + 20px);
+  transform:translateY(105%); transition:transform .22s ease; }
+#sheet.open { transform:none; }
+#sheet .handle { width:32px; height:4px; border-radius:2px; background:var(--divider); margin:4px auto 12px; }
+#sheetTitle { font-size:18px; font-weight:600; }
+#sheetSub { font-size:13px; color:var(--text-2); margin-top:4px; }
+
+#toast { position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 80px);
+  transform:translateX(-50%); background:var(--text-1); color:var(--surface);
+  padding:10px 18px; border-radius:20px; font-size:14px; opacity:0; transition:opacity .25s;
+  pointer-events:none; z-index:20; max-width:85vw; text-align:center; }
+#toast.show { opacity:.95; }
+</style>
+</head>
+<body>
+<svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
+
+<div id="topbar">
+  <div id="searchPill">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-2)">
+      <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+    </svg>
+    <input id="searchInput" type="search" placeholder="Buscar editora ou estande" autocomplete="off" enterkeyhint="search">
+    <button id="clearBtn" aria-label="Limpar">✕</button>
+  </div>
+  <div id="chips">
+    <button class="chip" data-filter="alimentacao"><span class="swatch"></span>Alimentação</button>
+    <button class="chip" data-filter="cultural"><span class="swatch"></span>Arenas &amp; espaços</button>
+    <button class="chip" data-filter="servico"><span class="swatch"></span>Serviços</button>
+  </div>
+</div>
+<div id="results"></div>
+
+<button id="themeBtn" class="fab" aria-label="Tema">◐</button>
+<button id="graphBtn" class="fab" aria-label="Grafo de corredores">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="5" cy="19" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="19" r="2"/>
+    <path d="M6.5 17.5 10.5 7m3 0 4 10.5M7 19h10"/>
+  </svg>
+</button>
+<button id="gpsBtn" class="fab" aria-label="Minha posição aproximada">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/>
+    <path d="M12 1v3M12 20v3M1 12h3M20 12h3"/>
+  </svg>
+</button>
+
+<div id="sheet">
+  <div class="handle"></div>
+  <div id="sheetTitle"></div>
+  <div id="sheetSub"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const SVGNS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("map");
+const el = (tag, attrs, parent) => {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+};
+
+/* Calibração GPS: pares [lat, lng] -> [x, y] (pt do mapa). Preenchida na etapa
+ * de calibração com o contorno real do pavilhão; null = GPS indisponível. */
+const GEO_REF = null;
+
+let M = null;               // map.json
+let view = { x: 0, y: 0, k: 1 };   // pan/zoom
+let selected = null;
+const standsById = {};
+
+fetch("map.json", { cache: "no-store" }).then(r => r.json()).then(data => { M = data; build(); })
+  .catch(() => toast("Não consegui carregar o mapa — recarrega a página"));
+
+function polyPath(pts) { return "M" + pts.map(p => p[0] + " " + p[1]).join("L") + "Z"; }
+function bboxCX(b) { return (b[0] + b[2]) / 2; }
+function bboxCY(b) { return (b[1] + b[3]) / 2; }
+function esc(s) { return s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function titleCase(s) {
+  return s.toLowerCase().replace(/(^|[\s(/-])\p{L}/gu, c => c.toUpperCase())
+          .replace(/\b(De|Da|Do|Das|Dos|E)\b/g, c => c.toLowerCase());
+}
+
+let world, areaLayer, boothLayer, labelLayer, graphLayer, youLayer;
+const areasByCode = {};
+
+function build() {
+  world = el("g", { id: "world" }, svg);
+
+  // piso do pavilhão: bbox do conteúdo, separado em hall principal e anexo
+  const floor = el("g", {}, world);
+  for (const region of [b => b < 1270, b => b >= 1270]) {
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (const it of [...M.stands, ...M.areas, ...M.ruas]) {
+      if (it.cat === "externo" || it.cat === "marcador") continue;  // ambiência não define o piso
+      if (!region(bboxCX(it.bbox))) continue;
+      x0 = Math.min(x0, it.bbox[0]); y0 = Math.min(y0, it.bbox[1]);
+      x1 = Math.max(x1, it.bbox[2]); y1 = Math.max(y1, it.bbox[3]);
+    }
+    if (x1 > x0) el("rect", { x: x0 - 14, y: y0 - 14, width: x1 - x0 + 28,
+                              height: y1 - y0 + 28, rx: 1, class: "hall" }, floor);
+  }
+
+  // área externa (calçada ao redor da Praça): abaixo das ruas, só ambiência
+  const externoLayer = el("g", {}, world);
+  for (const a of M.areas) {
+    if (a.cat === "externo")
+      el("path", { d: polyPath(a.poly), class: "area-externo" }, externoLayer);
+  }
+
+  // ruas: desenhadas como via de verdade (preenchimento + borda), não espaço
+  // negativo implícito — inclui as pontes/cruzamentos calculados no grafo
+  const streetLayer = el("g", {}, world);
+  for (const s of M.streets || []) {
+    const [x0, y0, x1, y1] = s.bbox;
+    el("rect", { x: x0, y: y0, width: x1 - x0, height: y1 - y0, class: "street" }, streetLayer);
+  }
+
+  areaLayer = el("g", {}, world);
+  boothLayer = el("g", {}, world);
+  graphLayer = el("g", { id: "graphLayer" }, world);
+  labelLayer = el("g", {}, world);
+  const iconLayer = el("g", {}, world);
+  youLayer = el("g", { id: "youLayer" }, world);
+
+  const ICON_GLYPH = { servico: "i", infra: "i" };
+
+  // áreas (alimentação, cultural, serviços, infra)
+  const labeledAreaCodes = new Set();
+  for (const a of M.areas) {
+    if (a.cat === "externo") continue;      // já renderizada na camada de baixo
+    const p = el("path", { d: polyPath(a.poly), class: "area-" + a.cat }, areaLayer);
+    if (a.cat === "marcador") {             // tira colorida fiel ao original
+      p.style.fill = a.color;
+      continue;
+    }
+    const name = areaName(a);
+    a.el = p;
+    if (a.code && !areasByCode[a.code]) areasByCode[a.code] = a;
+    if (a.cat === "servico" || a.cat === "infra") {
+      // marcador de tamanho constante em tela (mesmo truque de contra-escala dos rótulos)
+      const cx = bboxCX(a.bbox), cy = bboxCY(a.bbox);
+      const g = el("g", { class: "icon-" + a.cat }, iconLayer);
+      el("circle", { cx, cy, r: 8, class: "icon-bg",
+                      style: `transform:scale(var(--ik,1));transform-origin:${cx}px ${cy}px` }, g);
+      el("text", { x: cx, y: cy, class: "icon-glyph" }, g).textContent = ICON_GLYPH[a.cat] || "i";
+      a.iconG = g;
+    }
+    if (name) {
+      a.name = name;
+      p._tap = () => openSheet(name, catLabel(a.cat));
+      if (a.code && labeledAreaCodes.has(a.code)) continue;
+      if (a.code) labeledAreaCodes.add(a.code);
+      const sz = (a.bbox[2] - a.bbox[0]) * (a.bbox[3] - a.bbox[1]);
+      const small = sz < 4500 ? " lbl-area-sm" : "";
+      const g = addWrappedLabel(name, bboxCX(a.bbox), bboxCY(a.bbox), "lbl-area " + a.cat + small);
+      // áreas pequenas entram no controle dinâmico de "cabe?" — as grandes
+      // (praças, arenas) são identitárias e ficam sempre, mesmo transbordando
+      if (small) trackFit(g, a.bbox[2] - a.bbox[0], a.bbox[3] - a.bbox[1], 12);
+    }
+  }
+
+  // faixas de rua: rótulo discreto no centro de cada faixa
+  for (const r of M.ruas) {
+    if (!r.name) continue;
+    el("text", { x: bboxCX(r.bbox), y: bboxCY(r.bbox) + 3, class: "lbl-rua" }, labelLayer)
+      .textContent = r.name;
+  }
+
+  // contorno de quadra: grupos de células contíguas viram um bloco com traço
+  // mais presente — as divisas internas ficam em hairline (padrão indoor-map)
+  const blockLayer = el("g", {});
+  world.insertBefore(blockLayer, graphLayer);  // acima dos estandes, abaixo dos rótulos
+  {
+    const cells = M.stands.filter(s => s.cat !== "alameda" && s.cat !== "travessa");
+    const parent = cells.map((_, i) => i);
+    const find = i => parent[i] === i ? i : (parent[i] = find(parent[i]));
+    const touch = (a, b) =>
+      a[0] <= b[2] + 0.5 && b[0] <= a[2] + 0.5 && a[1] <= b[3] + 0.5 && b[1] <= a[3] + 0.5;
+    for (let i = 0; i < cells.length; i++)
+      for (let j = i + 1; j < cells.length; j++)
+        if (touch(cells[i].bbox, cells[j].bbox)) parent[find(i)] = find(j);
+    const groups = {};
+    cells.forEach((s, i) => {
+      const r = find(i);
+      const g = groups[r] || (groups[r] = [1e9, 1e9, -1e9, -1e9]);
+      g[0] = Math.min(g[0], s.bbox[0]); g[1] = Math.min(g[1], s.bbox[1]);
+      g[2] = Math.max(g[2], s.bbox[2]); g[3] = Math.max(g[3], s.bbox[3]);
+    });
+    for (const g of Object.values(groups))
+      el("rect", { x: g[0], y: g[1], width: g[2] - g[0], height: g[3] - g[1],
+                   class: "block" }, blockLayer);
+  }
+
+  // estandes
+  for (const s of M.stands) {
+    const node = el("path", { d: polyPath(s.poly), class: "booth " + s.cat }, boothLayer);
+    s.el = node;
+    if (s.id) standsById[s.id] = s;
+    s.name = M.directory[s.id] ? titleCase(M.directory[s.id])
+           : (s.cat === "travessa" && M.travessa[parseInt(s.id.slice(2), 10)])
+             ? titleCase(M.travessa[parseInt(s.id.slice(2), 10)]) : null;
+    node._tap = () => selectStand(s);
+
+    const w = s.bbox[2] - s.bbox[0], cx = bboxCX(s.bbox), cy = bboxCY(s.bbox);
+    if (s.cat === "alameda" || s.cat === "travessa") continue;  // mini-caixas: sem rótulo
+    if (s.name) {
+      const anchor = s.cat === "patrocinador";
+      s.lbl = addWrappedLabel(s.name, cx, cy - 1, anchor ? "lbl-anchor" : "lbl-name");
+      if (!anchor) trackFit(s.lbl, w, s.bbox[3] - s.bbox[1], 11);
+    }
+    if (s.id) {
+      s.lblCode = el("text", { x: cx, y: s.bbox[3] - 2, class: "lbl-code" }, labelLayer);
+      s.lblCode.textContent = s.id;
+    }
+  }
+
+  // grafo de corredores
+  const g = M.graph;
+  for (const [a, b] of g.edges)
+    el("line", { x1: g.nodes[a][0], y1: g.nodes[a][1], x2: g.nodes[b][0], y2: g.nodes[b][1] }, graphLayer);
+  for (const n of g.nodes) el("circle", { cx: n[0], cy: n[1], r: 1.6 }, graphLayer);
+
+  // GPS
+  el("circle", { id: "youHalo", r: 40 }, youLayer);
+  el("circle", { id: "youDot", r: 3 }, youLayer);
+
+  fitView();
+  applyView();
+}
+
+function areaName(a) {
+  if (a.code && M.directory[a.code]) return titleCase(M.directory[a.code]);
+  const t = (a.label || "").trim();
+  if (/PIZZA HUT|JOHNNY|SPOLETO|BOALI|BAUDUCCO|LOCKERS|PRAÇA$/i.test(t)) return titleCase(t);
+  if (a.cat === "alimentacao") return "Alimentação";
+  return null;
+}
+function catLabel(c) {
+  return { cultural: "Espaço cultural", alimentacao: "Alimentação",
+           servico: "Serviços", infra: "Serviços" }[c] || "";
+}
+function wrapLines(name) {
+  const words = name.split(" ");
+  const lines = [];
+  let cur = "";
+  for (const wd of words) {
+    if ((cur + " " + wd).trim().length > 16 && cur) { lines.push(cur); cur = wd; }
+    else cur = (cur + " " + wd).trim();
+  }
+  lines.push(cur);
+  const shown = lines.slice(0, 2);
+  if (lines.length > 2) shown[1] += "…";
+  return shown;
+}
+
+/* Cria um rótulo como <g class=...> com um <text> POR LINHA. O deslocamento
+ * vertical entre linhas usa a propriedade CSS translate com unidade `em`:
+ * CSS resolve `em` contra o font-size computado (que carrega a contra-escala
+ * via calc), diferente do atributo SVG dy="Nem", que no iOS resolve contra o
+ * font-size default de 16px e espalha as linhas pelo mapa. */
+function addWrappedLabel(name, cx, cy, cls) {
+  const shown = wrapLines(name);
+  const g = el("g", { class: cls }, labelLayer);
+  const off0 = -(shown.length - 1) * 0.575;
+  shown.forEach((ln, i) => {
+    const t = el("text", { x: cx, y: cy }, g);
+    // transform (não o atributo dy): CSS resolve `em` contra o font-size
+    // computado com a contra-escala; sintaxe antiga por compat com WebView velho
+    t.style.transform = `translate(0, ${(off0 + i * 1.15).toFixed(3)}em)`;
+    t.textContent = ln;
+  });
+  g._shown = shown;  // única fonte das linhas p/ trackFit não divergir do render
+  return g;
+}
+
+/* "Cabe?" agora é dinâmico: o rótulo tem tamanho constante em tela, mas a
+ * caixa cresce com o zoom — então a resposta muda conforme k. Reavaliado em
+ * applyView() quando o zoom muda o suficiente (ver refreshLabelFits). */
+const fitTracked = [];
+function trackFit(g, w, h, px) {
+  const shown = g._shown || [""];
+  const maxLine = Math.max(...shown.map(l => l.length));
+  fitTracked.push({ g, maxLine, nLines: shown.length, w, h, px });
+}
+let lastFitK = 0;
+function refreshLabelFits() {
+  if (Math.abs(view.k - lastFitK) < lastFitK * 0.12) return;
+  lastFitK = view.k;
+  for (const f of fitTracked) {
+    const wOk = f.maxLine * f.px * 0.58 < f.w * view.k * 0.94;
+    const hOk = f.nLines * f.px * 1.25 < f.h * view.k;
+    f.g.classList.toggle("no-fit", !(wOk && hOk));
+  }
+}
+
+/* ---------- pan / zoom ---------- */
+let userMoved = false;
+function fitView() {
+  const vw = innerWidth, vh = innerHeight;
+  if (!vw || !vh) { requestAnimationFrame(() => { fitView(); applyView(); }); return; }
+  const [W, H] = M.page;
+  view.k = Math.min(vw / W, vh / H) * 0.96;
+  view.x = (vw - W * view.k) / 2;
+  view.y = (vh - H * view.k) / 2;
+}
+function applyView() {
+  world.setAttribute("transform", `translate(${view.x} ${view.y}) scale(${view.k})`);
+  svg.style.setProperty("--ik", 1 / view.k);
+  refreshLabelFits();
+  const base = Math.min(innerWidth / M.page[0], innerHeight / M.page[1]);
+  const rel = view.k / base;
+  svg.classList.toggle("z0", rel < 1.6);
+  svg.classList.toggle("z1", rel >= 1.6 && rel < 3);
+  svg.classList.toggle("z2", rel >= 3 && rel < 5.5);
+  svg.classList.toggle("z3", rel >= 5.5);
+}
+function zoomAt(px, py, f) {
+  userMoved = true;
+  const k2 = Math.min(Math.max(view.k * f, 0.15), 40);
+  const real = k2 / view.k;
+  view.x = px - (px - view.x) * real;
+  view.y = py - (py - view.y) * real;
+  view.k = k2;
+  applyView();
+}
+svg.addEventListener("wheel", e => {
+  e.preventDefault();
+  zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.002));
+}, { passive: false });
+
+const ptrs = new Map();
+let pinch0 = null, moved = false;
+svg.addEventListener("pointerdown", e => {
+  svg.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  moved = false;
+  if (ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()];
+    pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), k: view.k };
+  }
+});
+svg.addEventListener("pointermove", e => {
+  const p = ptrs.get(e.pointerId);
+  if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y;
+  if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+  if (ptrs.size === 1) {
+    userMoved = true;
+    view.x += dx; view.y += dy;
+    p.x = e.clientX; p.y = e.clientY;
+    applyView();
+  } else if (ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()];
+    const oldMid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    p.x = e.clientX; p.y = e.clientY;
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+    view.x += cx - oldMid.x;           // pan de dois dedos acompanha o midpoint
+    view.y += cy - oldMid.y;
+    if (pinch0 && d > 0) zoomAt(cx, cy, (pinch0.k * d / pinch0.d) / view.k);
+    else applyView();
+  }
+});
+const endPtr = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = null; };
+svg.addEventListener("pointerup", endPtr);
+svg.addEventListener("pointercancel", endPtr);
+/* tap: resolvido no pointerup via elementFromPoint — com setPointerCapture no svg,
+ * o evento click é retargetado e nunca chega nos <path> dos estandes */
+let lastTap = 0;
+svg.addEventListener("pointerup", e => {
+  if (moved || ptrs.size > 0) return;
+  const now = Date.now();
+  if (now - lastTap < 300) { lastTap = 0; zoomAt(e.clientX, e.clientY, 2); return; }
+  lastTap = now;
+  let t = document.elementFromPoint(e.clientX, e.clientY);
+  while (t && t !== svg && !t._tap) t = t.parentNode;
+  if (t && t._tap) t._tap();
+  else { closeSheet(); clearSelection(); }
+});
+addEventListener("resize", () => { if (!M) return; if (!userMoved) fitView(); applyView(); });
+
+function centerOn(bbox, scale) {
+  const [W, H] = M.page;
+  const base = Math.min(innerWidth / W, innerHeight / H);
+  view.k = base * (scale || 4);
+  view.x = innerWidth / 2 - bboxCX(bbox) * view.k;
+  view.y = innerHeight / 2 - bboxCY(bbox) * view.k;
+  applyView();
+}
+
+/* ---------- seleção / sheet ---------- */
+const sheet = document.getElementById("sheet");
+function forceLabels(s, on) {
+  for (const l of [s.lbl, s.lblCode]) l && l.classList.toggle("force", on);
+}
+function selectStand(s) {
+  clearSelection();
+  selected = s;
+  s.el.classList.add("sel");
+  forceLabels(s, true);
+  const ref = s.cat === "travessa" ? "Lugar nº " + parseInt(s.id.slice(2), 10)
+                                   : "Estande " + (s.id || "?");
+  openSheet(s.name || (s.cat === "alameda" ? alamedaName(s.id) : "Estande " + s.id),
+            ref + ruaLabel(s.id));
+}
+function ruaLabel(id) {
+  if (id && id.startsWith("TL")) return " · Travessa Literária";
+  const m = id && /^(AA|BB|CC|DD|TI|[A-K])(?=[0-9])/.exec(id);
+  if (!m) return "";
+  return m[1] === "TI" ? " · Alameda dos Artistas" : " · Rua " + m[1];
+}
+function alamedaName(id) {
+  const n = M.directory[id];
+  return n ? titleCase(n) : "Alameda dos Artistas";
+}
+function clearSelection() {
+  if (selected) { selected.el.classList.remove("sel"); forceLabels(selected, false); }
+  selected = null;
+}
+function openSheet(title, sub) {
+  document.getElementById("sheetTitle").textContent = title;
+  document.getElementById("sheetSub").textContent = sub;
+  sheet.classList.add("open");
+}
+function closeSheet() { sheet.classList.remove("open"); clearSelection(); }
+sheet.addEventListener("click", closeSheet);
+
+/* ---------- busca ---------- */
+const input = document.getElementById("searchInput");
+const resultsBox = document.getElementById("results");
+const clearBtn = document.getElementById("clearBtn");
+let hits = [];
+function normalize(s) { return s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase(); }
+function runSearch(q) {
+  for (const h of hits) {
+    h.el && h.el.classList.remove("hit", "area-hit");
+    h.s && h.s !== selected && forceLabels(h.s, false);  // selecionado mantém o label
+    h.a && h.a.iconG && h.a.iconG.classList.remove("icon-hit");
+  }
+  hits = [];
+  resultsBox.innerHTML = "";
+  svg.classList.toggle("searching", !!q);
+  clearBtn.style.display = q ? "flex" : "none";
+  if (!q) { resultsBox.style.display = "none"; return; }
+  const nq = normalize(q);
+  const out = [];
+  for (const [code, name] of Object.entries(M.directory)) {
+    if (normalize(name).includes(nq) || normalize(code).startsWith(nq)) {
+      out.push({ code, name: titleCase(name), s: standsById[code], a: areasByCode[code] });
+      if (out.length >= 30) break;
+    }
+  }
+  for (const [num, name] of Object.entries(M.travessa || {})) {
+    if (normalize(name).includes(nq))
+      out.push({ code: "Travessa Literária · nº " + num, name: titleCase(name),
+                 s: standsById["TL" + String(num).padStart(2, "0")] });
+    if (out.length >= 30) break;
+  }
+  for (const h of out) {
+    if (h.s) { h.el = h.s.el; h.s.el.classList.add("hit"); forceLabels(h.s, true); }
+    else if (h.a) {
+      h.el = h.a.el; h.a.el.classList.add("area-hit");
+      h.a.iconG && h.a.iconG.classList.add("icon-hit");
+    }
+  }
+  hits = out;
+  resultsBox.style.display = "block";
+  resultsBox.innerHTML = out.length
+    ? out.map((h, i) =>
+        `<div class="row" data-i="${i}"><b>${esc(h.name)}</b><span>${esc(h.code)}</span></div>`).join("")
+    : `<div class="row"><b>Nenhum resultado</b><span>confere a grafia ou tenta parte do nome</span></div>`;
+}
+input.addEventListener("input", () => runSearch(input.value.trim()));
+clearBtn.addEventListener("click", () => { input.value = ""; runSearch(""); input.blur(); });
+resultsBox.addEventListener("click", e => {
+  const row = e.target.closest(".row");
+  if (!row || row.dataset.i === undefined) return;
+  const h = hits[+row.dataset.i];
+  resultsBox.style.display = "none";
+  input.blur();
+  if (h.s) { selectStand(h.s); centerOn(h.s.bbox, 5); }
+  else if (h.a) { openSheet(h.name, catLabel(h.a.cat)); centerOn(h.a.bbox, 3); }
+  else if (h.code.startsWith("Travessa")) toast("Fica na Travessa Literária, perto da Rua H");
+  else toast("Este código não tem localização própria no mapa (ainda)");
+});
+
+/* chips destacam categorias de área */
+document.querySelectorAll(".chip").forEach(ch => ch.addEventListener("click", () => {
+  const on = ch.classList.toggle("on");
+  document.querySelectorAll(".chip").forEach(o => { if (o !== ch) o.classList.remove("on"); });
+  svg.classList.remove("searching");
+  document.querySelectorAll("[class^=area-]").forEach(a => a.style.opacity = "");
+  for (const a of M.areas) if (a.iconG) a.iconG.style.opacity = "";
+  boothLayer.style.opacity = "";
+  if (on) {
+    const f = ch.dataset.filter;
+    boothLayer.style.opacity = .4;
+    document.querySelectorAll("[class^=area-]").forEach(a => {
+      const keep = a.classList.contains("area-" + f) ||
+                   (f === "servico" && a.classList.contains("area-infra"));
+      a.style.opacity = keep ? "" : .25;
+    });
+    for (const a of M.areas) {
+      if (!a.iconG) continue;
+      const keep = a.cat === f || (f === "servico" && a.cat === "infra");
+      a.iconG.style.opacity = keep ? "" : .25;
+    }
+  }
+}));
+
+/* ---------- grafo ---------- */
+document.getElementById("graphBtn").addEventListener("click", function () {
+  this.classList.toggle("on", svg.classList.toggle("show-graph"));
+});
+
+/* ---------- tema ---------- */
+const themeBtn = document.getElementById("themeBtn");
+themeBtn.style.display = "flex";
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem("theme", t); } catch (e) {}
+}
+try {
+  const saved = localStorage.getItem("theme");
+  if (saved) setTheme(saved);
+  else if (matchMedia("(prefers-color-scheme: dark)").matches) setTheme("dark");
+} catch (e) {}
+themeBtn.addEventListener("click", () =>
+  setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
+
+/* ---------- GPS difuso ---------- */
+let watching = null;
+document.getElementById("gpsBtn").addEventListener("click", function () {
+  if (watching !== null) {
+    navigator.geolocation.clearWatch(watching);
+    watching = null;
+    youLayer.classList.remove("on");
+    this.classList.remove("on");
+    return;
+  }
+  if (!GEO_REF) { toast("GPS ainda não calibrado para o pavilhão — em breve"); return; }
+  if (!navigator.geolocation) { toast("Sem geolocalização neste navegador"); return; }
+  this.classList.add("on");
+  watching = navigator.geolocation.watchPosition(pos => {
+    const [x, y] = geoToMap(pos.coords.latitude, pos.coords.longitude);
+    const acc = Math.max(pos.coords.accuracy, 20);   // metros; nunca fingir precisão
+    youLayer.classList.add("on");
+    document.getElementById("youHalo").setAttribute("cx", x);
+    document.getElementById("youHalo").setAttribute("cy", y);
+    document.getElementById("youHalo").setAttribute("r", acc * GEO_REF.ptPerMeter);
+    document.getElementById("youDot").setAttribute("cx", x);
+    document.getElementById("youDot").setAttribute("cy", y);
+  }, err => {
+    toast("Não consegui tua posição (" + err.message + ")");
+    this.classList.remove("on");
+    watching = null;
+  }, { enableHighAccuracy: true, maximumAge: 5000 });
+});
+function geoToMap(lat, lng) {
+  // afim 2D calibrada por pontos de referência do prédio
+  const a = GEO_REF.affine;
+  return [a[0] * lng + a[1] * lat + a[2], a[3] * lng + a[4] * lat + a[5]];
+}
+
+/* ---------- util ---------- */
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+/* service worker só em produção (https) */
+if (location.protocol === "https:" && "serviceWorker" in navigator)
+  navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>

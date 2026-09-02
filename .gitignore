@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.venv/
+.DS_Store
+*.log
+# artefatos de QA/depuração do legado (pesados, regeneráveis)
+reference/audit/
+reference/crop-*.png
+reference/qa-*.png
+reference/mapa-oficial.svg
+reference/mapa-texto.html
+reference/extracao.json
