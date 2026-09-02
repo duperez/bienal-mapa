@@ -168,12 +168,13 @@ def main():
             for c in celulas:
                 if c["largura_m"] < 1.0:
                     pend(f"{c['code']}: largura {c['largura_m']}m implausível (mediana {med}m)")
+            offset = colunas[0]["_x"] if colunas else 0
             for col in colunas:
                 col.pop("_x", None)
                 col.pop("_x1", None)
                 for c in col["celulas"]:
                     c.pop("_x1", None)
-            qs.append({"id": f"{nome}-{qi + 1}", "colunas": colunas})
+            qs.append({"id": f"{nome}-{qi + 1}", "offset_pt": offset, "colunas": colunas})
 
         # V2: sequência numérica por lado dentro da fileira
         for lado in ("norte", "sul", "cheia"):
@@ -197,6 +198,15 @@ def main():
                 for c in col["celulas"]:
                     c.pop("_x", None)
         fileiras.append({"banda": nome, "quadras": qs})
+
+    # offsets viram metros relativos à borda esquerda do conteúdo — as quadras
+    # ficam nas COLUNAS reais do pavilhão (alinhadas verticalmente entre
+    # fileiras), e os vãos entre elas são os corredores verticais
+    x0_global = min(q["offset_pt"] for f in fileiras for q in f["quadras"])
+    for f in fileiras:
+        for q in f["quadras"]:
+            q["offset_m"] = round((q["offset_pt"] - x0_global) * M_PER_PT, 2)
+            del q["offset_pt"]
 
     # V4: diretório vs células
     directory = m.get("directory", {})

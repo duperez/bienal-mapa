@@ -71,20 +71,20 @@ def main():
     for fileira in s["fileiras"]:
         banda = fileira["banda"]
         eh_rua_banda = len(banda) == 2  # "KJ", "JH"... têm rua acima
+        quadras = fileira["quadras"]
+        extent = [q["offset_m"] for q in quadras]
+        fim = [q["offset_m"] + sum(col["largura_m"] for col in q["colunas"]) for q in quadras]
+
         if eh_rua_banda or banda.endswith("sul"):
-            # faixa de rua acima desta banda (nome = rua de cima)
             rua_nome = banda[0]
-            largura_total = sum(
-                sum(col["largura_m"] for col in q["colunas"]) for q in fileira["quadras"]
-            ) + corr_w * (len(fileira["quadras"]) - 1)
-            feats.append(rect(0, y, largura_total, y + rua_h,
+            feats.append(rect(min(extent), y, max(fim), y + rua_h,
                               {"kind": "rua", "name": f"RUA {rua_nome}"}))
             y += rua_h
 
         top = y + (banda_h - cel_prof) / 2 if eh_rua_banda else y + respiro
         meio = top + cel_prof / 2
-        x = 0.0
-        for q in fileira["quadras"]:
+        for qi, q in enumerate(quadras):
+            x = q["offset_m"]
             qx0 = x
             for col in q["colunas"]:
                 w = col["largura_m"]
@@ -104,7 +104,13 @@ def main():
                 x += w
             feats.append(rect(qx0, top, x, top + cel_prof,
                               {"kind": "quadra", "id": q["id"]}))
-            x += corr_w
+            # corredor vertical: o vão real entre esta quadra e a próxima.
+            # Vãos largos (>12m) são áreas especiais futuras, não corredor.
+            if qi + 1 < len(quadras):
+                prox = quadras[qi + 1]["offset_m"]
+                if 0.5 < prox - x <= 12.0:
+                    feats.append(rect(x, y, prox, y + banda_h,
+                                      {"kind": "rua", "name": None}))
         y += banda_h
 
     gj = {"type": "FeatureCollection", "features": feats}

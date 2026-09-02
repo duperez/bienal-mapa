@@ -24,7 +24,9 @@ const VENUE_BOUNDS: [[number, number], [number, number]] = [
   [-46.6385, -23.5181],
   [-46.6343, -23.5151],
 ];
-const VENUE_BEARING = -4;
+// azimute do lado norte do prédio ≈ 94° (leste, 4° pro sul); para ele ficar
+// horizontal na tela o topo do mapa aponta pra 94−90 = +4°
+const VENUE_BEARING = 4;
 
 const map = new MlMap({
   container: "map",
