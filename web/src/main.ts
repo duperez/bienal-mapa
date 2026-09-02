@@ -272,7 +272,7 @@ map.on("load", async () => {
       "text-padding": 4,
       "text-anchor": "top",
       "text-offset": [0, 1.05],
-      "text-optional": true,
+      "text-optional": false,
       // área maior ganha a disputa por espaço de rótulo
       "symbol-sort-key": ["-", 0, ["coalesce", ["get", "peso"], 0]],
     },
@@ -310,14 +310,14 @@ map.on("load", async () => {
       "text-padding": 4,
       "text-anchor": "top",
       "text-offset": [0, 1.05],
-      "text-optional": true,
+      "text-optional": false,
     },
     paint: {
       "text-color": "#5a564e",
       "text-halo-color": "#ffffff",
       "text-halo-width": 1.3,
     },
-  });
+  }, "areas-poi");
 
   // entradas: os POIs mais importantes de um mapa de evento
   map.addLayer({
@@ -327,7 +327,7 @@ map.on("load", async () => {
     filter: ["==", ["get", "kind"], "poi"],
     minzoom: 15,
     layout: {
-      "icon-image": "poi-entrada",
+      "icon-image": ["case", ["==", ["get", "cat"], "saida"], "poi-saida", "poi-entrada"],
       "icon-size": ["interpolate", ["linear"], ["zoom"], 15, 0.72, 18, 1],
       "text-field": ["get", "name"],
       "text-font": ["Klokantech Noto Sans Bold"],
@@ -335,11 +335,11 @@ map.on("load", async () => {
       "text-max-width": 7,
       "text-anchor": "top",
       "text-offset": [0, 1.05],
-      "text-optional": true,
+      "text-optional": false,
       "symbol-sort-key": -99999,
     },
     paint: {
-      "text-color": "#186439",
+      "text-color": ["case", ["==", ["get", "cat"], "saida"], "#8f2a20", "#186439"],
       "text-halo-color": "#ffffff",
       "text-halo-width": 1.3,
     },

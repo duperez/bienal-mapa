@@ -2225,7 +2225,7 @@
   },
   {
    "code": null,
-   "cat": "servico",
+   "cat": "alimentacao",
    "nome": "Pizza Hut",
    "x_m": 6.18,
    "y_m": 171.45,
@@ -2351,7 +2351,7 @@
   },
   {
    "code": null,
-   "cat": "servico",
+   "cat": "alimentacao",
    "nome": "Johnny Rockets",
    "x_m": 82.94,
    "y_m": 171.53,
@@ -2378,7 +2378,7 @@
   },
   {
    "code": null,
-   "cat": "servico",
+   "cat": "alimentacao",
    "nome": "Spoleto",
    "x_m": 98.17,
    "y_m": 171.53,
@@ -2387,7 +2387,7 @@
   },
   {
    "code": null,
-   "cat": "servico",
+   "cat": "alimentacao",
    "nome": "Boali",
    "x_m": 175.69,
    "y_m": 171.45,
@@ -2432,7 +2432,7 @@
   },
   {
    "code": null,
-   "cat": "servico",
+   "cat": "alimentacao",
    "nome": "Casa Bauducco",
    "x_m": 230.72,
    "y_m": 171.45,
@@ -3800,6 +3800,12 @@
    "cat": "entrada",
    "x_m": 167.83,
    "y_m": 192.33
+  },
+  {
+   "nome": "Saída",
+   "cat": "saida",
+   "x_m": 75.16,
+   "y_m": 177.74
   },
   {
    "nome": "Acesso Hall 04",

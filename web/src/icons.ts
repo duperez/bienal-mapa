@@ -127,6 +127,22 @@ const entrada: Draw = (ctx) => {
   ctx.stroke();
 };
 
+const saida: Draw = (ctx) => {
+  ctx.lineWidth = 2.6;
+  ctx.lineCap = "round";
+  // porta à esquerda, seta saindo pra direita
+  ctx.strokeRect(11, 12, 7, 18);
+  ctx.beginPath();
+  ctx.moveTo(21, 21);
+  ctx.lineTo(31, 21);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(27, 16.5);
+  ctx.lineTo(32, 21);
+  ctx.lineTo(27, 25.5);
+  ctx.stroke();
+};
+
 export function addPoiIcons(map: MlMap): void {
   const icones: Record<string, [string, Draw]> = {
     "poi-alimentacao": ["#e8871e", talheres],
@@ -134,6 +150,7 @@ export function addPoiIcons(map: MlMap): void {
     "poi-servico": ["#7c64ac", info],
     "poi-cultural": ["#1a8bbf", estrela],
     "poi-entrada": ["#1e874b", entrada],
+    "poi-saida": ["#c0392b", saida],
   };
   for (const [nome, [cor, draw]] of Object.entries(icones)) {
     map.addImage(nome, makeIcon(cor, draw), { pixelRatio: 2 });

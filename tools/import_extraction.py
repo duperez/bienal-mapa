@@ -255,9 +255,12 @@ def main():
         nome = directory_nome_area(m.get("directory", {}), a)
         if code and not nome:
             warn(f"Área {code} sem nome no diretório")
+        cat = a["cat"]
+        if nome and re.search(r"pizza hut|johnny|spoleto|boali|bauducco|cinemark", nome, re.I):
+            cat = "alimentacao"
         areas_out.append({
             "code": code,
-            "cat": a["cat"],
+            "cat": cat,
             "nome": nome,
             "x_m": round(frame.x_m(b[0]), 2),
             "y_m": round(warp(b[1]), 2),
@@ -334,12 +337,26 @@ def main():
             if x0 > 1060 and y0 < 600:   # legenda do mapa: não é POI
                 continue
             if t == "ENTRADA":
+                # complemento na mesma linha OU logo abaixo (texto empilhado)
                 seg = next((w for w in words
                             if abs(w[1] - y0) < 4 and 0 < w[0] - x1 < 10), None)
+                if not seg:
+                    seg = next((w for w in words
+                                if abs((w[0] + w[2]) / 2 - (x0 + x1) / 2) < 30
+                                and 0 < w[1] - y1 < 8
+                                and w[4] in ("PÚBLICO", "EXPOSITORES")), None)
                 if seg and seg[4] == "PÚBLICO":
                     add_poi("Entrada do Público", x0, y0, seg[2], y1)
                 elif seg and seg[4] == "EXPOSITORES":
                     add_poi("Entrada de Expositores", x0, y0, seg[2], y1)
+            elif t == "SAÍDA":
+                # a Saída principal (não as "SAÍDA DE EMERGÊNCIA" do perímetro)
+                emergencia = any(abs(w[1] - y0) < 6 and abs(w[0] - x1) < 20
+                                 and w[4] in ("DE", "EMERGÊNCIA") for w in words)
+                if not emergencia and y0 > 700:
+                    pois.append({"nome": "Saída", "cat": "saida",
+                                  "x_m": round(frame.x_m((x0 + x1) / 2), 2),
+                                  "y_m": round(warp((y0 + y1) / 2), 2)})
             elif t == "ACESSO":
                 seg = [w for w in words if abs(w[1] - y0) < 4 and 0 < w[0] - x1 < 60]
                 seg.sort(key=lambda w: w[0])
