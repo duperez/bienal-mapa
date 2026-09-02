@@ -16,25 +16,38 @@ SRC = "data/structure.json"
 VENUE = "data/venue.geojson"
 OUT = "web/public/data/mapa.geojson"
 
-# ---- âncora geográfica: canto NW do prédio + direção do lado norte ----
+# ---- âncora geográfica: canto NW REAL do prédio + direção do lado norte ----
 venue = json.load(open(VENUE))
 ring = venue["features"][0]["geometry"]["coordinates"][0]
-# vértices nomeados do polígono OSM (ver README legado): NW, NE, SE, SW...
-P_NW = ring[0]   # [-46.6372162, -23.5155046]
-P_NE = ring[1]   # [-46.6347654, -23.5156621]
+# ring[0]/ring[1] são dois vértices do lado norte (definem a direção), mas
+# ring[0] NÃO é o canto NW: o prédio segue ~66m a oeste dele. O canto real é
+# o vértice mais a oeste dentre os que estão sobre o lado norte (y≈0).
+P_REF = ring[0]
+P_NE = ring[1]
 
-LAT0 = P_NW[1]
+LAT0 = P_REF[1]
 M_PER_DEG_LAT = 111320.0
 M_PER_DEG_LON = 111320.0 * math.cos(math.radians(LAT0))
 
 # eixo x̂ = direção do lado norte do prédio (em metros)
-dx_m = (P_NE[0] - P_NW[0]) * M_PER_DEG_LON
-dy_m = (P_NE[1] - P_NW[1]) * M_PER_DEG_LAT
+dx_m = (P_NE[0] - P_REF[0]) * M_PER_DEG_LON
+dy_m = (P_NE[1] - P_REF[1]) * M_PER_DEG_LAT
 norm = math.hypot(dx_m, dy_m)
 UX = (dx_m / norm, dy_m / norm)          # leste do prédio
 UY = (UX[1], -UX[0])                     # sul do prédio (perpendicular, y cresce p/ sul)
 
-# o frame já é relativo à parede NW do hall; margem mínima de segurança
+
+def _frame_of(p):
+    mx = (p[0] - P_REF[0]) * M_PER_DEG_LON
+    my = (p[1] - P_REF[1]) * M_PER_DEG_LAT
+    return (mx * UX[0] + my * UX[1], mx * UY[0] + my * UY[1])
+
+
+_west_x = min(x for x, y in (_frame_of(p) for p in ring) if abs(y) < 5)
+P_NW = [P_REF[0] + _west_x * UX[0] / M_PER_DEG_LON,
+        P_REF[1] + _west_x * UX[1] / M_PER_DEG_LAT]
+
+# margem interna mínima a partir da parede NW real
 ORIGIN_OFFSET_M = (2.0, 2.0)
 
 
