@@ -160,6 +160,30 @@ def main():
             "name": a.get("nome"),
         }))
 
+    # ---- estandes ancorados: anexo (AA-DD), Alameda (TI), Travessa (TL),
+    # células soltas do miolo ----
+    travessa = s.get("travessa", {})
+
+    def nome_de(code):
+        if code and code.startswith("TL"):
+            n = travessa.get(str(int(code[2:])))
+            return n.title() if n else None
+        n = directory.get(code)
+        return n.title() if n else None
+
+    for a in s.get("ancorados", []):
+        feats.append(rect(a["x_m"], a["y_m"], a["x_m"] + a["w_m"], a["y_m"] + a["h_m"], {
+            "kind": "estande",
+            "cat": a["cat"],
+            "code": a["code"],
+            "name": nome_de(a["code"]),
+        }))
+
+    # ruas do anexo (AA-DD)
+    for r in s.get("ruas_anexo", []):
+        feats.append(rect(r["x_m"], r["y_m"], r["x_m"] + r["w_m"], r["y_m"] + r["h_m"],
+                          {"kind": "rua", "name": r["nome"]}))
+
     gj = {"type": "FeatureCollection", "features": feats}
     json.dump(gj, open(OUT, "w"), ensure_ascii=False)
     print(f"features: {len(feats)}")

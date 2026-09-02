@@ -233,8 +233,6 @@ def main():
         if a["cat"] not in AREA_CATS:
             continue
         b = a["bbox"]
-        if b[0] >= MIOLO_X_MAX + 260:   # anexo fica para rodada própria
-            continue
         w_m = (b[2] - b[0]) * M_PER_PT
         h_m = warp(b[3]) - warp(b[1])
         if w_m < 1.0 or h_m < 1.0:
@@ -265,6 +263,40 @@ def main():
     def _norm(s):
         import unicodedata
         return unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode().lower()
+
+    # ---- ancorados: anexo (AA-DD), Alameda (TI), Travessa (TL) e células
+    # soltas do miolo — elementos fora da grade declarativa, com posição
+    # absoluta em metros no mesmo frame ----
+    ids_grade = {c["code"] for f in fileiras for q in f["quadras"]
+                 for col in q["colunas"] for c in col["celulas"]}
+    ancorados = []
+    vistos_anc = set()
+    for st in m["stands"]:
+        if st["id"] in ids_grade or st["id"] in vistos_anc:
+            continue
+        vistos_anc.add(st["id"])
+        b = st["bbox"]
+        w_m = (b[2] - b[0]) * M_PER_PT
+        h_m = warp(b[3]) - warp(b[1])
+        if w_m < 0.5 or h_m < 0.5:
+            pend(f"Ancorado {st['id']}: degenerado — descartado")
+            continue
+        ancorados.append({
+            "code": st["id"], "cat": st["cat"],
+            "x_m": round(frame.x_m(b[0]), 2), "y_m": round(warp(b[1]), 2),
+            "w_m": round(w_m, 2), "h_m": round(h_m, 2),
+        })
+    # ruas do anexo (AA-DD): faixas ancoradas
+    ruas_anexo = []
+    for r in m["ruas"]:
+        if r["name"] and r["bbox"][0] >= MIOLO_X_MAX:
+            b = r["bbox"]
+            ruas_anexo.append({
+                "nome": r["name"], "x_m": round(frame.x_m(b[0]), 2),
+                "y_m": round(warp(b[1]), 2),
+                "w_m": round((b[2] - b[0]) * M_PER_PT, 2),
+                "h_m": round(warp(b[3]) - warp(b[1]), 2),
+            })
 
     dedup_areas = []
     for a in areas_out:
@@ -297,6 +329,8 @@ def main():
         "fileiras": fileiras,
         "ruas_y_pt": [round(rua_y[n], 2) for n in ordem_ruas],
         "areas": areas_out,
+        "ancorados": ancorados,
+        "ruas_anexo": ruas_anexo,
         "directory": directory,
         "travessa": m.get("travessa", {}),
         "pendencias": pending,
