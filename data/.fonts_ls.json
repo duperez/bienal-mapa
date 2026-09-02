@@ -1,0 +1,1106 @@
+[
+  {
+    "name": "CNAME",
+    "path": "CNAME",
+    "sha": "cbc76d32fcfb4e2f189d199d2856d08d2ab7c062",
+    "size": 22,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/CNAME?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/CNAME",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/cbc76d32fcfb4e2f189d199d2856d08d2ab7c062",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/CNAME",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/CNAME?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/cbc76d32fcfb4e2f189d199d2856d08d2ab7c062",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/CNAME"
+    }
+  },
+  {
+    "name": "Klokantech Noto Sans Bold.zip",
+    "path": "Klokantech Noto Sans Bold.zip",
+    "sha": "f7a33b6883701af0faf1e2814ae77e7586c7e387",
+    "size": 1411195,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Bold.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Klokantech%20Noto%20Sans%20Bold.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/f7a33b6883701af0faf1e2814ae77e7586c7e387",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Klokantech%20Noto%20Sans%20Bold.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Bold.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/f7a33b6883701af0faf1e2814ae77e7586c7e387",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Klokantech%20Noto%20Sans%20Bold.zip"
+    }
+  },
+  {
+    "name": "Klokantech Noto Sans Bold",
+    "path": "Klokantech Noto Sans Bold",
+    "sha": "9f8e3bc5082efcd6cc51fbb3edda0ec1b2e8b9fa",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Bold?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Klokantech%20Noto%20Sans%20Bold",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/9f8e3bc5082efcd6cc51fbb3edda0ec1b2e8b9fa",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Bold?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/9f8e3bc5082efcd6cc51fbb3edda0ec1b2e8b9fa",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Klokantech%20Noto%20Sans%20Bold"
+    }
+  },
+  {
+    "name": "Klokantech Noto Sans CJK Bold.zip",
+    "path": "Klokantech Noto Sans CJK Bold.zip",
+    "sha": "8adeebdb9e1546e40fe312499bef0ce76c7a6d7c",
+    "size": 19829931,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20CJK%20Bold.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Klokantech%20Noto%20Sans%20CJK%20Bold.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/8adeebdb9e1546e40fe312499bef0ce76c7a6d7c",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Klokantech%20Noto%20Sans%20CJK%20Bold.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20CJK%20Bold.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/8adeebdb9e1546e40fe312499bef0ce76c7a6d7c",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Klokantech%20Noto%20Sans%20CJK%20Bold.zip"
+    }
+  },
+  {
+    "name": "Klokantech Noto Sans CJK Bold",
+    "path": "Klokantech Noto Sans CJK Bold",
+    "sha": "2d7ff00fc7eddc94c3654400d648e4b0b78ebe12",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20CJK%20Bold?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Klokantech%20Noto%20Sans%20CJK%20Bold",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/2d7ff00fc7eddc94c3654400d648e4b0b78ebe12",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20CJK%20Bold?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/2d7ff00fc7eddc94c3654400d648e4b0b78ebe12",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Klokantech%20Noto%20Sans%20CJK%20Bold"
+    }
+  },
+  {
+    "name": "Klokantech Noto Sans CJK Regular.zip",
+    "path": "Klokantech Noto Sans CJK Regular.zip",
+    "sha": "db063d931f38e13791a526f2f1e2d352edacf9a8",
+    "size": 19109516,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20CJK%20Regular.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Klokantech%20Noto%20Sans%20CJK%20Regular.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/db063d931f38e13791a526f2f1e2d352edacf9a8",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Klokantech%20Noto%20Sans%20CJK%20Regular.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20CJK%20Regular.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/db063d931f38e13791a526f2f1e2d352edacf9a8",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Klokantech%20Noto%20Sans%20CJK%20Regular.zip"
+    }
+  },
+  {
+    "name": "Klokantech Noto Sans CJK Regular",
+    "path": "Klokantech Noto Sans CJK Regular",
+    "sha": "0b2a419567bf638226af8849e6a1a86d6d5a9897",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20CJK%20Regular?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Klokantech%20Noto%20Sans%20CJK%20Regular",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/0b2a419567bf638226af8849e6a1a86d6d5a9897",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20CJK%20Regular?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/0b2a419567bf638226af8849e6a1a86d6d5a9897",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Klokantech%20Noto%20Sans%20CJK%20Regular"
+    }
+  },
+  {
+    "name": "Klokantech Noto Sans Italic.zip",
+    "path": "Klokantech Noto Sans Italic.zip",
+    "sha": "e74018b27e57912ed1991a779407ef2cafd1eb74",
+    "size": 1488666,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Klokantech%20Noto%20Sans%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/e74018b27e57912ed1991a779407ef2cafd1eb74",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Klokantech%20Noto%20Sans%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/e74018b27e57912ed1991a779407ef2cafd1eb74",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Klokantech%20Noto%20Sans%20Italic.zip"
+    }
+  },
+  {
+    "name": "Klokantech Noto Sans Italic",
+    "path": "Klokantech Noto Sans Italic",
+    "sha": "c6e34c68b708136eb7acd50ee649cb688eea45f0",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Klokantech%20Noto%20Sans%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/c6e34c68b708136eb7acd50ee649cb688eea45f0",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/c6e34c68b708136eb7acd50ee649cb688eea45f0",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Klokantech%20Noto%20Sans%20Italic"
+    }
+  },
+  {
+    "name": "Klokantech Noto Sans Regular.zip",
+    "path": "Klokantech Noto Sans Regular.zip",
+    "sha": "0c71bb4db8a4c23c3479e9fa77be44d8f3ae1b38",
+    "size": 1450919,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Regular.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Klokantech%20Noto%20Sans%20Regular.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/0c71bb4db8a4c23c3479e9fa77be44d8f3ae1b38",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Klokantech%20Noto%20Sans%20Regular.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Regular.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/0c71bb4db8a4c23c3479e9fa77be44d8f3ae1b38",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Klokantech%20Noto%20Sans%20Regular.zip"
+    }
+  },
+  {
+    "name": "Klokantech Noto Sans Regular",
+    "path": "Klokantech Noto Sans Regular",
+    "sha": "df67bf066326c9be96ba45a8925cf58ce703d1c2",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Regular?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Klokantech%20Noto%20Sans%20Regular",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/df67bf066326c9be96ba45a8925cf58ce703d1c2",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Klokantech%20Noto%20Sans%20Regular?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/df67bf066326c9be96ba45a8925cf58ce703d1c2",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Klokantech%20Noto%20Sans%20Regular"
+    }
+  },
+  {
+    "name": "Metropolis Black Italic.zip",
+    "path": "Metropolis Black Italic.zip",
+    "sha": "44ef18a612b4764b74a86cf1fc17db1b9010b8e1",
+    "size": 146341,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Black%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Black%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/44ef18a612b4764b74a86cf1fc17db1b9010b8e1",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Black%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Black%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/44ef18a612b4764b74a86cf1fc17db1b9010b8e1",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Black%20Italic.zip"
+    }
+  },
+  {
+    "name": "Metropolis Black Italic",
+    "path": "Metropolis Black Italic",
+    "sha": "9e42f751e659eadf7fd6ae7ad8c9b1a54b5f581c",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Black%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Black%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/9e42f751e659eadf7fd6ae7ad8c9b1a54b5f581c",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Black%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/9e42f751e659eadf7fd6ae7ad8c9b1a54b5f581c",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Black%20Italic"
+    }
+  },
+  {
+    "name": "Metropolis Black.zip",
+    "path": "Metropolis Black.zip",
+    "sha": "1fe6b7e9168634d4e3dfeac2c62282c76576f738",
+    "size": 130485,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Black.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Black.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/1fe6b7e9168634d4e3dfeac2c62282c76576f738",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Black.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Black.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/1fe6b7e9168634d4e3dfeac2c62282c76576f738",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Black.zip"
+    }
+  },
+  {
+    "name": "Metropolis Black",
+    "path": "Metropolis Black",
+    "sha": "6c0c0dc0fcce87a6a3420c9ed9e99394f2c83b72",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Black?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Black",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/6c0c0dc0fcce87a6a3420c9ed9e99394f2c83b72",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Black?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/6c0c0dc0fcce87a6a3420c9ed9e99394f2c83b72",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Black"
+    }
+  },
+  {
+    "name": "Metropolis Bold Italic.zip",
+    "path": "Metropolis Bold Italic.zip",
+    "sha": "49946a4c906498d562962094c4ef40234a8ab126",
+    "size": 143205,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Bold%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Bold%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/49946a4c906498d562962094c4ef40234a8ab126",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Bold%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Bold%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/49946a4c906498d562962094c4ef40234a8ab126",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Bold%20Italic.zip"
+    }
+  },
+  {
+    "name": "Metropolis Bold Italic",
+    "path": "Metropolis Bold Italic",
+    "sha": "d0316785ee53ff2e4be444e1eac2d4419a4c7258",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Bold%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Bold%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/d0316785ee53ff2e4be444e1eac2d4419a4c7258",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Bold%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/d0316785ee53ff2e4be444e1eac2d4419a4c7258",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Bold%20Italic"
+    }
+  },
+  {
+    "name": "Metropolis Bold.zip",
+    "path": "Metropolis Bold.zip",
+    "sha": "ecfdca8b4ed96f8df1ee18301ef340854efad5e2",
+    "size": 126678,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Bold.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Bold.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/ecfdca8b4ed96f8df1ee18301ef340854efad5e2",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Bold.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Bold.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/ecfdca8b4ed96f8df1ee18301ef340854efad5e2",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Bold.zip"
+    }
+  },
+  {
+    "name": "Metropolis Bold",
+    "path": "Metropolis Bold",
+    "sha": "4dda8d22c9ab14fde249d53136abe91ff9d1d1be",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Bold?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Bold",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/4dda8d22c9ab14fde249d53136abe91ff9d1d1be",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Bold?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/4dda8d22c9ab14fde249d53136abe91ff9d1d1be",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Bold"
+    }
+  },
+  {
+    "name": "Metropolis Extra Bold Italic.zip",
+    "path": "Metropolis Extra Bold Italic.zip",
+    "sha": "0270c9200999a5e611b366e187cee771195d4240",
+    "size": 149199,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Bold%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Extra%20Bold%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/0270c9200999a5e611b366e187cee771195d4240",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Extra%20Bold%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Bold%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/0270c9200999a5e611b366e187cee771195d4240",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Extra%20Bold%20Italic.zip"
+    }
+  },
+  {
+    "name": "Metropolis Extra Bold Italic",
+    "path": "Metropolis Extra Bold Italic",
+    "sha": "607e932d9b54c1208be1ef397a16f9d48d714f2f",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Bold%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Extra%20Bold%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/607e932d9b54c1208be1ef397a16f9d48d714f2f",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Bold%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/607e932d9b54c1208be1ef397a16f9d48d714f2f",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Extra%20Bold%20Italic"
+    }
+  },
+  {
+    "name": "Metropolis Extra Bold.zip",
+    "path": "Metropolis Extra Bold.zip",
+    "sha": "644f63cfad204e3b2ec201fcd18f92958227c0f9",
+    "size": 133388,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Bold.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Extra%20Bold.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/644f63cfad204e3b2ec201fcd18f92958227c0f9",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Extra%20Bold.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Bold.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/644f63cfad204e3b2ec201fcd18f92958227c0f9",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Extra%20Bold.zip"
+    }
+  },
+  {
+    "name": "Metropolis Extra Bold",
+    "path": "Metropolis Extra Bold",
+    "sha": "b42ed8ea991c171af89e9fce1c0c233ef2a43825",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Bold?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Extra%20Bold",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/b42ed8ea991c171af89e9fce1c0c233ef2a43825",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Bold?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/b42ed8ea991c171af89e9fce1c0c233ef2a43825",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Extra%20Bold"
+    }
+  },
+  {
+    "name": "Metropolis Extra Light Italic.zip",
+    "path": "Metropolis Extra Light Italic.zip",
+    "sha": "f786033ede06c410550c3f84350012c5c7aea2ab",
+    "size": 139267,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Light%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Extra%20Light%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/f786033ede06c410550c3f84350012c5c7aea2ab",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Extra%20Light%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Light%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/f786033ede06c410550c3f84350012c5c7aea2ab",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Extra%20Light%20Italic.zip"
+    }
+  },
+  {
+    "name": "Metropolis Extra Light Italic",
+    "path": "Metropolis Extra Light Italic",
+    "sha": "530db56eef8b88354336be1f256f96f9551bd2b1",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Light%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Extra%20Light%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/530db56eef8b88354336be1f256f96f9551bd2b1",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Light%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/530db56eef8b88354336be1f256f96f9551bd2b1",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Extra%20Light%20Italic"
+    }
+  },
+  {
+    "name": "Metropolis Extra Light.zip",
+    "path": "Metropolis Extra Light.zip",
+    "sha": "76af93472c91db54bae365ce671131251d10039b",
+    "size": 122707,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Light.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Extra%20Light.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/76af93472c91db54bae365ce671131251d10039b",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Extra%20Light.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Light.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/76af93472c91db54bae365ce671131251d10039b",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Extra%20Light.zip"
+    }
+  },
+  {
+    "name": "Metropolis Extra Light",
+    "path": "Metropolis Extra Light",
+    "sha": "b3af71250f3f67bfa1ff3af6ba208933a123c8f0",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Light?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Extra%20Light",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/b3af71250f3f67bfa1ff3af6ba208933a123c8f0",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Extra%20Light?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/b3af71250f3f67bfa1ff3af6ba208933a123c8f0",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Extra%20Light"
+    }
+  },
+  {
+    "name": "Metropolis Light Italic.zip",
+    "path": "Metropolis Light Italic.zip",
+    "sha": "18ae81821ccffe3afa54a383551780f8e21e26fb",
+    "size": 137056,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Light%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Light%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/18ae81821ccffe3afa54a383551780f8e21e26fb",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Light%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Light%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/18ae81821ccffe3afa54a383551780f8e21e26fb",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Light%20Italic.zip"
+    }
+  },
+  {
+    "name": "Metropolis Light Italic",
+    "path": "Metropolis Light Italic",
+    "sha": "56ab72e4a4eba7cbc224e6f68b03002061ea5613",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Light%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Light%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/56ab72e4a4eba7cbc224e6f68b03002061ea5613",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Light%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/56ab72e4a4eba7cbc224e6f68b03002061ea5613",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Light%20Italic"
+    }
+  },
+  {
+    "name": "Metropolis Light.zip",
+    "path": "Metropolis Light.zip",
+    "sha": "759ab58762ef25336edf04087bd0af8b679cf7d4",
+    "size": 119751,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Light.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Light.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/759ab58762ef25336edf04087bd0af8b679cf7d4",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Light.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Light.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/759ab58762ef25336edf04087bd0af8b679cf7d4",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Light.zip"
+    }
+  },
+  {
+    "name": "Metropolis Light",
+    "path": "Metropolis Light",
+    "sha": "69bf2f2d0b10818e541d65d6c53efffe4f3482f5",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Light?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Light",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/69bf2f2d0b10818e541d65d6c53efffe4f3482f5",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Light?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/69bf2f2d0b10818e541d65d6c53efffe4f3482f5",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Light"
+    }
+  },
+  {
+    "name": "Metropolis Medium Italic.zip",
+    "path": "Metropolis Medium Italic.zip",
+    "sha": "b72f7bf6fbf14c393886afa728c2e115f9b2f823",
+    "size": 139820,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Medium%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Medium%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/b72f7bf6fbf14c393886afa728c2e115f9b2f823",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Medium%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Medium%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/b72f7bf6fbf14c393886afa728c2e115f9b2f823",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Medium%20Italic.zip"
+    }
+  },
+  {
+    "name": "Metropolis Medium Italic",
+    "path": "Metropolis Medium Italic",
+    "sha": "78b4d7f61d0a9461782ba0b66933c02945487873",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Medium%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Medium%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/78b4d7f61d0a9461782ba0b66933c02945487873",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Medium%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/78b4d7f61d0a9461782ba0b66933c02945487873",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Medium%20Italic"
+    }
+  },
+  {
+    "name": "Metropolis Medium.zip",
+    "path": "Metropolis Medium.zip",
+    "sha": "4b52ed49002415003cf62341ef9a9289b2055f37",
+    "size": 122806,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Medium.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Medium.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/4b52ed49002415003cf62341ef9a9289b2055f37",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Medium.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Medium.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/4b52ed49002415003cf62341ef9a9289b2055f37",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Medium.zip"
+    }
+  },
+  {
+    "name": "Metropolis Medium",
+    "path": "Metropolis Medium",
+    "sha": "9be2c2f3b0b2b04e087d254527e3d9bb8dba9933",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Medium?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Medium",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/9be2c2f3b0b2b04e087d254527e3d9bb8dba9933",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Medium?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/9be2c2f3b0b2b04e087d254527e3d9bb8dba9933",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Medium"
+    }
+  },
+  {
+    "name": "Metropolis Regular Italic.zip",
+    "path": "Metropolis Regular Italic.zip",
+    "sha": "e72a6653b583b134ed54bc9e7ee361f522a68b9a",
+    "size": 138398,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Regular%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Regular%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/e72a6653b583b134ed54bc9e7ee361f522a68b9a",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Regular%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Regular%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/e72a6653b583b134ed54bc9e7ee361f522a68b9a",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Regular%20Italic.zip"
+    }
+  },
+  {
+    "name": "Metropolis Regular Italic",
+    "path": "Metropolis Regular Italic",
+    "sha": "86fb1b804b292a2c3bd9d2dabd50f1b04f6da3c1",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Regular%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Regular%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/86fb1b804b292a2c3bd9d2dabd50f1b04f6da3c1",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Regular%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/86fb1b804b292a2c3bd9d2dabd50f1b04f6da3c1",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Regular%20Italic"
+    }
+  },
+  {
+    "name": "Metropolis Regular.zip",
+    "path": "Metropolis Regular.zip",
+    "sha": "8ff6bc5bae1110b4a9ed11c0bffd483d43cec6b1",
+    "size": 121756,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Regular.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Regular.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/8ff6bc5bae1110b4a9ed11c0bffd483d43cec6b1",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Regular.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Regular.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/8ff6bc5bae1110b4a9ed11c0bffd483d43cec6b1",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Regular.zip"
+    }
+  },
+  {
+    "name": "Metropolis Regular",
+    "path": "Metropolis Regular",
+    "sha": "5d68711617258ca1541239fbd09a82a29362507c",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Regular?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Regular",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/5d68711617258ca1541239fbd09a82a29362507c",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Regular?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/5d68711617258ca1541239fbd09a82a29362507c",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Regular"
+    }
+  },
+  {
+    "name": "Metropolis Semi Bold Italic.zip",
+    "path": "Metropolis Semi Bold Italic.zip",
+    "sha": "86030cb8e79ae3e6bc0efb23d2c8c110e15467f1",
+    "size": 143642,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Semi%20Bold%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Semi%20Bold%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/86030cb8e79ae3e6bc0efb23d2c8c110e15467f1",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Semi%20Bold%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Semi%20Bold%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/86030cb8e79ae3e6bc0efb23d2c8c110e15467f1",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Semi%20Bold%20Italic.zip"
+    }
+  },
+  {
+    "name": "Metropolis Semi Bold Italic",
+    "path": "Metropolis Semi Bold Italic",
+    "sha": "ae72d6389c9e72cf4bb6c3fd8dcacd84c7912eb6",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Semi%20Bold%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Semi%20Bold%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/ae72d6389c9e72cf4bb6c3fd8dcacd84c7912eb6",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Semi%20Bold%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/ae72d6389c9e72cf4bb6c3fd8dcacd84c7912eb6",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Semi%20Bold%20Italic"
+    }
+  },
+  {
+    "name": "Metropolis Semi Bold.zip",
+    "path": "Metropolis Semi Bold.zip",
+    "sha": "5479634e9483bbbaa94ea78eb2ef6b9d61937c9d",
+    "size": 127396,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Semi%20Bold.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Semi%20Bold.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/5479634e9483bbbaa94ea78eb2ef6b9d61937c9d",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Semi%20Bold.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Semi%20Bold.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/5479634e9483bbbaa94ea78eb2ef6b9d61937c9d",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Semi%20Bold.zip"
+    }
+  },
+  {
+    "name": "Metropolis Semi Bold",
+    "path": "Metropolis Semi Bold",
+    "sha": "19de66c9eaa8b230164d10137c485bd496a4815a",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Semi%20Bold?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Semi%20Bold",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/19de66c9eaa8b230164d10137c485bd496a4815a",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Semi%20Bold?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/19de66c9eaa8b230164d10137c485bd496a4815a",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Semi%20Bold"
+    }
+  },
+  {
+    "name": "Metropolis Thin Italic.zip",
+    "path": "Metropolis Thin Italic.zip",
+    "sha": "3dda6f38a0ba0b677d5d83683ecb4153050b1cde",
+    "size": 132261,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Thin%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Thin%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/3dda6f38a0ba0b677d5d83683ecb4153050b1cde",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Thin%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Thin%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/3dda6f38a0ba0b677d5d83683ecb4153050b1cde",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Thin%20Italic.zip"
+    }
+  },
+  {
+    "name": "Metropolis Thin Italic",
+    "path": "Metropolis Thin Italic",
+    "sha": "bee7a220a374d2f78d4daf1799c57f47934f9ee1",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Thin%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Thin%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/bee7a220a374d2f78d4daf1799c57f47934f9ee1",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Thin%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/bee7a220a374d2f78d4daf1799c57f47934f9ee1",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Thin%20Italic"
+    }
+  },
+  {
+    "name": "Metropolis Thin.zip",
+    "path": "Metropolis Thin.zip",
+    "sha": "8d9dd4dd04673bc904678a24ce5883c55409d070",
+    "size": 115918,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Thin.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Thin.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/8d9dd4dd04673bc904678a24ce5883c55409d070",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Metropolis%20Thin.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Thin.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/8d9dd4dd04673bc904678a24ce5883c55409d070",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Metropolis%20Thin.zip"
+    }
+  },
+  {
+    "name": "Metropolis Thin",
+    "path": "Metropolis Thin",
+    "sha": "e37e0b15d56f67559bfee2f838b830b6dd762ed7",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Thin?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Thin",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/e37e0b15d56f67559bfee2f838b830b6dd762ed7",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Metropolis%20Thin?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/e37e0b15d56f67559bfee2f838b830b6dd762ed7",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Metropolis%20Thin"
+    }
+  },
+  {
+    "name": "Open Sans Bold Italic.zip",
+    "path": "Open Sans Bold Italic.zip",
+    "sha": "0a2410b9bb964c6ea5fc803fb782819df341d4ee",
+    "size": 286850,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Bold%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Bold%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/0a2410b9bb964c6ea5fc803fb782819df341d4ee",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Open%20Sans%20Bold%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Bold%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/0a2410b9bb964c6ea5fc803fb782819df341d4ee",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Bold%20Italic.zip"
+    }
+  },
+  {
+    "name": "Open Sans Bold Italic",
+    "path": "Open Sans Bold Italic",
+    "sha": "f05d92aad908be6f3378432a5024f909732d978e",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Bold%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Bold%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/f05d92aad908be6f3378432a5024f909732d978e",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Bold%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/f05d92aad908be6f3378432a5024f909732d978e",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Bold%20Italic"
+    }
+  },
+  {
+    "name": "Open Sans Bold.zip",
+    "path": "Open Sans Bold.zip",
+    "sha": "26afe030aa23b717b7fa918fc5b946ef9a0dc529",
+    "size": 259373,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Bold.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Bold.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/26afe030aa23b717b7fa918fc5b946ef9a0dc529",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Open%20Sans%20Bold.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Bold.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/26afe030aa23b717b7fa918fc5b946ef9a0dc529",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Bold.zip"
+    }
+  },
+  {
+    "name": "Open Sans Bold",
+    "path": "Open Sans Bold",
+    "sha": "1a84dc4ba3283ada5cd34432743685c9e0562839",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Bold?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Bold",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/1a84dc4ba3283ada5cd34432743685c9e0562839",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Bold?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/1a84dc4ba3283ada5cd34432743685c9e0562839",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Bold"
+    }
+  },
+  {
+    "name": "Open Sans Extra Bold Italic.zip",
+    "path": "Open Sans Extra Bold Italic.zip",
+    "sha": "22dd04a9f6ffe95bfbde9da51c5efcf99a193011",
+    "size": 301910,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Extra%20Bold%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Extra%20Bold%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/22dd04a9f6ffe95bfbde9da51c5efcf99a193011",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Open%20Sans%20Extra%20Bold%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Extra%20Bold%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/22dd04a9f6ffe95bfbde9da51c5efcf99a193011",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Extra%20Bold%20Italic.zip"
+    }
+  },
+  {
+    "name": "Open Sans Extra Bold Italic",
+    "path": "Open Sans Extra Bold Italic",
+    "sha": "7355f854a0b824069a69b5e0f8c5f13fcb8a3db4",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Extra%20Bold%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Extra%20Bold%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/7355f854a0b824069a69b5e0f8c5f13fcb8a3db4",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Extra%20Bold%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/7355f854a0b824069a69b5e0f8c5f13fcb8a3db4",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Extra%20Bold%20Italic"
+    }
+  },
+  {
+    "name": "Open Sans Extra Bold.zip",
+    "path": "Open Sans Extra Bold.zip",
+    "sha": "c96b07bd8dc304ae0e928ea3bac0ed712c69f7a7",
+    "size": 271857,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Extra%20Bold.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Extra%20Bold.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/c96b07bd8dc304ae0e928ea3bac0ed712c69f7a7",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Open%20Sans%20Extra%20Bold.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Extra%20Bold.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/c96b07bd8dc304ae0e928ea3bac0ed712c69f7a7",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Extra%20Bold.zip"
+    }
+  },
+  {
+    "name": "Open Sans Extra Bold",
+    "path": "Open Sans Extra Bold",
+    "sha": "39667001d8562fd1ea850dd0c467aad1064f5ec2",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Extra%20Bold?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Extra%20Bold",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/39667001d8562fd1ea850dd0c467aad1064f5ec2",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Extra%20Bold?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/39667001d8562fd1ea850dd0c467aad1064f5ec2",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Extra%20Bold"
+    }
+  },
+  {
+    "name": "Open Sans Italic.zip",
+    "path": "Open Sans Italic.zip",
+    "sha": "43c5d4e92d0b008113ee679b3253a664dcde9888",
+    "size": 269605,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/43c5d4e92d0b008113ee679b3253a664dcde9888",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Open%20Sans%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/43c5d4e92d0b008113ee679b3253a664dcde9888",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Italic.zip"
+    }
+  },
+  {
+    "name": "Open Sans Italic",
+    "path": "Open Sans Italic",
+    "sha": "f2ab5467240d2882971ddbe85fa24c2783eac377",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/f2ab5467240d2882971ddbe85fa24c2783eac377",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/f2ab5467240d2882971ddbe85fa24c2783eac377",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Italic"
+    }
+  },
+  {
+    "name": "Open Sans Light Italic.zip",
+    "path": "Open Sans Light Italic.zip",
+    "sha": "01a89a37cfe7fcfa4537a91288231baa8de1002f",
+    "size": 264869,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Light%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Light%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/01a89a37cfe7fcfa4537a91288231baa8de1002f",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Open%20Sans%20Light%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Light%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/01a89a37cfe7fcfa4537a91288231baa8de1002f",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Light%20Italic.zip"
+    }
+  },
+  {
+    "name": "Open Sans Light Italic",
+    "path": "Open Sans Light Italic",
+    "sha": "77de6073d6b256b1819cca9e8f5dc2ceb4bdee77",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Light%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Light%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/77de6073d6b256b1819cca9e8f5dc2ceb4bdee77",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Light%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/77de6073d6b256b1819cca9e8f5dc2ceb4bdee77",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Light%20Italic"
+    }
+  },
+  {
+    "name": "Open Sans Light.zip",
+    "path": "Open Sans Light.zip",
+    "sha": "cf1c78f65bfe7c24d0c3f122df8446802867196b",
+    "size": 234392,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Light.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Light.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/cf1c78f65bfe7c24d0c3f122df8446802867196b",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Open%20Sans%20Light.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Light.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/cf1c78f65bfe7c24d0c3f122df8446802867196b",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Light.zip"
+    }
+  },
+  {
+    "name": "Open Sans Light",
+    "path": "Open Sans Light",
+    "sha": "6e0e574697f1cae25d35e04b8a6defb908e63337",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Light?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Light",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/6e0e574697f1cae25d35e04b8a6defb908e63337",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Light?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/6e0e574697f1cae25d35e04b8a6defb908e63337",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Light"
+    }
+  },
+  {
+    "name": "Open Sans Regular.zip",
+    "path": "Open Sans Regular.zip",
+    "sha": "569f66ac22ad4d07a99db6102f5c689e9b5c7dea",
+    "size": 249501,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Regular.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Regular.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/569f66ac22ad4d07a99db6102f5c689e9b5c7dea",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Open%20Sans%20Regular.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Regular.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/569f66ac22ad4d07a99db6102f5c689e9b5c7dea",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Regular.zip"
+    }
+  },
+  {
+    "name": "Open Sans Regular",
+    "path": "Open Sans Regular",
+    "sha": "528e7d3833f2627d13afb5671ae3fcffff16fa89",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Regular?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Regular",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/528e7d3833f2627d13afb5671ae3fcffff16fa89",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Regular?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/528e7d3833f2627d13afb5671ae3fcffff16fa89",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Regular"
+    }
+  },
+  {
+    "name": "Open Sans Semibold Italic.zip",
+    "path": "Open Sans Semibold Italic.zip",
+    "sha": "4169a4b55f82233294f58e0933558f9d534dbfc2",
+    "size": 285566,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Semibold%20Italic.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Semibold%20Italic.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/4169a4b55f82233294f58e0933558f9d534dbfc2",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Open%20Sans%20Semibold%20Italic.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Semibold%20Italic.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/4169a4b55f82233294f58e0933558f9d534dbfc2",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Semibold%20Italic.zip"
+    }
+  },
+  {
+    "name": "Open Sans Semibold Italic",
+    "path": "Open Sans Semibold Italic",
+    "sha": "854917cba882012b51cb0ebee78d46887db8fcd5",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Semibold%20Italic?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Semibold%20Italic",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/854917cba882012b51cb0ebee78d46887db8fcd5",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Semibold%20Italic?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/854917cba882012b51cb0ebee78d46887db8fcd5",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Semibold%20Italic"
+    }
+  },
+  {
+    "name": "Open Sans Semibold.zip",
+    "path": "Open Sans Semibold.zip",
+    "sha": "0d8540457e1583c98aadc8801a36426616547b1c",
+    "size": 258187,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Semibold.zip?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Semibold.zip",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/0d8540457e1583c98aadc8801a36426616547b1c",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/Open%20Sans%20Semibold.zip",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Semibold.zip?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/0d8540457e1583c98aadc8801a36426616547b1c",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/Open%20Sans%20Semibold.zip"
+    }
+  },
+  {
+    "name": "Open Sans Semibold",
+    "path": "Open Sans Semibold",
+    "sha": "35c140d5d8264bc9e35159ba1d94ad6f2a8454d1",
+    "size": 0,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Semibold?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Semibold",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/trees/35c140d5d8264bc9e35159ba1d94ad6f2a8454d1",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/Open%20Sans%20Semibold?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/trees/35c140d5d8264bc9e35159ba1d94ad6f2a8454d1",
+      "html": "https://github.com/openmaptiles/fonts/tree/gh-pages/Open%20Sans%20Semibold"
+    }
+  },
+  {
+    "name": "fontstacks.json",
+    "path": "fontstacks.json",
+    "sha": "1b06d028755d62390962668cd53154f4feb002e8",
+    "size": 986,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/fontstacks.json?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/fontstacks.json",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/1b06d028755d62390962668cd53154f4feb002e8",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/fontstacks.json",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/fontstacks.json?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/1b06d028755d62390962668cd53154f4feb002e8",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/fontstacks.json"
+    }
+  },
+  {
+    "name": "index.html",
+    "path": "index.html",
+    "sha": "6409c87e4c83b5bb4df12861238b30429c799e8c",
+    "size": 2725,
+    "url": "https://api.github.com/repos/openmaptiles/fonts/contents/index.html?ref=gh-pages",
+    "html_url": "https://github.com/openmaptiles/fonts/blob/gh-pages/index.html",
+    "git_url": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/6409c87e4c83b5bb4df12861238b30429c799e8c",
+    "download_url": "https://raw.githubusercontent.com/openmaptiles/fonts/gh-pages/index.html",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/openmaptiles/fonts/contents/index.html?ref=gh-pages",
+      "git": "https://api.github.com/repos/openmaptiles/fonts/git/blobs/6409c87e4c83b5bb4df12861238b30429c799e8c",
+      "html": "https://github.com/openmaptiles/fonts/blob/gh-pages/index.html"
+    }
+  }
+]

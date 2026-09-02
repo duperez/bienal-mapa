@@ -30,9 +30,10 @@ const VENUE_BEARING = 4;
 
 const map = new MlMap({
   container: "map",
-  // estilo 100% local: fundo neutro; sem fontes/tiles remotos (offline-first)
+  // estilo 100% local: fundo neutro, glyphs de fonte servidos pelo próprio app
   style: {
     version: 8,
+    glyphs: `${location.origin}${import.meta.env.BASE_URL}glyphs/{fontstack}/{range}.pbf`,
     sources: {},
     layers: [
       { id: "background", type: "background", paint: { "background-color": "#e4e1db" } },
@@ -135,6 +136,67 @@ map.on("load", async () => {
       "line-color": "#d3cfc7",
       // borda hairline que só engrossa de leve com o zoom
       "line-width": ["interpolate", ["linear"], ["zoom"], 16, 0.4, 20, 1.2],
+    },
+  });
+
+  // ---- rótulos: colisão e densidade por zoom são do motor ----
+  map.addLayer({
+    id: "ruas-nome",
+    type: "symbol",
+    source: "mapa",
+    filter: ["all", ["==", ["get", "kind"], "rua"], ["has", "name"]],
+    minzoom: 16,
+    layout: {
+      "text-field": ["get", "name"],
+      "text-font": ["Klokantech Noto Sans Regular"],
+      "text-size": 11,
+      "text-letter-spacing": 0.15,
+    },
+    paint: {
+      "text-color": "#8a857b",
+      "text-halo-color": "#ddd6c8",
+      "text-halo-width": 1.2,
+    },
+  });
+
+  map.addLayer({
+    id: "estandes-nome",
+    type: "symbol",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "estande"],
+    minzoom: 17.5,
+    layout: {
+      "text-field": ["coalesce", ["get", "name"], ["get", "code"]],
+      "text-font": ["Klokantech Noto Sans Regular"],
+      "text-size": ["interpolate", ["linear"], ["zoom"], 17.5, 10, 20, 14],
+      "text-max-width": 7,
+      "text-padding": 4,
+    },
+    paint: {
+      "text-color": "#202124",
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.4,
+    },
+  });
+
+  map.addLayer({
+    id: "estandes-codigo",
+    type: "symbol",
+    source: "mapa",
+    filter: ["all", ["==", ["get", "kind"], "estande"], ["has", "name"]],
+    minzoom: 19,
+    layout: {
+      "text-field": ["get", "code"],
+      "text-font": ["Klokantech Noto Sans Regular"],
+      "text-size": 9,
+      "text-offset": [0, 1.6],
+      "text-anchor": "top",
+      "text-padding": 2,
+    },
+    paint: {
+      "text-color": "#5f6368",
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.2,
     },
   });
 });
