@@ -4,7 +4,11 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // O worker do MapLibre v6 vive num arquivo separado resolvido via
 // import.meta.url — no dev do Vite esse caminho não existe no diretório de
 // deps otimizados e o mapa trava em silêncio. Servimos a URL via bundler:
-import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
+// "?worker&url": o Vite EMPACOTA o worker com as dependências dele e devolve a
+// URL do chunk completo. Com "?url" puro, o arquivo é copiado cru e o import
+// interno de maplibre-gl-shared.mjs dá 404 no build — worker morre em
+// silêncio e nenhuma source processa (mapa "vazio" só em produção).
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "./style.css";
 
 setWorkerUrl(maplibreWorkerUrl);
