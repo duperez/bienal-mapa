@@ -1,5 +1,6 @@
 import { Map as MlMap, AttributionControl, setWorkerUrl } from "maplibre-gl";
 import { attachSearchUI, buildIndex, subtitle, type Hit } from "./search";
+import { addPoiIcons } from "./icons";
 import "maplibre-gl/dist/maplibre-gl.css";
 // O worker do MapLibre v6 vive num arquivo separado resolvido via
 // import.meta.url — no dev do Vite esse caminho não existe no diretório de
@@ -175,6 +176,7 @@ map.on("load", async () => {
     filter: ["==", ["get", "kind"], "rua"],
     paint: { "fill-color": "#ddd6c8" },
   });
+  // chão quieto: fills suaves — a cor forte fica no pin/rótulo (padrão GMaps)
   map.addLayer({
     id: "areas",
     type: "fill",
@@ -183,11 +185,11 @@ map.on("load", async () => {
     paint: {
       "fill-color": [
         "match", ["get", "cat"],
-        "alimentacao", "#ffdca8",
-        "cultural", "#b9e0f2",
-        "servico", "#e2ded6",
-        "infra", "#d5e6d0",
-        "#e2ded6",
+        "alimentacao", "#ffe8c4",
+        "cultural", "#d5eaf4",
+        "servico", "#e6e2da",
+        "infra", "#ddead8",
+        "#e6e2da",
       ],
     },
   });
@@ -199,12 +201,12 @@ map.on("load", async () => {
     paint: {
       "line-color": [
         "match", ["get", "cat"],
-        "alimentacao", "#b36b00",
-        "cultural", "#0072a8",
-        "#b9b4aa",
+        "alimentacao", "#d9a253",
+        "cultural", "#7db8d4",
+        "#c5c0b6",
       ],
       "line-width": 1,
-      "line-opacity": 0.6,
+      "line-opacity": 0.5,
     },
   });
   map.addLayer({
@@ -234,40 +236,125 @@ map.on("load", async () => {
   });
 
   // ---- rótulos: colisão e densidade por zoom são do motor ----
+  addPoiIcons(map);
+
+  // áreas como POI: pin circular colorido + nome (linguagem do Google Maps).
+  // Serviço sem nome = banheiro (pin WC, só ícone).
   map.addLayer({
-    id: "areas-nome",
+    id: "areas-poi",
     type: "symbol",
     source: "mapa",
-    filter: ["all", ["==", ["get", "kind"], "area"], ["has", "name"]],
-    minzoom: 15.5,
+    filter: [
+      "all",
+      ["==", ["get", "kind"], "area"],
+      ["has", "name"],
+      ["!=", ["get", "cat"], "servico"],
+      ["!=", ["get", "cat"], "infra"],
+    ],
+    minzoom: 15.6,
     layout: {
+      "icon-image": [
+        "case",
+        ["!", ["has", "name"]],
+        "poi-wc",
+        [
+          "match", ["get", "cat"],
+          "alimentacao", "poi-alimentacao",
+          "cultural", "poi-cultural",
+          "poi-servico",
+        ],
+      ],
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 15.6, 0.72, 18, 1],
       "text-field": ["get", "name"],
       "text-font": ["Klokantech Noto Sans Bold"],
-      "text-size": ["interpolate", ["linear"], ["zoom"], 15.5, 10, 19, 13],
+      "text-size": ["interpolate", ["linear"], ["zoom"], 15.6, 10, 19, 12.5],
       "text-max-width": 8,
-      "text-padding": 6,
+      "text-padding": 4,
+      "text-anchor": "top",
+      "text-offset": [0, 1.05],
+      "text-optional": true,
       // área maior ganha a disputa por espaço de rótulo
       "symbol-sort-key": ["-", 0, ["coalesce", ["get", "peso"], 0]],
     },
     paint: {
       "text-color": [
         "match", ["get", "cat"],
-        "alimentacao", "#7a4100",
-        "cultural", "#00516e",
-        "#474747",
+        "alimentacao", "#8a5200",
+        "cultural", "#0a628a",
+        "#5a564e",
       ],
       "text-halo-color": "#ffffff",
-      "text-halo-width": 1.2,
+      "text-halo-width": 1.3,
     },
   });
 
+  // serviços e banheiros: pins entram um passo de zoom depois (densidade GMaps)
+  map.addLayer({
+    id: "areas-poi-servico",
+    type: "symbol",
+    source: "mapa",
+    filter: [
+      "all",
+      ["==", ["get", "kind"], "area"],
+      ["any", ["==", ["get", "cat"], "servico"], ["==", ["get", "cat"], "infra"]],
+      ["any", ["has", "name"], ["==", ["get", "cat"], "servico"]],
+    ],
+    minzoom: 16.8,
+    layout: {
+      "icon-image": ["case", ["!", ["has", "name"]], "poi-wc", "poi-servico"],
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 16.8, 0.78, 18.5, 1],
+      "text-field": ["get", "name"],
+      "text-font": ["Klokantech Noto Sans Bold"],
+      "text-size": 11.5,
+      "text-max-width": 8,
+      "text-padding": 4,
+      "text-anchor": "top",
+      "text-offset": [0, 1.05],
+      "text-optional": true,
+    },
+    paint: {
+      "text-color": "#5a564e",
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.3,
+    },
+  });
+
+  // entradas: os POIs mais importantes de um mapa de evento
+  map.addLayer({
+    id: "pois-entrada",
+    type: "symbol",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "poi"],
+    minzoom: 15,
+    layout: {
+      "icon-image": "poi-entrada",
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 15, 0.72, 18, 1],
+      "text-field": ["get", "name"],
+      "text-font": ["Klokantech Noto Sans Bold"],
+      "text-size": 11.5,
+      "text-max-width": 7,
+      "text-anchor": "top",
+      "text-offset": [0, 1.05],
+      "text-optional": true,
+      "symbol-sort-key": -99999,
+    },
+    paint: {
+      "text-color": "#186439",
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.3,
+    },
+  });
+
+  // nome da rua corre AO LONGO da via, repetindo
   map.addLayer({
     id: "ruas-nome",
     type: "symbol",
     source: "mapa",
-    filter: ["all", ["==", ["get", "kind"], "rua"], ["has", "name"]],
+    filter: ["==", ["get", "kind"], "rua-eixo"],
     minzoom: 16,
     layout: {
+      "symbol-placement": "line",
+      "symbol-spacing": 320,
       "text-field": ["get", "name"],
       "text-font": ["Klokantech Noto Sans Regular"],
       "text-size": 11,
@@ -278,7 +365,7 @@ map.on("load", async () => {
       "text-halo-color": "#ddd6c8",
       "text-halo-width": 1.2,
     },
-  });
+  }, "areas-poi");
 
   map.addLayer({
     id: "estandes-nome",
@@ -298,7 +385,7 @@ map.on("load", async () => {
       "text-halo-color": "#ffffff",
       "text-halo-width": 1.4,
     },
-  });
+  }, "areas-poi");
 
   // destaque de seleção: source dedicada, atualizada ao selecionar
   map.addSource("sel", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
@@ -309,7 +396,7 @@ map.on("load", async () => {
       source: "sel",
       paint: { "fill-color": "#ffd200", "fill-opacity": 0.85 },
     },
-    "areas-nome",
+    "areas-poi",
   );
   map.addLayer(
     {
@@ -318,7 +405,7 @@ map.on("load", async () => {
       source: "sel",
       paint: { "line-color": "#8a7000", "line-width": 2 },
     },
-    "areas-nome",
+    "areas-poi",
   );
 
   // cabines minúsculas (Travessa/Alameda/fileira AA): nome só bem de perto
@@ -340,7 +427,7 @@ map.on("load", async () => {
       "text-halo-color": "#ffffff",
       "text-halo-width": 1.4,
     },
-  });
+  }, "areas-poi");
 
   map.addLayer({
     id: "estandes-codigo",
@@ -361,7 +448,7 @@ map.on("load", async () => {
       "text-halo-color": "#ffffff",
       "text-halo-width": 1.2,
     },
-  });
+  }, "areas-poi");
 
   // ---- busca + seleção ----
   const setSel = (features: GeoJSON.Feature[]) =>

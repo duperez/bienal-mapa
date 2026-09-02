@@ -112,6 +112,16 @@ def main():
             rua_nome = banda[0]
             feats.append(rect(WEST, y, EAST, y + rua_h,
                               {"kind": "rua", "name": f"RUA {rua_nome}"}))
+            # eixo da rua: o nome corre AO LONGO da via (estilo Google Maps),
+            # apenas no trecho com quadras (não sobre praças/áreas vizinhas)
+            feats.append({
+                "type": "Feature",
+                "properties": {"kind": "rua-eixo", "name": f"RUA {rua_nome}"},
+                "geometry": {"type": "LineString", "coordinates": [
+                    to_lnglat(min(extent), y + rua_h / 2),
+                    to_lnglat(max(fim), y + rua_h / 2),
+                ]},
+            })
             y += rua_h
 
         top = y + (banda_h - cel_prof) / 2 if eh_rua_banda else y + respiro
@@ -197,6 +207,23 @@ def main():
     for r in s.get("ruas_anexo", []):
         feats.append(rect(r["x_m"], r["y_m"], r["x_m"] + r["w_m"], r["y_m"] + r["h_m"],
                           {"kind": "rua", "name": r["nome"]}))
+        ym = r["y_m"] + r["h_m"] / 2
+        feats.append({
+            "type": "Feature",
+            "properties": {"kind": "rua-eixo", "name": r["nome"]},
+            "geometry": {"type": "LineString", "coordinates": [
+                to_lnglat(r["x_m"], ym), to_lnglat(r["x_m"] + r["w_m"], ym),
+            ]},
+        })
+
+    # POIs (entradas etc., extraídos do mapa oficial pelo importador)
+    for p in s.get("pois", []):
+        feats.append({
+            "type": "Feature",
+            "properties": {"kind": "poi", "cat": p["cat"], "name": p["nome"]},
+            "geometry": {"type": "Point",
+                          "coordinates": to_lnglat(p["x_m"], p["y_m"])},
+        })
 
     gj = {"type": "FeatureCollection", "features": feats}
     json.dump(gj, open(OUT, "w"), ensure_ascii=False)

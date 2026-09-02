@@ -2514,7 +2514,7 @@
   {
    "code": "K38",
    "cat": "cultural",
-   "nome": "Espaço Bem-estar",
+   "nome": "Espaço Bem-Estar",
    "x_m": 164.7,
    "y_m": 12.64,
    "w_m": 7.85,
@@ -3750,6 +3750,74 @@
    "y_m": 160.16,
    "w_m": 8.52,
    "h_m": 2.49
+  }
+ ],
+ "pois": [
+  {
+   "nome": "Portão 7",
+   "cat": "entrada",
+   "x_m": 11.39,
+   "y_m": -1.87
+  },
+  {
+   "nome": "Portão 8",
+   "cat": "entrada",
+   "x_m": 162.54,
+   "y_m": -1.87
+  },
+  {
+   "nome": "Portão 9",
+   "cat": "entrada",
+   "x_m": 207.64,
+   "y_m": -4.82
+  },
+  {
+   "nome": "Portão 10",
+   "cat": "entrada",
+   "x_m": 251.65,
+   "y_m": -1.87
+  },
+  {
+   "nome": "Portão 5",
+   "cat": "entrada",
+   "x_m": 3.35,
+   "y_m": 176.26
+  },
+  {
+   "nome": "Acesso Hall 01",
+   "cat": "entrada",
+   "x_m": 223.22,
+   "y_m": 187.74
+  },
+  {
+   "nome": "Entrada do Público",
+   "cat": "entrada",
+   "x_m": 223.22,
+   "y_m": 168.95
+  },
+  {
+   "nome": "Acesso Hall 02",
+   "cat": "entrada",
+   "x_m": 167.83,
+   "y_m": 192.33
+  },
+  {
+   "nome": "Acesso Hall 04",
+   "cat": "entrada",
+   "x_m": 75.01,
+   "y_m": 192.33
+  },
+  {
+   "nome": "Acesso Hall 03",
+   "cat": "entrada",
+   "x_m": 121.96,
+   "y_m": 192.33
+  },
+  {
+   "nome": "Acesso Hall 05",
+   "cat": "entrada",
+   "x_m": 29.15,
+   "y_m": 192.33
   }
  ],
  "directory": {

@@ -305,6 +305,50 @@ def main():
                 "h_m": round(warp(b[3]) - warp(b[1]), 2),
             })
 
+    # ---- POIs de entrada: extraídos dos TEXTOS do PDF oficial (portões,
+    # acessos, entrada pública) — num mapa de evento, entradas são âncoras ----
+    pois = []
+    try:
+        import pymupdf
+        page = pymupdf.open("reference/mapa-oficial.pdf")[0]
+        words = [(x0, y0, x1, y1, t) for x0, y0, x1, y1, t, *_ in page.get_text("words")
+                 if y0 < 950]
+
+        def add_poi(nome, x0, y0, x1, y1):
+            pois.append({"nome": nome, "cat": "entrada",
+                          "x_m": round(frame.x_m((x0 + x1) / 2), 2),
+                          "y_m": round(warp((y0 + y1) / 2), 2)})
+
+        # os NÚMEROS dos portões são desenho (curvas), não texto — a numeração
+        # vem da ordem verificada no mapa oficial: topo oeste->leste = 7,8,9,10;
+        # o do sudoeste = 5
+        portoes = sorted([w for w in words if w[4] == "PORTÃO" and w[1] < 100],
+                         key=lambda w: w[0])
+        for w, num in zip(portoes, [7, 8, 9, 10]):
+            add_poi(f"Portão {num}", w[0], w[1], w[2], w[3] + 25)
+        p5 = next((w for w in words if w[4] == "PORTÃO" and w[1] > 700), None)
+        if p5:
+            add_poi("Portão 5", p5[0], p5[1], p5[2], p5[3] + 25)
+
+        for i, (x0, y0, x1, y1, t) in enumerate(words):
+            if x0 > 1060 and y0 < 600:   # legenda do mapa: não é POI
+                continue
+            if t == "ENTRADA":
+                seg = next((w for w in words
+                            if abs(w[1] - y0) < 4 and 0 < w[0] - x1 < 10), None)
+                if seg and seg[4] == "PÚBLICO":
+                    add_poi("Entrada do Público", x0, y0, seg[2], y1)
+                elif seg and seg[4] == "EXPOSITORES":
+                    add_poi("Entrada de Expositores", x0, y0, seg[2], y1)
+            elif t == "ACESSO":
+                seg = [w for w in words if abs(w[1] - y0) < 4 and 0 < w[0] - x1 < 60]
+                seg.sort(key=lambda w: w[0])
+                if len(seg) >= 2 and seg[0][4] == "HALL" and seg[1][4].isdigit():
+                    add_poi(f"Acesso Hall {seg[1][4]}", x0, y0, seg[1][2], y1)
+        print(f"POIs de entrada: {len(pois)}")
+    except Exception as e:
+        warn(f"extração de POIs de entrada falhou ({e}) — seguindo sem")
+
     dedup_areas = []
     for a in areas_out:
         cx, cy = a["x_m"] + a["w_m"] / 2, a["y_m"] + a["h_m"] / 2
@@ -338,6 +382,7 @@ def main():
         "areas": areas_out,
         "ancorados": ancorados,
         "ruas_anexo": ruas_anexo,
+        "pois": pois,
         "directory": directory,
         "travessa": m.get("travessa", {}),
         "pendencias": pending,

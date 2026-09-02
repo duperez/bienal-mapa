@@ -59,5 +59,9 @@ def title_pt(s):
     palavras = s.lower().split()
     out = []
     for i, p in enumerate(palavras):
-        out.append(p if i > 0 and p in PARTICULAS else p.capitalize())
+        if i > 0 and p in PARTICULAS:
+            out.append(p)
+        else:
+            # capitaliza também depois de hífen (Faber-Castell)
+            out.append("-".join(t.capitalize() for t in p.split("-")))
     return " ".join(out)
