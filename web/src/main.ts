@@ -93,9 +93,23 @@ map.touchZoomRotate.disableRotation();
 map.touchPitch.disable();
 map.keyboard.disableRotation();
 
+// Enquadramento inicial robusto: fitBounds com container 0x0 manda a câmera
+// pra zoom máximo num ponto qualquer (tela "vazia"). Só enquadra com medida
+// válida — e se o load rodou cedo demais, o primeiro resize real reenquadra.
+let cameraSet = false;
+function frameVenue(): void {
+  const el = document.getElementById("map")!;
+  if (!el.clientWidth || !el.clientHeight) return;
+  map.fitBounds(VENUE_BOUNDS, { padding: 24, bearing: VENUE_BEARING, animate: false });
+  cameraSet = true;
+}
+
 // o container pode medir 0x0 no primeiro paint (webview/painel abrindo);
 // garante que o canvas acompanhe o tamanho real assim que ele existir
-new ResizeObserver(() => map.resize()).observe(document.getElementById("map")!);
+new ResizeObserver(() => {
+  map.resize();
+  if (!cameraSet) frameVenue();
+}).observe(document.getElementById("map")!);
 
 // acesso de debug no console (sem efeito em produção)
 declare global {
@@ -110,7 +124,7 @@ const MAPA_URL = `${import.meta.env.BASE_URL}data/mapa.geojson`;
 map.on("load", async () => {
   // o `bounds` do construtor aplica a câmera com bearing 0 (reset assíncrono);
   // reenquadra com o bearing que endireita o prédio, sem animação
-  map.fitBounds(VENUE_BOUNDS, { padding: 24, bearing: VENUE_BEARING, animate: false });
+  frameVenue();
 
   const [venue, mapa] = await Promise.all([
     fetch(VENUE_URL).then((r) => r.json()),
