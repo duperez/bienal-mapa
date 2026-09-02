@@ -60,7 +60,8 @@ const map = new MlMap({
   // estilo 100% local: fundo neutro, glyphs de fonte servidos pelo próprio app
   style: {
     version: 8,
-    glyphs: `${location.origin}${import.meta.env.BASE_URL}glyphs/{fontstack}/{range}.pbf`,
+    // URL absoluta resolvida da base (funciona na raiz e em subcaminho/Pages)
+    glyphs: `${new URL(import.meta.env.BASE_URL, location.href).href}glyphs/{fontstack}/{range}.pbf`,
     sources: {},
     layers: [
       { id: "background", type: "background", paint: { "background-color": "#e4e1db" } },
