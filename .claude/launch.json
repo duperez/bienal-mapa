@@ -2,9 +2,15 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "bienal-app",
+      "name": "bienal-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "web", "run", "dev", "--", "--port", "5273", "--host"],
+      "port": 5273
+    },
+    {
+      "name": "bienal-app-legado",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8027", "-d", "app"],
+      "runtimeArgs": ["-m", "http.server", "8027", "-d", "legacy/app"],
       "port": 8027
     }
   ]
