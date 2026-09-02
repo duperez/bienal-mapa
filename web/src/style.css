@@ -22,6 +22,20 @@ body {
   --divider: #e8e6e1;
 }
 
+#errOverlay {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 8px);
+  left: 8px;
+  right: 8px;
+  z-index: 99;
+  background: #b3261e;
+  color: #fff;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  word-break: break-word;
+}
+
 /* ---- busca ---- */
 #searchWrap {
   position: fixed;

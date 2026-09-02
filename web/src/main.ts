@@ -9,6 +9,32 @@ import "./style.css";
 
 setWorkerUrl(maplibreWorkerUrl);
 
+// erros visíveis: tela muda esconde a causa — qualquer exceção aparece num
+// overlay discreto (app pessoal: diagnóstico > estética)
+function showError(msg: string): void {
+  let el = document.getElementById("errOverlay");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "errOverlay";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+}
+window.addEventListener("error", (e) => showError(`Erro: ${e.message}`));
+window.addEventListener("unhandledrejection", (e) =>
+  showError(`Erro: ${e.reason?.message ?? e.reason}`),
+);
+
+// a origem :8027 já serviu o app legado com service worker cache-first;
+// qualquer SW residual dessa era intercepta os requests — remove todos
+// (o app novo ganhará SW próprio via vite-plugin-pwa em outra rodada)
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .getRegistrations()
+    .then((rs) => rs.forEach((r) => r.unregister()))
+    .catch(() => {});
+}
+
 /**
  * Marco 1 do app novo: MapLibre rodando 100% local (nenhum tile/fonte externo),
  * com o pavilhão real do Anhembi georreferenciado (OSM way 203621978) como
