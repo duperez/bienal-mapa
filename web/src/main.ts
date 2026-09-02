@@ -1,4 +1,5 @@
 import { Map as MlMap, AttributionControl, setWorkerUrl } from "maplibre-gl";
+import { attachSearchUI, buildIndex, subtitle, type Hit } from "./search";
 import "maplibre-gl/dist/maplibre-gl.css";
 // O worker do MapLibre v6 vive num arquivo separado resolvido via
 // import.meta.url — no dev do Vite esse caminho não existe no diretório de
@@ -236,6 +237,27 @@ map.on("load", async () => {
     },
   });
 
+  // destaque de seleção: source dedicada, atualizada ao selecionar
+  map.addSource("sel", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+  map.addLayer(
+    {
+      id: "sel-fill",
+      type: "fill",
+      source: "sel",
+      paint: { "fill-color": "#ffd200", "fill-opacity": 0.85 },
+    },
+    "areas-nome",
+  );
+  map.addLayer(
+    {
+      id: "sel-borda",
+      type: "line",
+      source: "sel",
+      paint: { "line-color": "#8a7000", "line-width": 2 },
+    },
+    "areas-nome",
+  );
+
   map.addLayer({
     id: "estandes-codigo",
     type: "symbol",
@@ -255,5 +277,66 @@ map.on("load", async () => {
       "text-halo-color": "#ffffff",
       "text-halo-width": 1.2,
     },
+  });
+
+  // ---- busca + seleção ----
+  const setSel = (features: GeoJSON.Feature[]) =>
+    (map.getSource("sel") as import("maplibre-gl").GeoJSONSource).setData({
+      type: "FeatureCollection",
+      features,
+    });
+
+  const sheet = document.createElement("div");
+  sheet.id = "sheet";
+  sheet.innerHTML = `<div class="handle"></div><div id="sheetTitle"></div><div id="sheetSub"></div>`;
+  document.body.appendChild(sheet);
+
+  function openSheet(title: string, sub: string): void {
+    (document.getElementById("sheetTitle") as HTMLElement).textContent = title;
+    (document.getElementById("sheetSub") as HTMLElement).textContent = sub;
+    sheet.classList.add("open");
+  }
+  function closeSheet(): void {
+    sheet.classList.remove("open");
+    setSel([]);
+  }
+  sheet.addEventListener("click", closeSheet);
+
+  function pick(h: Hit, fly: boolean): void {
+    setSel([h.feature]);
+    openSheet(h.name, subtitle(h));
+    if (fly) {
+      map.flyTo({
+        center: h.center,
+        zoom: h.kind === "area" ? 17.8 : 19.4,
+        bearing: VENUE_BEARING,
+        duration: 900,
+        // sheet cobre a base da tela: puxa o alvo um pouco pra cima
+        offset: [0, -40],
+      });
+    }
+  }
+
+  const index = buildIndex(mapa);
+  attachSearchUI(index, (h) => pick(h, true));
+
+  // tap num estande/área do mapa abre a ficha (sem voo)
+  const indexByKey = new Map(index.map((h) => [`${h.kind}:${h.code ?? h.name}`, h]));
+  for (const layerId of ["estandes", "areas"]) {
+    map.on("click", layerId, (e) => {
+      const f = e.features?.[0];
+      if (!f) return;
+      const p = f.properties ?? {};
+      const h = indexByKey.get(`${p.kind}:${p.code ?? p.name}`);
+      if (h) {
+        pick(h, false);
+        e.preventDefault();
+      }
+    });
+    map.on("mouseenter", layerId, () => (map.getCanvas().style.cursor = "pointer"));
+    map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
+  }
+  map.on("click", (e) => {
+    if (!e.defaultPrevented) closeSheet();
   });
 });
