@@ -60,6 +60,56 @@ def limpa(p):
     return p if p.is_valid else p.buffer(0)
 
 
+def confere_vias(feats, to_m, modelo):
+    """As vias são derivadas, não transcritas — então precisam de teste próprio.
+
+    Três perguntas: toda rua nomeada no PDF virou via? nenhuma via passa por
+    dentro de um bloco? todo estande encosta na circulação (senão é estande
+    inalcançável, e aí o mapa mente)?
+    """
+    from shapely.geometry import LineString, shape
+    from shapely.ops import unary_union
+
+    def em_metros(g):
+        c = g["coordinates"]
+        linhas = [c] if g["type"] == "LineString" else c
+        return unary_union([LineString([to_m(*p) for p in l]) for l in linhas])
+
+    setas = {f["properties"]["name"].upper() for f in feats
+             if f["properties"]["kind"] == "rua" and f["properties"].get("name")}
+    vias = {f["properties"]["name"].upper(): em_metros(f["geometry"])
+            for f in feats if f["properties"]["kind"] == "via"}
+    faltando = sorted(setas - set(vias))
+
+    # só o que o visitante procura precisa ser alcançável; sala técnica
+    # embutida em outro bloco não tem porta para o corredor e nem deveria ter
+    blocos = [g for p, g in modelo if p["kind"] in ("estande", "area")
+              and (p.get("code") or p.get("name"))]
+    circ = unary_union([g for p, g in modelo if p["kind"] == "circulacao"])
+
+    invasoes = []
+    for nome, linha in vias.items():
+        for g in blocos:
+            if linha.intersection(g).length > 0.5:
+                invasoes.append(nome)
+                break
+
+    ilhados = [(f'{p["kind"]}/{p.get("cat")}/{p.get("code")}/{p.get("name")}',
+                [round(v, 1) for v in g.centroid.coords[0]], round(g.distance(circ), 1))
+               for p, g in modelo if p["kind"] in ("estande", "area")
+               and (p.get("code") or p.get("name")) and g.distance(circ) > 0.6]
+
+    print(f"\nvias: {len(vias)} ({len(setas)} nomeadas no PDF)")
+    if faltando:
+        print(f"  rua do PDF sem via: {', '.join(faltando)}")
+    if invasoes:
+        print(f"  via passando por dentro de bloco: {', '.join(sorted(invasoes))}")
+    print(f"  blocos sem circulação ao lado: {len(ilhados)}/{len(blocos)}")
+    for i in ilhados[:8]:
+        print(f"    {i[0]} em {i[1]} m, a {i[2]} m da circulação")
+    return not faltando and not invasoes and not ilhados
+
+
 def main():
     box = pymupdf.Rect(*MAP_CLIP)
     page = pymupdf.open("reference/mapa-oficial.pdf")[0]
@@ -150,6 +200,8 @@ def main():
         for o in sorted(orfaos, key=lambda o: o[1])[:8]:
             print(f"   {o[0]:12s} IoU {o[1]:.3f}  em {o[2]} m")
 
+    vias_ok = confere_vias(feats, to_m, modelo)
+
     if "--aceitar" in sys.argv:
         json.dump(atual, open(BASELINE, "w"), indent=1)
         print(f"baseline gravado em {BASELINE}")
@@ -173,8 +225,8 @@ def main():
         elif v < ref - 0.01:
             print(f"REGREDIU {cat}: {v:.1%} (era {ref:.1%})")
             ok = False
-    print("aceite: OK" if ok else "aceite: FALHOU")
-    return 0 if ok else 1
+    print("aceite: OK" if ok and vias_ok else "aceite: FALHOU")
+    return 0 if ok and vias_ok else 1
 
 
 if __name__ == "__main__":

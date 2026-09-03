@@ -29,13 +29,13 @@ esses blocos de volta na fileira.
 
 ## Estado atual
 
-`web/public/data/mapa.geojson` — 429 features geradas do PDF:
+`web/public/data/mapa.geojson` — 400 features geradas do PDF:
 
 ```
 expositor 200   travessa 48   cultural 17   piso 16   infra 10
-patrocinador 7  alimentacao 6 entidade 5    rua 55    rua-eixo 55
+patrocinador 7  alimentacao 6 entidade 5    rua 55    via 24   circulacao 2
 POIs: entrada 5, saída 3, escolas 1, entrada-expositor 1
-282 com código · 401 com nome
+282 com código · 370 com nome
 ```
 
 Teste de aceite (`tools/verify_map.py`, vetorial com shapely):
@@ -45,7 +45,20 @@ alimentacao 6/6  cultural 17/17  entidade 5/5  expositor 199/199
 infra 10/10  patrocinador 7/7  rua 55/55  travessa 48/48   -> 100%
 piso 15/16 (93,8%; a forma restante tem IoU 0,978 - ambiguidade de casamento)
 deriva máxima de centroide: 2,37 cm
+
+vias: 24, sendo as 14 ruas nomeadas no PDF
+nenhuma via atravessa bloco · 0/286 blocos navegáveis sem circulação ao lado
 ```
+
+### Ruas e circulação
+
+O PDF não desenha ruas: desenha setas com o nome delas. As setas cobrem só 9,7%
+do espaço livre — a seta é o rótulo da rua, não a rua. Então a circulação é
+derivada por morfologia (fecho de 12 m sobre os blocos, menos os blocos, com
+abertura de 2 m) e as vias saem da largura local do vão, entre 2 e 12 m. Uma
+seta que a varredura não alcança vira semente: o PDF afirma que a rua existe,
+então ela entra pelo corredor que passa por baixo da seta. Nada é desenhado à
+mão — se um corredor sair errado, conserta-se a regra.
 
 App (`web/`): MapLibre GL 100% local (nenhum tile ou fonte externa), pavilhão real do
 Anhembi (OSM way 203621978) como base, busca, seleção com bottom sheet, ícones de POI
@@ -78,9 +91,12 @@ para conferir a olho que a leitura do PDF está correta.
 4. **GPS não calibrado**: a afim atual ancora o canto NW no polígono OSM e usa o lado
    maior do hall (322 m) como escala. Serve para o desenho; não foi validada contra
    leitura de GPS real no local.
-5. **Rota (fase 2)**: não existe grafo no pipeline novo. O grafo do legado
-   (`legacy/`) não foi portado.
-6. **Deploy https** (Pages ou similar) para service worker e geolocalização valerem.
+5. **Rota (fase 2)**: as vias existem como LineString, mas ainda não há grafo
+   nodado nos cruzamentos nem ponto de acesso por estande.
+6. **`LARG_MIN = 2 m` e `AVENTAL = 6 m` são julgamento meu**, não saem do PDF.
+   As 9 transversais e 1 alameda sem seta carregam `nome_derivado: true`; a RUA
+   AA corre na borda do anexo e carrega `borda_aberta: true`.
+7. **Deploy https** (Pages ou similar) para service worker e geolocalização valerem.
 
 ## Layout
 

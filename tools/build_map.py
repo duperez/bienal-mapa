@@ -8,11 +8,17 @@ design. Ela vem do arquivo. Categoria, código e nome são metadados pendurados
 em cima; se a classificação errar, o desenho continua no lugar certo.
 """
 import json
+from collections import Counter
 import math
 import re
 import sys
 
 import pymupdf
+from shapely.geometry import LineString, Polygon
+from shapely.geometry import Point as shp_point
+from shapely.geometry import box as shp_box
+
+from shapely.ops import unary_union
 
 PDF = "reference/mapa-oficial.pdf"
 VENUE = "data/venue.geojson"
@@ -331,6 +337,153 @@ def classificar(cor, ext, area, na_travessa):
     return None, None
 
 
+# ---------------------------------------------------------------- circulação
+# O PDF não desenha as ruas: desenha SETAS com o nome delas. A rua de verdade
+# é o espaço que sobra entre os blocos. Então a geometria continua saindo do
+# PDF (por complemento), e a seta vira o que ela sempre foi: o rótulo.
+FECHO = 12.0        # m: fecha vão até 24 m -> corredor entra, vazio externo não
+LARG_MIN = 2.0      # m: abaixo disso é fresta de montagem, não passagem
+LARG_MAX = 12.0     # m: acima disso é salão/praça aberta, não rua
+LARG_ABERTA = 20.0  # m: via de borda, sem quarteirão do outro lado, vai até aqui
+AMOSTRA = 1.0       # m: passo de amostragem ao longo da via
+TOL_CENTRO = 1.5    # m: quanto o centro do corredor pode oscilar e ainda ser a mesma via
+HIATO = 14.0        # m: hiato tolerado na trilha (cruzamento com via transversal)
+AVENTAL = 6.0       # m: faixa caminhável rente a qualquer bloco
+EXT_MIN = 12.0      # m: piso absoluto de comprimento de corredor
+EXT_ANON = 20.0     # m: sem seta que a nomeie, a via precisa ser longa para entrar
+
+
+def circulacao(ocupados):
+    """Espaço livre entre os blocos, sem o vazio de fora do salão.
+
+    Fecho morfológico (dilata e volta): o vão entre fileiras some, mas a área
+    aberta ao sul do pavilhão continua fora. Depois uma abertura descarta o que
+    é estreito demais para ser passagem.
+    """
+    ocupado = unary_union([Polygon(r).buffer(0) for r in ocupados])
+    fecho = ocupado.buffer(FECHO, join_style=2).buffer(-FECHO, join_style=2)
+    meia = LARG_MIN / 2
+
+    def abre(g):
+        return g.difference(ocupado).buffer(-meia, join_style=2).buffer(meia, join_style=2)
+
+    # corredor: só o vão entre quarteirões. É daqui que as ruas são derivadas.
+    corr = abre(fecho)
+    # caminhável: o corredor mais a faixa rente aos blocos. Quem está na borda
+    # do salão só tem acesso pela área aberta, que o fecho descarta — mas essa
+    # faixa não pode virar rua, senão o contorno de cada bloco vira avenida.
+    x0, y0, x1, y1 = ocupado.bounds
+    avental = ocupado.buffer(AVENTAL, join_style=2).intersection(shp_box(x0, y0, x1, y1))
+    return ocupado, corr, abre(fecho.union(avental))
+
+
+def _corte(eixo, a, b0, b1):
+    return LineString([(a, b0), (a, b1)] if eixo == "x" else [(b0, a), (b1, a)])
+
+
+def _maior(geom):
+    partes = [p for p in getattr(geom, "geoms", [geom]) if p.length > 0]
+    return max(partes, key=lambda p: p.length) if partes else None
+
+
+def _trecho(geom, alvo):
+    """Do recorte, o pedaço que passa pelo ponto alvo (o resto é outra rua)."""
+    for p in getattr(geom, "geoms", [geom]):
+        if p.length > 0 and p.distance(shp_point(*alvo)) < 0.6:
+            return p
+    return None
+
+
+def semente(seta, corr, ocupado):
+    """Constrói a via a partir da seta, quando a varredura não a achou.
+
+    O eixo é o da própria seta — o PDF a desenhou deitada em cima da rua. A
+    largura é medida ao lado da seta, porque o centro dela costuma cair num
+    cruzamento, onde o vão é o cruzamento inteiro e não a rua.
+    """
+    x0, y0, x1, y1 = ocupado.bounds
+    eixo, cx, cy = seta["eixo"], seta["cx"], seta["cy"]
+    centro = cy if eixo == "y" else cx
+    ao_longo = cx if eixo == "y" else cy
+
+    larguras = []
+    for d in (-12.0, -10.0, -8.0, -6.0, -5.0, -4.0, 4.0, 5.0, 6.0, 8.0, 10.0, 12.0):
+        a = ao_longo + d
+        perp = _corte("x" if eixo == "y" else "y", a,
+                      *((y0, y1) if eixo == "y" else (x0, x1)))
+        alvo = (a, centro) if eixo == "y" else (centro, a)
+        vao = _trecho(perp.intersection(corr), alvo)
+        if vao is not None and LARG_MIN <= vao.length <= LARG_ABERTA:
+            larguras.append(vao.length)
+    if not larguras:
+        return None
+
+    linha = _corte(eixo, centro, *((x0, x1) if eixo == "y" else (y0, y1)))
+    trecho = _trecho(linha.intersection(corr), (cx, cy))
+    if trecho is None or trecho.length < EXT_MIN:
+        return None
+    larg = sorted(larguras)[len(larguras) // 2]
+    return {"eixo": eixo, "centro": centro,
+            # vão maior que uma rua = a via corre na borda e o outro lado é
+            # salão aberto; o eixo continua sendo o da seta, que é o dado real
+            "largura": round(min(larg, LARG_MAX), 1), "aberta": larg > LARG_MAX,
+            "ext": trecho.length, "linha": list(trecho.coords),
+            "nome": seta["nome"], "derivado": False}
+
+
+def eixos(ocupado, corr, eixo):
+    """Corredores retos, achados pela largura LOCAL do vão.
+
+    Em cada amostra perpendicular ao eixo, os trechos livres viram candidatos:
+    um trecho entre 2 e 12 m é vão de corredor; abaixo é fresta de montagem,
+    acima é praça (que já está na circulação e não precisa virar rua).
+    Candidatos com o mesmo centro ao longo do eixo formam uma via.
+
+    Medir o vão local, e não a fatia inteira do salão, é o que faz a RUA A e as
+    ruas curtas do anexo aparecerem sem fundir as ruas vizinhas do miolo.
+    """
+    x0, y0, x1, y1 = ocupado.bounds
+    a0, a1 = (x0, x1) if eixo == "y" else (y0, y1)   # onde amostrar
+    b0, b1 = (y0, y1) if eixo == "y" else (x0, x1)   # onde medir o vão
+
+    achados = []
+    a = a0
+    while a <= a1:
+        corte = _corte("x" if eixo == "y" else "y", a, b0, b1)
+        for p in getattr(corte.intersection(corr), "geoms", [corte.intersection(corr)]):
+            if LARG_MIN <= p.length <= LARG_MAX:
+                (px0, py0, px1, py1) = p.bounds
+                centro = (py0 + py1) / 2 if eixo == "y" else (px0 + px1) / 2
+                achados.append((a, centro, p.length))
+        a += AMOSTRA
+
+    # rastreia cada corredor: mesma via = amostras seguidas com centro estável.
+    # Agrupar só pelo centro fundiria o anexo com o miolo, que ficam no mesmo
+    # y mas em pontas opostas do salão.
+    trilhas = []
+    for a, centro, larg in achados:
+        for t in trilhas:
+            if a - t[-1][0] <= HIATO and abs(centro - t[-1][1]) <= TOL_CENTRO:
+                t.append((a, centro, larg))
+                break
+        else:
+            trilhas.append([(a, centro, larg)])
+
+    vias = []
+    for t in trilhas:
+        if t[-1][0] - t[0][0] < EXT_MIN:
+            continue
+        centro = sorted(s[1] for s in t)[len(t) // 2]
+        larg = sorted(s[2] for s in t)[len(t) // 2]
+        corte = _corte(eixo, centro, t[0][0], t[-1][0])
+        maior = _maior(corte.intersection(corr))
+        if maior is None or maior.length < EXT_MIN:
+            continue
+        vias.append({"eixo": eixo, "centro": centro, "largura": round(larg, 1),
+                     "ext": maior.length, "linha": list(maior.coords)})
+    return vias
+
+
 def main():
     page = pymupdf.open(PDF)[0]
     box = pymupdf.Rect(*MAP_CLIP)
@@ -357,6 +510,8 @@ def main():
     feats = []
     usados = set()
     ruas = []
+    ocupados = []
+    setas = []
     tv0, tv1 = ((TRAVESSA[0] - box.x0) * m_per_pt, (TRAVESSA[1] - box.y0) * m_per_pt)
     tv2, tv3 = ((TRAVESSA[2] - box.x0) * m_per_pt, (TRAVESSA[3] - box.y0) * m_per_pt)
     tl_cells = []
@@ -384,10 +539,11 @@ def main():
             feats.append(poly(ext, {"kind": "rua", "cat": None, "code": None,
                                     "name": nome, "area_m2": round(area, 1)}))
             if nome:
-                ruas.append({"type": "Feature", "properties": {
-                    "kind": "rua-eixo", "name": nome.upper()},
-                    "geometry": {"type": "LineString", "coordinates": [
-                        to_lnglat(min(xs), cy), to_lnglat(max(xs), cy)]}})
+                ys = [p[1] for p in ext]
+                setas.append({"nome": nome.upper(), "cx": cx, "cy": cy,
+                              # a seta aponta ao longo da rua: o lado maior dela
+                              # diz qual eixo ela nomeia
+                              "eixo": "y" if max(xs) - min(xs) >= max(ys) - min(ys) else "x"})
             continue
 
         # ---- POI: triângulo de entrada/saída, categoria pela cor da legenda ----
@@ -421,6 +577,7 @@ def main():
             usados.add(id(c))
 
         if kind == "estande" and dentro:
+            ocupados.append(ext)
             for ring, c in subdividir(ext, dentro):
                 a = abs(ring_area(ring))
                 props = {"kind": "estande", "cat": cat, "code": c["txt"],
@@ -448,6 +605,7 @@ def main():
                  "peso": round(area, 1)}
         if derivado:
             props["nome_derivado"] = True
+        ocupados.append(ext)
         feats.append({"type": "Feature", "geometry": {
             "type": "Polygon", "coordinates": coords}, "properties": props})
 
@@ -465,6 +623,62 @@ def main():
             "area_m2": round(abs(ring_area(ring)), 1)}))
 
     feats.extend(ruas)
+
+    # ---- circulação e vias: geometria por complemento, nome vindo da seta ----
+    ocupado, corr, caminhavel = circulacao(ocupados + [t[2] for t in tl_cells])
+    for parte in getattr(caminhavel, "geoms", [caminhavel]):
+        aneis = [list(parte.exterior.coords)] + [list(i.coords) for i in parte.interiors]
+        feats.append({"type": "Feature", "properties": {
+            "kind": "circulacao", "area_m2": round(parte.area, 1)},
+            "geometry": {"type": "Polygon", "coordinates": [
+                [to_lnglat(x, y) for x, y in a] for a in aneis]}})
+
+    longit = eixos(ocupado, corr, "y")
+    transv = eixos(ocupado, corr, "x")
+    for v in longit + transv:
+        # a seta tem que cair DENTRO da via, não só no mesmo eixo: a RUA C do
+        # miolo e o corredor do anexo compartilham o y e são ruas diferentes
+        faixa = LineString(v["linha"]).buffer(v["largura"] / 2 + 1.0, cap_style=2)
+        cand = [s["nome"] for s in setas if s["eixo"] == v["eixo"]
+                and faixa.contains(shp_point(s["cx"], s["cy"]))]
+        v["nome"] = Counter(cand).most_common(1)[0][0] if cand else None
+        v["derivado"] = not cand
+    # seta que não caiu em nenhuma via vira semente: o PDF afirma que a rua
+    # existe, então ela entra pelo corredor que passa por baixo da seta
+    achadas = {v["nome"] for v in longit + transv if v["nome"]}
+    for s in setas:
+        if s["nome"] in achadas:
+            continue
+        v = semente(s, corr, ocupado)
+        if v:
+            achadas.add(s["nome"])
+            (longit if v["eixo"] == "y" else transv).append(v)
+
+    # seta nomeada é prova de que a rua existe: entra mesmo curta. Sem nome,
+    # só entra se for longa — assim recorte de canto não vira rua inventada.
+    longit = [v for v in longit if v["nome"] or v["ext"] >= EXT_ANON]
+    transv = [v for v in transv if v["nome"] or v["ext"] >= EXT_ANON]
+    for grupo, rotulo in ((transv, "Transversal"), (longit, "Alameda")):
+        anon = sorted([v for v in grupo if not v["nome"]], key=lambda v: v["centro"])
+        for i, v in enumerate(anon, start=1):
+            v["nome"] = f"{rotulo} {i:02d}"
+
+    # trechos da mesma rua separados por um cruzamento largo continuam a mesma rua
+    juntas = {}
+    for v in longit + transv:
+        juntas.setdefault((v["nome"], v["eixo"]), []).append(v)
+    for (nome, eixo), partes in juntas.items():
+        props = {"kind": "via", "name": nome, "eixo": eixo,
+                 "largura_m": round(sum(p["largura"] for p in partes) / len(partes), 1),
+                 "extensao_m": round(sum(LineString(p["linha"]).length for p in partes), 1)}
+        if any(p["derivado"] for p in partes):
+            props["nome_derivado"] = True
+        if any(p.get("aberta") for p in partes):
+            props["borda_aberta"] = True
+        linhas = [[to_lnglat(x, y) for x, y in p["linha"]] for p in partes]
+        feats.append({"type": "Feature", "properties": props, "geometry": (
+            {"type": "LineString", "coordinates": linhas[0]} if len(linhas) == 1
+            else {"type": "MultiLineString", "coordinates": linhas})})
 
     # propriedade nula não é ausência para o MapLibre: ["has","name"] dá true
     # e o app acaba pintando pin de POI em área sem nome nenhum.

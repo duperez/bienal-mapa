@@ -173,12 +173,30 @@ map.on("load", async () => {
   });
 
   map.addLayer({
-    id: "ruas",
+    id: "circulacao",
     type: "fill",
     source: "mapa",
-    filter: ["==", ["get", "kind"], "rua"],
-    paint: { "fill-color": "#ddd6c8" },
+    filter: ["==", ["get", "kind"], "circulacao"],
+    paint: { "fill-color": "#f4f1ea" },
   });
+  // as vias derivadas viram fita clara: o corredor lê como rua, não como sobra
+  map.addLayer({
+    id: "vias",
+    type: "line",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "via"],
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": "#ffffff",
+      "line-opacity": 0.75,
+      "line-width": ["interpolate", ["exponential", 2], ["zoom"],
+        15, ["*", ["get", "largura_m"], 0.06],
+        20, ["*", ["get", "largura_m"], 2.0]],
+    },
+  });
+
+  // as setas do PDF não são mais desenhadas: viraram as vias acima. Ficam no
+  // dado como procedência do nome, não como pintura.
   // chão quieto: fills suaves — a cor forte fica no pin/rótulo (padrão GMaps)
   map.addLayer({
     id: "areas",
@@ -373,7 +391,7 @@ map.on("load", async () => {
     id: "ruas-nome",
     type: "symbol",
     source: "mapa",
-    filter: ["==", ["get", "kind"], "rua-eixo"],
+    filter: ["==", ["get", "kind"], "via"],
     minzoom: 16,
     layout: {
       "symbol-placement": "line",
@@ -385,8 +403,8 @@ map.on("load", async () => {
     },
     paint: {
       "text-color": "#8a857b",
-      "text-halo-color": "#ddd6c8",
-      "text-halo-width": 1.2,
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.4,
     },
   }, "areas-poi");
 
