@@ -3,6 +3,7 @@ import { attachSearchUI, buildIndex, subtitle, type Hit } from "./search";
 import { addPoiIcons } from "./icons";
 import { Rotas, type Malha } from "./rotas";
 import { Percurso, type Ponto } from "./percurso";
+import { fixSimulado, iniciaSimulacao, simula, simulando } from "./gps";
 import "maplibre-gl/dist/maplibre-gl.css";
 // O worker do MapLibre v6 vive num arquivo separado resolvido via
 // import.meta.url — no dev do Vite esse caminho não existe no diretório de
@@ -15,6 +16,10 @@ import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import "./style.css";
 
 setWorkerUrl(maplibreWorkerUrl);
+
+// ?gps=sim liga a simulação de posição (shift+clique larga um fix).
+// Precisa correr antes do app montar: o rótulo do botão de GPS muda.
+iniciaSimulacao();
 
 // erros visíveis: tela muda esconde a causa — qualquer exceção aparece num
 // overlay discreto (app pessoal: diagnóstico > estética)
@@ -571,6 +576,36 @@ map.on("load", async () => {
     paint: { "line-color": "#1a73e8", "line-width": 1.5, "line-dasharray": [2, 2], "line-opacity": 0.6 },
   }, "rota-halo");
 
+  // fix simulado: fica desenhado o tempo todo enquanto a simulação está
+  // ligada, para nunca haver dúvida sobre de onde veio a "posição"
+  map.addSource("gpsim", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({
+    id: "gpsim-area",
+    type: "fill",
+    source: "gpsim",
+    filter: ["==", ["geometry-type"], "Polygon"],
+    paint: { "fill-color": "#9334e6", "fill-opacity": 0.1 },
+  });
+  map.addLayer({
+    id: "gpsim-borda",
+    type: "line",
+    source: "gpsim",
+    filter: ["==", ["geometry-type"], "Polygon"],
+    paint: { "line-color": "#9334e6", "line-width": 1.5, "line-dasharray": [3, 2] },
+  });
+  map.addLayer({
+    id: "gpsim-ponto",
+    type: "circle",
+    source: "gpsim",
+    filter: ["==", ["geometry-type"], "Point"],
+    paint: {
+      "circle-radius": 7,
+      "circle-color": "#9334e6",
+      "circle-stroke-color": "#ffffff",
+      "circle-stroke-width": 2,
+    },
+  });
+
   map.addSource("pontos", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
   map.addLayer({
     id: "pontos-circulo",
@@ -603,6 +638,11 @@ map.on("load", async () => {
     });
   const setIncerteza = (features: GeoJSON.Feature[]) =>
     (map.getSource("incerteza") as import("maplibre-gl").GeoJSONSource).setData({
+      type: "FeatureCollection",
+      features,
+    });
+  const setGpsim = (features: GeoJSON.Feature[]) =>
+    (map.getSource("gpsim") as import("maplibre-gl").GeoJSONSource).setData({
       type: "FeatureCollection",
       features,
     });
@@ -660,6 +700,22 @@ map.on("load", async () => {
   };
 
   const index = buildIndex(mapa);
+  const mostraSimulado = (): void => {
+    const f = fixSimulado();
+    setGpsim(
+      f
+        ? [
+            cercaDe(rotas.celula(f.lng, f.lat), f.erro),
+            {
+              type: "Feature",
+              properties: {},
+              geometry: { type: "Point", coordinates: [f.lng, f.lat] },
+            },
+          ]
+        : [],
+    );
+  };
+
   const percurso = new Percurso({
     rotas,
     desenhaRota: (cels) =>
@@ -682,21 +738,37 @@ map.on("load", async () => {
             geometry: { type: "Point", coordinates: rotas.lngLat(p!.cel) },
           })),
       ),
-    desenhaIncerteza: (cel, raio) => setIncerteza(cel ? [cercaDe(cel, raio)] : []),
+    desenhaIncerteza: (cel, raio) => {
+      const cerca = cel ? cercaDe(cel, raio) : null;
+      setIncerteza(cerca ? [cerca] : []);
+      // sem isto o círculo pode nascer fora da tela e a pergunta "você está
+      // por aqui" fica sem o "aqui"
+      if (cerca) {
+        map.fitBounds(bboxDe((cerca.geometry as GeoJSON.Polygon).coordinates[0] as [number, number][]), {
+          padding: { top: 90, bottom: 320, left: 40, right: 40 },
+          bearing: VENUE_BEARING,
+          duration: 700,
+        });
+      }
+    },
     enquadra: (cels) =>
       map.fitBounds(bboxDe(cels.map((c) => rotas.lngLat(c))), {
         padding: { top: 90, bottom: 260, left: 40, right: 40 },
         bearing: VENUE_BEARING,
         duration: 700,
       }),
-    candidatos: (cel, n) =>
-      index
+    candidatos: (cel, raio, min, max) => {
+      const perto = index
         .map((h) => pontoDe(h))
         .filter((p): p is Ponto => !!p)
         .map((p) => ({ p, d: rotas.distancia(p.cel, cel) }))
-        .sort((a, b) => a.d - b.d)
-        .slice(0, n)
-        .map(({ p }) => p),
+        .sort((a, b) => a.d - b.d);
+      // dentro do círculo de confiança do fix, mas nunca menos que `min`:
+      // um sinal muito bom não pode deixar o visitante sem alternativa se o
+      // `accuracy` estiver otimista, que é o defeito clássico indoor
+      const dentro = perto.filter(({ d }) => d <= raio).length;
+      return perto.slice(0, Math.min(max, Math.max(min, dentro))).map(({ p }) => p);
+    },
     aoEscolher: (campo) => {
       document.body.classList.toggle("escolhendo", !!campo);
       if (campo) closeSheet();
@@ -746,6 +818,17 @@ map.on("load", async () => {
 
   attachSearchUI(index, (h) => pick(h, true));
 
+  if (simulando()) {
+    // shift+arrasto é o box-zoom do MapLibre, e ele engole o clique: sem
+    // desligar, o shift+clique da simulação nunca chega ao handler
+    map.boxZoom.disable();
+    mostraSimulado();
+    const aviso = document.createElement("div");
+    aviso.id = "avisoSim";
+    aviso.textContent = "posição simulada · shift+clique move";
+    document.body.appendChild(aviso);
+  }
+
   // tap num estande/área do mapa abre a ficha (sem voo)
   const indexByKey = new Map(index.map((h) => [`${h.kind}:${h.code ?? h.name}`, h]));
   for (const layerId of ["estandes", "areas"]) {
@@ -753,6 +836,8 @@ map.on("load", async () => {
       const f = e.features?.[0];
       if (!f) return;
       const p = f.properties ?? {};
+      // shift+clique é da simulação: deixa passar para o handler geral
+      if (simulando() && (e.originalEvent as MouseEvent).shiftKey) return;
       const h = indexByKey.get(`${p.kind}:${p.code ?? p.name}`);
       if (h) {
         pick(h, false);
@@ -764,6 +849,12 @@ map.on("load", async () => {
   }
   map.on("click", (e) => {
     if (e.defaultPrevented) return;
+    if (simulando() && (e.originalEvent as MouseEvent).shiftKey) {
+      const q = new URLSearchParams(location.search);
+      simula(e.lngLat.lng, e.lngLat.lat, Number(q.get("erro") ?? 30));
+      mostraSimulado();
+      return;
+    }
     // toque em área livre durante a escolha vira ponto do percurso, com snap
     // para a célula caminhável mais próxima: dedo em tela de celular erra o
     // corredor com facilidade, e ponto em cima de estande não gera rota

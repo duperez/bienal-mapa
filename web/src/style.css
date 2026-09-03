@@ -345,3 +345,19 @@ body {
 body.escolhendo .maplibregl-canvas {
   cursor: crosshair;
 }
+
+/* aviso da simulação de posição: precisa ser impossível de confundir com o
+   app normal, senão um fix falso passa por verdadeiro */
+#avisoSim {
+  position: fixed;
+  left: 12px;
+  top: calc(env(safe-area-inset-top) + 14px);
+  z-index: 20;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #9334e6;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}

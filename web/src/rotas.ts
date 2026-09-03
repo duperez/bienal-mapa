@@ -48,6 +48,11 @@ export class Rotas {
     return this.m.passo;
   }
 
+  /** extensão da grade em metros — serve de régua para limites que não devem ser chutados */
+  extensao(): [number, number] {
+    return [this.m.w * this.m.passo, this.m.h * this.m.passo];
+  }
+
   /**
    * lng/lat -> célula fracionária, invertendo a afim do build.
    *

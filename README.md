@@ -120,10 +120,24 @@ nunca para filtrar. O motivo é o defeito 4: a âncora do desenho dentro do pré
 tem ~30 m de folga, então um raio traçado a partir do fix sairia descentrado por
 mais do que o próprio erro do sensor e poderia excluir justamente o estande
 certo. Ordenando, o erro de âncora piora a ordem da lista e nunca esconde a
-resposta. Regras: fix acima de 100 m de erro é descartado; espera de 5 s e cai
-para o manual (fix pendurado é o desfecho mais comum indoor); porta a menos de
-35 m do fix é assumida como origem — é o único caso em que o GPS decide sozinho,
-e é justamente onde ele funciona, porque portão é área aberta com céu à vista.
+resposta. Regras: fix acima de 100 m de erro é descartado; espera de 5 s com relógio
+próprio e cai para o manual (fix pendurado — nem sucesso nem erro — é o desfecho
+mais comum indoor, e o `timeout` da API nem sempre é respeitado); e o GPS só
+decide sozinho quando **uma porta é a coisa mais próxima do fix**. Essa última
+regra começou como "porta a menos de 35 m" e o teste derrubou: no meio do salão
+quase sempre há uma saída nesse raio, e o app escolhia por conta própria um
+lugar onde o visitante não estava.
+
+Como o GPS não dá para exercitar sentado, `web/src/gps.ts` isola a leitura de
+posição e aceita simulação por `?gps=sim` (shift+clique larga um fix, `&erro=NN`
+define a precisão fingida). A simulação é sempre visível — tarja roxa na tela,
+rótulo do botão trocado e "· simulado" na mensagem —, porque um fix falso
+passando por verdadeiro seria o pior defeito possível neste app.
+
+`test-gps.mjs` cobre 8 cenários com a emulação de geolocalização do próprio
+navegador (não com o modo de simulação): fix na porta, fix no meio do salão,
+sinal fraco, fora do pavilhão, permissão negada, fix pendurado e a simulação
+se anunciando.
 
 ### Ruas e circulação
 
@@ -149,6 +163,10 @@ sh tools/build.sh --aceitar  # regrava a baseline (só quando a mudança for int
 cd web && npm install && npm run dev
 node test-shots.mjs <porta>  # screenshots do app real via Playwright
 node test-rota.mjs <porta>   # percurso na UI + carga de 300 pares de estandes
+node test-gps.mjs <porta>    # 8 cenários de GPS com emulação real do navegador
+
+# testar GPS à mão, sem estar no Anhembi: shift+clique larga um fix falso
+open 'http://localhost:5173/?gps=sim&erro=25'
 ```
 
 `tools/transcribe.py` gera a prova de conceito da transcrição
@@ -198,6 +216,7 @@ tools/transcribe.py   prova de conceito PDF -> SVG -> PNG
 web/                  app MapLibre (Vite + TypeScript)
 web/src/rotas.ts      A* sobre a malha, snap e inversa da afim
 web/src/percurso.ts   escolha de origem/destino e camada opcional de GPS
+web/src/gps.ts        leitura de posição, com simulação para teste
 reference/            PDF oficial e artefatos de comparação
 legacy/               app e geradores sintéticos anteriores (referência)
 ```

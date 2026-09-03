@@ -17,6 +17,7 @@
  */
 
 import type { Rotas } from "./rotas";
+import { posicao, simulando } from "./gps";
 
 export interface Ponto {
   rotulo: string;
@@ -32,8 +33,15 @@ export interface Contexto {
   /** círculo de incerteza do GPS, em metros (null limpa) */
   desenhaIncerteza(cel: [number, number] | null, raio: number): void;
   enquadra(cels: [number, number][]): void;
-  /** locais roteáveis mais próximos de uma célula, já ordenados */
-  candidatos(cel: [number, number], n: number): Ponto[];
+  /**
+   * Locais roteáveis dentro de um raio, ordenados por distância.
+   *
+   * O raio vem do `accuracy` do fix, então a lista encolhe quando o sinal é
+   * bom e cresce quando é ruim — que é a informação honesta a dar. `min`
+   * garante que uma leitura muito precisa ainda ofereça alternativa, e `max`
+   * impede a lista de virar o índice inteiro.
+   */
+  candidatos(cel: [number, number], raio: number, min: number, max: number): Ponto[];
   /** avisa o app que o próximo toque/busca preenche este campo */
   aoEscolher(campo: Campo | null): void;
 }
@@ -41,12 +49,19 @@ export interface Contexto {
 export type Campo = "origem" | "destino";
 
 const LEMBRETE = "bienal.origem";
-/** acima disso o círculo cobre meio pavilhão e o fix não informa nada */
-const ERRO_MAX_M = 100;
 /** fix pendurado é o desfecho mais comum indoor; não dá para travar a tela */
-const ESPERA_MS = 5000;
-/** porta dentro deste raio do fix é assumida como origem, sempre editável */
-const PORTA_OBVIA_M = 35;
+const ESPERA_MS = 6000;
+/**
+ * Precisão a partir da qual não vale seguir esperando: metade da menor rua do
+ * mapa (LARG_MIN = 2 m) seria fantasia indoor, então o critério é o vão entre
+ * fileiras — com ±12 m o círculo já cabe em poucas fileiras e a lista é curta.
+ */
+const BOM_M = 12;
+/** quanto esperar por um fix melhor depois que o primeiro chegou */
+const ASSENTA_MS = 1500;
+/** a lista de candidatos precisa caber na tela e ainda dar escolha */
+const MIN_OPCOES = 3;
+const MAX_OPCOES = 12;
 
 export class Percurso {
   private ctx: Contexto;
@@ -54,6 +69,8 @@ export class Percurso {
   private origem: Ponto | null = null;
   private destino: Ponto | null = null;
   private campo: Campo | null = null;
+  /** motivo de estar pedindo a origem — some assim que ela é definida */
+  private aviso: string | null = null;
 
   constructor(ctx: Contexto) {
     this.ctx = ctx;
@@ -80,6 +97,7 @@ export class Percurso {
     this.$("rotaOrigem").addEventListener("click", () => this.escolher("origem"));
     this.$("rotaDestino").addEventListener("click", () => this.escolher("destino"));
     this.$("rotaTrocar").addEventListener("click", () => this.trocar());
+    if (simulando()) this.$("rotaGps").textContent = "Usar posição simulada";
     this.$("rotaGps").addEventListener("click", () => void this.usarGps());
     this.$("rotaFechar").addEventListener("click", () => this.fechar());
   }
@@ -125,7 +143,8 @@ export class Percurso {
     this.esconderLista();
   }
 
-  escolher(campo: Campo): void {
+  escolher(campo: Campo, aviso: string | null = null): void {
+    this.aviso = aviso;
     this.campo = this.campo === campo ? null : campo;
     this.ctx.aoEscolher(this.campo);
     this.esconderLista();
@@ -142,6 +161,7 @@ export class Percurso {
       this.destino = ponto;
     }
     this.campo = null;
+    this.aviso = null;
     this.ctx.aoEscolher(null);
     this.esconderLista();
     if (!this.aberto) this.el.classList.add("open");
@@ -170,10 +190,13 @@ export class Percurso {
 
     const resumo = this.$("rotaResumo");
     if (this.campo) {
-      resumo.textContent =
+      const dica =
         this.campo === "origem"
-          ? "Busque ou toque no mapa onde você está"
-          : "Busque ou toque no mapa aonde quer ir";
+          ? "busque ou toque no mapa onde você está"
+          : "busque ou toque no mapa aonde quer ir";
+      resumo.textContent = this.aviso
+        ? `${this.aviso} — ${dica}`
+        : dica[0].toUpperCase() + dica.slice(1);
       this.ctx.desenhaRota(null);
       return;
     }
@@ -199,62 +222,65 @@ export class Percurso {
 
   private async usarGps(): Promise<void> {
     const resumo = this.$("rotaResumo");
-    if (!navigator.geolocation) {
-      resumo.textContent = "Este navegador não dá acesso à localização — aponte no mapa";
-      return;
-    }
-    resumo.textContent = "Procurando sinal…";
-    let pos: GeolocationPosition;
-    try {
-      pos = await new Promise<GeolocationPosition>((ok, erro) =>
-        navigator.geolocation.getCurrentPosition(ok, erro, {
-          enableHighAccuracy: true,
-          timeout: ESPERA_MS,
-          maximumAge: 60000,
-        }),
-      );
-    } catch {
-      // negado, indisponível ou pendurado — os três terminam igual: manual
-      resumo.textContent = "Sem sinal de GPS aqui dentro — aponte no mapa onde você está";
-      this.escolher("origem");
+    resumo.textContent = simulando() ? "Lendo posição simulada…" : "Procurando sinal…";
+    const fix = await posicao(ESPERA_MS, BOM_M, ASSENTA_MS);
+
+    if (typeof fix === "string") {
+      // negado, indisponível e pendurado terminam igual: o visitante aponta.
+      // Distinguir só serve para a mensagem não mentir sobre a causa.
+      const motivo = {
+        negado: "Sem permissão de localização",
+        indisponivel: "Este navegador não dá acesso à localização",
+        demorou: "Sem sinal de GPS aqui dentro",
+      }[fix];
+      this.escolher("origem", motivo);
       return;
     }
 
-    const erro = pos.coords.accuracy;
-    if (erro > ERRO_MAX_M) {
-      resumo.textContent = `Sinal fraco (± ${Math.round(erro)} m) — aponte no mapa onde você está`;
-      this.escolher("origem");
-      return;
-    }
-
+    const marca = fix.simulado ? " · simulado" : "";
     const { rotas } = this.ctx;
-    const cel = rotas.celula(pos.coords.longitude, pos.coords.latitude);
-    const dentro = rotas.maisProximaLivre(pos.coords.longitude, pos.coords.latitude, erro + 40);
-    if (!dentro) {
-      resumo.textContent = "Você parece estar fora do pavilhão — aponte no mapa";
-      this.escolher("origem");
+    // Um círculo maior que metade do menor lado do salão cobre boa parte das
+    // fileiras: ordenar por ele não diria nada. O limite sai da própria malha
+    // em vez de ser um número escolhido por mim.
+    const limite = Math.min(...rotas.extensao()) / 2;
+    if (fix.erro > limite) {
+      this.escolher("origem", `Sinal fraco (± ${Math.round(fix.erro)} m${marca})`);
       return;
     }
 
-    // porta perto do fix é o único caso em que o GPS decide sozinho, e é
-    // justamente onde ele é confiável: portão é área aberta, com céu à vista
+    const cel = rotas.celula(fix.lng, fix.lat);
+    // o alcance da busca por chão caminhável também sai do fix: com ±10 m não
+    // faz sentido varrer 50 m, e com ±80 m varrer 50 m descartaria o certo
+    if (!rotas.maisProximaLivre(fix.lng, fix.lat, Math.max(fix.erro, 15))) {
+      this.escolher("origem", `Você parece estar fora do pavilhão${marca}`);
+      return;
+    }
+
+    // Único caso em que o GPS decide sozinho: a porta é a coisa mais próxima
+    // do fix. É onde o sensor é confiável (portão é área aberta, com céu à
+    // vista) e onde a resposta é óbvia (quem acabou de entrar está na porta).
+    // Bastar "porta a menos de 35 m" não serve: no meio do salão quase sempre
+    // há uma saída nesse raio, e o app escolheria por conta própria um lugar
+    // onde o visitante não está.
+    const perto = this.ctx.candidatos(cel, fix.erro, MIN_OPCOES, MAX_OPCOES);
+    const dPerto = perto.length ? rotas.distancia(perto[0].cel, cel) : Infinity;
     const porta = rotas
       .portas()
       .map((p) => ({ ...p, d: rotas.distancia(p.cel, cel) }))
       .sort((a, b) => a.d - b.d)[0];
-    if (porta && porta.d <= Math.max(PORTA_OBVIA_M, erro)) {
+    if (porta && porta.d <= Math.max(fix.erro, BOM_M) && porta.d <= dPerto) {
       this.ctx.desenhaIncerteza(null, 0);
       this.define({ rotulo: porta.nome, cel: porta.cel }, "origem");
-      this.$("rotaResumo").textContent =
-        `${this.$("rotaResumo").textContent} · origem pelo GPS (± ${Math.round(erro)} m)`;
+      resumo.textContent =
+        `${resumo.textContent} · origem pelo GPS${marca} (± ${Math.round(fix.erro)} m)`;
       return;
     }
 
     // longe de porta: o GPS não escolhe, só ordena. O círculo é honesto sobre
     // o tamanho da dúvida e a lista continua rolável até o fim do índice.
-    this.ctx.desenhaIncerteza(cel, erro);
-    const perto = this.ctx.candidatos(cel, 8);
-    resumo.textContent = `Você está por aqui (± ${Math.round(erro)} m). Qual destes está mais perto de você?`;
+    this.ctx.desenhaIncerteza(cel, fix.erro);
+    resumo.textContent =
+      `Você está por aqui (± ${Math.round(fix.erro)} m${marca}). Qual destes está mais perto de você?`;
     const lista = this.$("rotaLista");
     lista.hidden = false;
     lista.innerHTML = perto
