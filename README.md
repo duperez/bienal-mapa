@@ -191,7 +191,27 @@ para conferir a olho que a leitura do PDF está correta.
    explicação: o canto certo pode ser o NE. Faltam pontos de controle — tentei
    sanitários, portões e contorno da planta oficial do Anhembi e nenhum casou,
    porque o mapa da Bienal não desenha nenhuma feição permanente do prédio.
-   Resolver com leitura de GPS no local.
+
+   **Primeira medida (`tools/afere_ancora.py`).** O OSM não mapeia nada dentro
+   do pavilhão, mas mapeia três marquises (`building=roof`) — e marquise cobre
+   entrada. As 13 portas do evento (5 "Acesso Hall", 2 "Acesso Crianças",
+   1 "Entrada", 3 "Saída" na borda oeste, 2 "Saída") deveriam cair sob alguma:
+
+   | orientação do desenho | distância média das portas à marquise |
+   | --- | --- |
+   | âncora de hoje | 71,2 m |
+   | espelhada no eixo horizontal | **10,2 m** |
+   | espelhada nos dois eixos | 26,0 m |
+   | espelhada no eixo vertical | 117,7 m |
+
+   Ou seja: hoje as portas do evento abrem para o meio do prédio, sem nada
+   atrás. Espelhado o desenho, encostam nas marquises. O segundo colocado fica
+   2,5x pior, então o eixo está decidido pelo dado — mas é **indício, não
+   prova**: "Acesso Hall" pode ser porta interna para o hall do pavilhão, e o
+   ajuste ainda quer empurrar o desenho 10 m para além da parede oeste. Nada
+   foi reposicionado. Vale notar que a rota **não depende disto**: origem e
+   destino são apontados no desenho, então o erro da âncora se cancela. Quem
+   depende é só a camada de GPS. Resolver com leitura de GPS no local.
 5. **Rota sem instrução falada**: o caminho existe, é ótimo e já vai de
    qualquer ponto a qualquer ponto, mas o app só desenha a linha. Falta cruzar
    os trechos com as vias para escrever "siga pela RUA E, vire na Transversal
