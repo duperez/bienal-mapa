@@ -89,8 +89,9 @@ não cobrem praça nem avental. Costurar isso à mão é justamente o que o proj
 se proíbe. A grade é a própria superfície livre, amostrada.
 
 ```
-282 destinos · 0 sem rota · mediana 117 m · máx 162 m
-5,3 curvas por rota · 25 ms por destino (10 portas testadas)
+282 destinos · 0 ilhados das portas
+300 pares estande->estande · 0 sem rota · mediana 108 m · máx 281 m
+7,1 curvas por rota · 1,5 ms por par
 malha.json: 34,1 KB
 ```
 
@@ -98,6 +99,31 @@ Detalhes que custaram cuidado: diagonal só passa se os dois ortogonais também
 estiverem livres (senão a rota corta a quina do estande); e o caminho cru é uma
 escada de 0,5 m, enxugada por varredura de visibilidade — sem isso o traço sai
 serrilhado e daria um "vire à esquerda" a cada meio metro.
+
+### Percurso: por que o GPS não manda
+
+O evento é indoor, sob telhado metálico. O navegador devolve fixes com **10 a
+50 m** de erro e o corredor mais largo do pavilhão tem **7 m**: uma posição
+errada apontaria a direção errada com toda a confiança do mundo. Posição errada
+é pior que posição nenhuma.
+
+Então o visitante **aponta** onde está — por busca ("estou no estande E60", que
+é a placa que ele tem na frente dos olhos) ou por toque no mapa, com snap para a
+célula caminhável mais próxima. Origem e destino são simétricos, e a origem fica
+sempre escrita na tela: o app nunca roteia de um lugar que o visitante não
+escolheu sem ele perceber. Para não cobrar duas marcações no caso comum ("acabei
+de entrar, onde fica X"), a origem já vem preenchida com a última usada ou com a
+porta mais próxima do destino — e é trocável em um toque.
+
+O GPS entra como camada opcional, e mesmo assim para **ordenar** candidatos,
+nunca para filtrar. O motivo é o defeito 4: a âncora do desenho dentro do prédio
+tem ~30 m de folga, então um raio traçado a partir do fix sairia descentrado por
+mais do que o próprio erro do sensor e poderia excluir justamente o estande
+certo. Ordenando, o erro de âncora piora a ordem da lista e nunca esconde a
+resposta. Regras: fix acima de 100 m de erro é descartado; espera de 5 s e cai
+para o manual (fix pendurado é o desfecho mais comum indoor); porta a menos de
+35 m do fix é assumida como origem — é o único caso em que o GPS decide sozinho,
+e é justamente onde ele funciona, porque portão é área aberta com céu à vista.
 
 ### Ruas e circulação
 
@@ -122,7 +148,7 @@ sh tools/build.sh --aceitar  # regrava a baseline (só quando a mudança for int
 
 cd web && npm install && npm run dev
 node test-shots.mjs <porta>  # screenshots do app real via Playwright
-node test-rota.mjs <porta>   # rota ponta a ponta + todos os 282 destinos
+node test-rota.mjs <porta>   # percurso na UI + carga de 300 pares de estandes
 ```
 
 `tools/transcribe.py` gera a prova de conceito da transcrição
@@ -148,15 +174,18 @@ para conferir a olho que a leitura do PDF está correta.
    sanitários, portões e contorno da planta oficial do Anhembi e nenhum casou,
    porque o mapa da Bienal não desenha nenhuma feição permanente do prédio.
    Resolver com leitura de GPS no local.
-5. **Rota sem instrução falada**: o caminho existe e é ótimo, mas o app só
-   desenha a linha. Falta cruzar os trechos com as vias para escrever "siga
-   pela RUA E, vire na Transversal 04". Falta também partir da posição do
-   visitante (hoje parte sempre da porta mais próxima do destino) — depende do
-   defeito 4 e do 7.
+5. **Rota sem instrução falada**: o caminho existe, é ótimo e já vai de
+   qualquer ponto a qualquer ponto, mas o app só desenha a linha. Falta cruzar
+   os trechos com as vias para escrever "siga pela RUA E, vire na Transversal
+   04".
 6. **`LARG_MIN = 2 m` e `AVENTAL = 6 m` são julgamento meu**, não saem do PDF.
    As 9 transversais e 1 alameda sem seta carregam `nome_derivado: true`; a RUA
    AA corre na borda do anexo e carrega `borda_aberta: true`.
-7. **Deploy https** (Pages ou similar) para service worker e geolocalização valerem.
+7. **Não abre offline ainda.** Todos os assets já são locais (~650 KB, nenhum
+   tile ou fonte externa) e o roteamento não faz uma única chamada de rede, mas
+   não há service worker: `main.ts` hoje só *desregistra* os SW residuais do app
+   legado. Falta escrever o SW próprio e publicar em https (Pages ou similar) —
+   sem isso, e sem https, nem o cache nem a geolocalização valem.
 
 ## Layout
 
@@ -167,6 +196,8 @@ tools/build_route.py  superfície caminhável -> malha.json (grade + acessos)
 tools/calibra.py      mede a escala pelo módulo dos estandes
 tools/transcribe.py   prova de conceito PDF -> SVG -> PNG
 web/                  app MapLibre (Vite + TypeScript)
+web/src/rotas.ts      A* sobre a malha, snap e inversa da afim
+web/src/percurso.ts   escolha de origem/destino e camada opcional de GPS
 reference/            PDF oficial e artefatos de comparação
 legacy/               app e geradores sintéticos anteriores (referência)
 ```

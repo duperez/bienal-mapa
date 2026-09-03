@@ -187,3 +187,161 @@ body {
 #sheetRota[hidden] {
   display: none;
 }
+
+/* ---- percurso (origem -> destino) ---- */
+#rota {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 13;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.25);
+  padding: 14px 16px calc(env(safe-area-inset-bottom) + 14px);
+  transform: translateY(105%);
+  transition: transform 0.22s ease;
+}
+
+#rota.open {
+  transform: none;
+}
+
+#rotaLinhas {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 6px 8px;
+  align-items: center;
+}
+
+.rota-campo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  background: #fafaf8;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text-1);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rota-campo.vazio .rota-texto {
+  color: var(--text-2);
+}
+
+/* o campo em escolha precisa gritar: enquanto ele está ativo, o toque no
+   mapa muda de significado, e isso tem que estar óbvio na tela */
+.rota-campo.ativo {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.rota-texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rota-marca {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+
+.rota-marca-a {
+  background: #1a73e8;
+}
+
+.rota-marca-b {
+  background: #d93025;
+}
+
+.rota-icone {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+#rotaResumo:not(:empty) {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+#rotaLista {
+  margin-top: 10px;
+  max-height: 40vh;
+  overflow-y: auto;
+  border-top: 1px solid var(--divider);
+}
+
+.rota-op {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--divider);
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text-1);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rota-op span {
+  flex: none;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+#rotaBarra {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+#rotaBarra button {
+  flex: 1;
+  padding: 11px;
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+  cursor: pointer;
+}
+
+#rotaGps {
+  border-color: #1a73e8 !important;
+  color: #1a73e8;
+}
+
+/* mira no cursor durante a escolha, para o toque no mapa parecer intencional */
+body.escolhendo .maplibregl-canvas {
+  cursor: crosshair;
+}

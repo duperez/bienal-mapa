@@ -44,6 +44,90 @@ export class Rotas {
     return this.m.acessos[chave];
   }
 
+  get passo(): number {
+    return this.m.passo;
+  }
+
+  /**
+   * lng/lat -> célula fracionária, invertendo a afim do build.
+   *
+   * A afim é [ex ey] aplicada em (i,j); aqui resolvemos o sistema 2x2. Sai
+   * fracionário de propósito: quem chama decide se arredonda (posição de
+   * toque) ou se usa a fração para medir distância em metros.
+   */
+  celula(lng: number, lat: number): [number, number] {
+    const { origem, ex, ey } = this.m;
+    const dx = lng - origem[0];
+    const dy = lat - origem[1];
+    const det = ex[0] * ey[1] - ey[0] * ex[1];
+    return [(dx * ey[1] - ey[0] * dy) / det, (ex[0] * dy - dx * ex[1]) / det];
+  }
+
+  livreEm(i: number, j: number): boolean {
+    const { w, h } = this.m;
+    if (i < 0 || j < 0 || i >= w || j >= h) return false;
+    return this.livre[j * w + i] === 1;
+  }
+
+  /**
+   * Célula livre mais próxima de um ponto, por anéis crescentes.
+   *
+   * Toque de dedo num celular cai em cima de estande na maior parte das
+   * vezes, e GPS de pavilhão cai em qualquer lugar. Sem esta função a rota
+   * simplesmente não nasce e o app parece quebrado. `limite` em metros evita
+   * arrastar um ponto do estacionamento para dentro do salão.
+   */
+  maisProximaLivre(lng: number, lat: number, limite = 25): [number, number] | null {
+    const [fi, fj] = this.celula(lng, lat);
+    const ci = Math.round(fi);
+    const cj = Math.round(fj);
+    if (this.livreEm(ci, cj)) return [ci, cj];
+    const raio = Math.ceil(limite / this.m.passo);
+    for (let r = 1; r <= raio; r++) {
+      let melhor: [number, number] | null = null;
+      let dist = Infinity;
+      for (let d = -r; d <= r; d++) {
+        for (const [i, j] of [
+          [ci + d, cj - r],
+          [ci + d, cj + r],
+          [ci - r, cj + d],
+          [ci + r, cj + d],
+        ] as [number, number][]) {
+          if (!this.livreEm(i, j)) continue;
+          const s = (i - fi) ** 2 + (j - fj) ** 2;
+          if (s < dist) {
+            dist = s;
+            melhor = [i, j];
+          }
+        }
+      }
+      if (melhor) return melhor;
+    }
+    return null;
+  }
+
+  /** distância em linha reta, em metros, entre duas células (aceita fracionárias) */
+  distancia(a: [number, number], b: [number, number]): number {
+    return Math.hypot(a[0] - b[0], a[1] - b[1]) * this.m.passo;
+  }
+
+  /**
+   * Rota entre dois pontos quaisquer — é este o caminho principal do app.
+   *
+   * O evento é indoor: GPS erra de 10 a 50 m e o corredor tem 3 m, então a
+   * posição do visitante não vem de sensor, vem de ele apontar onde está.
+   * Origem e destino são simétricos por isso.
+   */
+  rota(de: [number, number], ate: [number, number]): { cels: [number, number][]; metros: number } | null {
+    const cels = this.caminho(de, ate);
+    if (!cels) return null;
+    // o comprimento é medido no traçado já enxuto: a escada de células de
+    // 0,5 m do A* infla a distância em ~8%, e é o traçado reto que a pessoa
+    // efetivamente anda
+    const enxuto = this.enxuga(cels);
+    return { cels: enxuto, metros: this.metros(enxuto) };
+  }
+
   /** todas as portas do evento, achatadas */
   portas(): { nome: string; cel: [number, number] }[] {
     return Object.entries(this.m.portas).flatMap(([nome, cels]) =>
@@ -189,15 +273,15 @@ export class Rotas {
   /** rota da porta mais conveniente até um destino, escolhendo pela distância real */
   daPortaMaisProxima(destino: [number, number]): {
     porta: string;
+    cel: [number, number];
     cels: [number, number][];
     metros: number;
   } | null {
-    let melhor: { porta: string; cels: [number, number][]; metros: number } | null = null;
+    let melhor: { porta: string; cel: [number, number]; cels: [number, number][]; metros: number } | null = null;
     for (const { nome, cel } of this.portas()) {
-      const cels = this.caminho(cel, destino);
-      if (!cels) continue;
-      const m = this.metros(cels);
-      if (!melhor || m < melhor.metros) melhor = { porta: nome, cels, metros: m };
+      const r = this.rota(cel, destino);
+      if (!r) continue;
+      if (!melhor || r.metros < melhor.metros) melhor = { porta: nome, cel, ...r };
     }
     return melhor;
   }

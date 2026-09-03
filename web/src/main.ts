@@ -2,6 +2,7 @@ import { Map as MlMap, AttributionControl, setWorkerUrl } from "maplibre-gl";
 import { attachSearchUI, buildIndex, subtitle, type Hit } from "./search";
 import { addPoiIcons } from "./icons";
 import { Rotas, type Malha } from "./rotas";
+import { Percurso, type Ponto } from "./percurso";
 import "maplibre-gl/dist/maplibre-gl.css";
 // O worker do MapLibre v6 vive num arquivo separado resolvido via
 // import.meta.url — no dev do Vite esse caminho não existe no diretório de
@@ -552,6 +553,60 @@ map.on("load", async () => {
       features,
     });
 
+  // ---- pontos do percurso e incerteza do GPS ----
+  // A incerteza fica ABAIXO do traçado e dos marcadores: ela é contexto sobre
+  // a dúvida, não a resposta. Desenhada como polígono em espaço de célula e
+  // convertida pela mesma afim da malha, para não reimplementar georreferência.
+  map.addSource("incerteza", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({
+    id: "incerteza-fill",
+    type: "fill",
+    source: "incerteza",
+    paint: { "fill-color": "#1a73e8", "fill-opacity": 0.12 },
+  }, "rota-halo");
+  map.addLayer({
+    id: "incerteza-linha",
+    type: "line",
+    source: "incerteza",
+    paint: { "line-color": "#1a73e8", "line-width": 1.5, "line-dasharray": [2, 2], "line-opacity": 0.6 },
+  }, "rota-halo");
+
+  map.addSource("pontos", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({
+    id: "pontos-circulo",
+    type: "circle",
+    source: "pontos",
+    paint: {
+      "circle-radius": 11,
+      "circle-color": ["match", ["get", "papel"], "origem", "#1a73e8", "#d93025"],
+      "circle-stroke-color": "#ffffff",
+      "circle-stroke-width": 2.5,
+    },
+  });
+  map.addLayer({
+    id: "pontos-letra",
+    type: "symbol",
+    source: "pontos",
+    layout: {
+      "text-field": ["get", "letra"],
+      "text-font": ["Klokantech Noto Sans Bold"],
+      "text-size": 12,
+      "text-allow-overlap": true,
+    },
+    paint: { "text-color": "#ffffff" },
+  });
+
+  const setPontos = (features: GeoJSON.Feature[]) =>
+    (map.getSource("pontos") as import("maplibre-gl").GeoJSONSource).setData({
+      type: "FeatureCollection",
+      features,
+    });
+  const setIncerteza = (features: GeoJSON.Feature[]) =>
+    (map.getSource("incerteza") as import("maplibre-gl").GeoJSONSource).setData({
+      type: "FeatureCollection",
+      features,
+    });
+
   // ---- busca + seleção ----
   const setSel = (features: GeoJSON.Feature[]) =>
     (map.getSource("sel") as import("maplibre-gl").GeoJSONSource).setData({
@@ -576,47 +631,106 @@ map.on("load", async () => {
   function closeSheet(): void {
     sheet.classList.remove("open");
     setSel([]);
-    setRota([]);
+    // o traçado NÃO some junto: a ficha é sobre um lugar, o percurso é sobre
+    // o trajeto. Fechar a ficha para enxergar o mapa é o gesto natural de
+    // quem está seguindo a rota.
+    if (!percurso.aberto) setRota([]);
   }
   // o clique no botão não pode fechar a ficha junto
   sheet.addEventListener("click", (e) => {
     if (e.target !== btnRota) closeSheet();
   });
 
-  let alvoRota: string | null = null;
+  // ---- percurso de dois pontos ----
+  const pontoDe = (h: Hit): Ponto | null => {
+    const cel = rotas.acesso(h.code ?? h.name);
+    return cel ? { rotulo: h.name, cel } : null;
+  };
+
+  const cercaDe = (cel: [number, number], raio: number): GeoJSON.Feature => {
+    // círculo desenhado em espaço de célula (a grade é métrica e regular),
+    // depois convertido pela afim da malha
+    const r = raio / rotas.passo;
+    const anel: [number, number][] = [];
+    for (let k = 0; k <= 48; k++) {
+      const a = (k / 48) * 2 * Math.PI;
+      anel.push(rotas.lngLat([cel[0] + r * Math.cos(a), cel[1] + r * Math.sin(a)]));
+    }
+    return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [anel] } };
+  };
+
+  const index = buildIndex(mapa);
+  const percurso = new Percurso({
+    rotas,
+    desenhaRota: (cels) =>
+      setRota(
+        cels
+          ? [{
+              type: "Feature",
+              properties: {},
+              geometry: { type: "LineString", coordinates: cels.map((c) => rotas.lngLat(c)) },
+            }]
+          : [],
+      ),
+    desenhaPontos: (o, d) =>
+      setPontos(
+        ([[o, "origem", "A"], [d, "destino", "B"]] as [Ponto | null, string, string][])
+          .filter(([p]) => p)
+          .map(([p, papel, letra]) => ({
+            type: "Feature",
+            properties: { papel, letra },
+            geometry: { type: "Point", coordinates: rotas.lngLat(p!.cel) },
+          })),
+      ),
+    desenhaIncerteza: (cel, raio) => setIncerteza(cel ? [cercaDe(cel, raio)] : []),
+    enquadra: (cels) =>
+      map.fitBounds(bboxDe(cels.map((c) => rotas.lngLat(c))), {
+        padding: { top: 90, bottom: 260, left: 40, right: 40 },
+        bearing: VENUE_BEARING,
+        duration: 700,
+      }),
+    candidatos: (cel, n) =>
+      index
+        .map((h) => pontoDe(h))
+        .filter((p): p is Ponto => !!p)
+        .map((p) => ({ p, d: rotas.distancia(p.cel, cel) }))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, n)
+        .map(({ p }) => p),
+    aoEscolher: (campo) => {
+      document.body.classList.toggle("escolhendo", !!campo);
+      if (campo) closeSheet();
+    },
+  });
+
+  let alvoRota: Hit | null = null;
   btnRota.addEventListener("click", () => {
     if (!alvoRota) return;
-    const destino = rotas.acesso(alvoRota);
-    if (!destino) {
+    const p = pontoDe(alvoRota);
+    if (!p) {
       (document.getElementById("sheetSub") as HTMLElement).textContent =
         "sem ponto de acesso na malha";
       return;
     }
-    const r = rotas.daPortaMaisProxima(destino);
-    if (!r) {
-      (document.getElementById("sheetSub") as HTMLElement).textContent =
-        "sem caminho até nenhuma entrada";
-      return;
-    }
-    setRota([{
-      type: "Feature",
-      properties: {},
-      geometry: { type: "LineString", coordinates: rotas.enxuga(r.cels).map((c) => rotas.lngLat(c)) },
-    }]);
-    (document.getElementById("sheetSub") as HTMLElement).textContent =
-      `${Math.round(r.metros)} m a pé desde ${r.porta}`;
-    map.fitBounds(bboxDe(rotas.enxuga(r.cels).map((c) => rotas.lngLat(c))), {
-      padding: { top: 90, bottom: 190, left: 40, right: 40 },
-      bearing: VENUE_BEARING,
-      duration: 700,
-    });
+    sheet.classList.remove("open");
+    setSel([]);
+    percurso.abrir(p);
   });
 
   function pick(h: Hit, fly: boolean): void {
+    // em modo de escolha, tocar num lugar preenche o campo em vez de abrir
+    // a ficha — é o mesmo gesto do fluxo normal, com outro destino
+    if (percurso.escolhendo) {
+      const p = pontoDe(h);
+      if (p) {
+        percurso.define(p);
+        return;
+      }
+    }
     setSel([h.feature]);
-    setRota([]);
-    alvoRota = h.code ?? h.name;
-    btnRota.hidden = !rotas.acesso(alvoRota);
+    if (!percurso.aberto) setRota([]);
+    alvoRota = h;
+    btnRota.hidden = !pontoDe(h);
     openSheet(h.name, subtitle(h));
     if (fly) {
       map.flyTo({
@@ -630,7 +744,6 @@ map.on("load", async () => {
     }
   }
 
-  const index = buildIndex(mapa);
   attachSearchUI(index, (h) => pick(h, true));
 
   // tap num estande/área do mapa abre a ficha (sem voo)
@@ -650,6 +763,15 @@ map.on("load", async () => {
     map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
   }
   map.on("click", (e) => {
-    if (!e.defaultPrevented) closeSheet();
+    if (e.defaultPrevented) return;
+    // toque em área livre durante a escolha vira ponto do percurso, com snap
+    // para a célula caminhável mais próxima: dedo em tela de celular erra o
+    // corredor com facilidade, e ponto em cima de estande não gera rota
+    if (percurso.escolhendo) {
+      const cel = rotas.maisProximaLivre(e.lngLat.lng, e.lngLat.lat, 25);
+      if (cel) percurso.define({ rotulo: "Ponto no mapa", cel });
+      return;
+    }
+    closeSheet();
   });
 });
