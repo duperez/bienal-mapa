@@ -76,6 +76,29 @@ negativa e apareciam do lado de fora da parede no app.
 Reproduzir com `python tools/calibra.py`. O teste de aceite mede o desvio a cada
 build, então a escala não pode regredir em silêncio.
 
+### Rota
+
+O visitante pergunta "como chego lá", então existe `web/public/data/malha.json`:
+a superfície caminhável amostrada a cada **0,5 m** (601 x 300 células, 75.938
+livres) mais o ponto de acesso de cada bloco. O A* roda **no navegador** — a
+origem de uma rota é o visitante, e ela muda a cada passo.
+
+Grade em vez de grafo das vias porque as vias são o *rótulo* dos corredores, não
+a topologia deles: não se nodam nos cruzamentos, não chegam à porta do estande e
+não cobrem praça nem avental. Costurar isso à mão é justamente o que o projeto
+se proíbe. A grade é a própria superfície livre, amostrada.
+
+```
+282 destinos · 0 sem rota · mediana 117 m · máx 162 m
+5,3 curvas por rota · 25 ms por destino (10 portas testadas)
+malha.json: 34,1 KB
+```
+
+Detalhes que custaram cuidado: diagonal só passa se os dois ortogonais também
+estiverem livres (senão a rota corta a quina do estande); e o caminho cru é uma
+escada de 0,5 m, enxugada por varredura de visibilidade — sem isso o traço sai
+serrilhado e daria um "vire à esquerda" a cada meio metro.
+
 ### Ruas e circulação
 
 O PDF não desenha ruas: desenha setas com o nome delas. As setas cobrem só 9,7%
@@ -94,11 +117,12 @@ desenhados em canvas. Screenshots de verificação em `web/shot-*.png`.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt
-sh tools/build.sh            # PDF -> mapa.geojson + teste de aceite
+sh tools/build.sh            # PDF -> mapa.geojson + malha.json + teste de aceite
 sh tools/build.sh --aceitar  # regrava a baseline (só quando a mudança for intencional)
 
 cd web && npm install && npm run dev
 node test-shots.mjs <porta>  # screenshots do app real via Playwright
+node test-rota.mjs <porta>   # rota ponta a ponta + todos os 282 destinos
 ```
 
 `tools/transcribe.py` gera a prova de conceito da transcrição
@@ -124,8 +148,11 @@ para conferir a olho que a leitura do PDF está correta.
    sanitários, portões e contorno da planta oficial do Anhembi e nenhum casou,
    porque o mapa da Bienal não desenha nenhuma feição permanente do prédio.
    Resolver com leitura de GPS no local.
-5. **Rota (fase 2)**: as vias existem como LineString, mas ainda não há grafo
-   nodado nos cruzamentos nem ponto de acesso por estande.
+5. **Rota sem instrução falada**: o caminho existe e é ótimo, mas o app só
+   desenha a linha. Falta cruzar os trechos com as vias para escrever "siga
+   pela RUA E, vire na Transversal 04". Falta também partir da posição do
+   visitante (hoje parte sempre da porta mais próxima do destino) — depende do
+   defeito 4 e do 7.
 6. **`LARG_MIN = 2 m` e `AVENTAL = 6 m` são julgamento meu**, não saem do PDF.
    As 9 transversais e 1 alameda sem seta carregam `nome_derivado: true`; a RUA
    AA corre na borda do anexo e carrega `borda_aberta: true`.
@@ -136,6 +163,8 @@ para conferir a olho que a leitura do PDF está correta.
 ```
 tools/build_map.py    PDF -> mapa.geojson (transcrição + classificação)
 tools/verify_map.py   teste de aceite vetorial contra o PDF
+tools/build_route.py  superfície caminhável -> malha.json (grade + acessos)
+tools/calibra.py      mede a escala pelo módulo dos estandes
 tools/transcribe.py   prova de conceito PDF -> SVG -> PNG
 web/                  app MapLibre (Vite + TypeScript)
 reference/            PDF oficial e artefatos de comparação

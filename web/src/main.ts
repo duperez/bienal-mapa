@@ -1,6 +1,7 @@
 import { Map as MlMap, AttributionControl, setWorkerUrl } from "maplibre-gl";
 import { attachSearchUI, buildIndex, subtitle, type Hit } from "./search";
 import { addPoiIcons } from "./icons";
+import { Rotas, type Malha } from "./rotas";
 import "maplibre-gl/dist/maplibre-gl.css";
 // O worker do MapLibre v6 vive num arquivo separado resolvido via
 // import.meta.url — no dev do Vite esse caminho não existe no diretório de
@@ -16,6 +17,17 @@ setWorkerUrl(maplibreWorkerUrl);
 
 // erros visíveis: tela muda esconde a causa — qualquer exceção aparece num
 // overlay discreto (app pessoal: diagnóstico > estética)
+function bboxDe(pts: [number, number][]): [[number, number], [number, number]] {
+  let x0 = 180, y0 = 90, x1 = -180, y1 = -90;
+  for (const [x, y] of pts) {
+    if (x < x0) x0 = x;
+    if (y < y0) y0 = y;
+    if (x > x1) x1 = x;
+    if (y > y1) y1 = y;
+  }
+  return [[x0, y0], [x1, y1]];
+}
+
 function showError(msg: string): void {
   let el = document.getElementById("errOverlay");
   if (!el) {
@@ -130,16 +142,19 @@ declare global {
 window.__map = map;
 
 const MAPA_URL = `${import.meta.env.BASE_URL}data/mapa.geojson`;
+const MALHA_URL = `${import.meta.env.BASE_URL}data/malha.json`;
 
 map.on("load", async () => {
   // o `bounds` do construtor aplica a câmera com bearing 0 (reset assíncrono);
   // reenquadra com o bearing que endireita o prédio, sem animação
   frameVenue();
 
-  const [venue, mapa] = await Promise.all([
+  const [venue, mapa, malha] = await Promise.all([
     fetch(VENUE_URL).then((r) => r.json()),
     fetch(MAPA_URL).then((r) => r.json()),
+    fetch(MALHA_URL).then((r) => r.json()),
   ]);
+  const rotas = new Rotas(malha as Malha);
 
   map.addSource("venue", { type: "geojson", data: venue });
   map.addLayer({
@@ -511,6 +526,32 @@ map.on("load", async () => {
     },
   }, "areas-poi");
 
+  // ---- rota ----
+  // desenhada acima de tudo: é resposta a uma pergunta do visitante, não
+  // contexto. Duas linhas, uma mais grossa por baixo, para o traço se destacar
+  // tanto do piso claro quanto dos blocos.
+  map.addSource("rota", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({
+    id: "rota-halo",
+    type: "line",
+    source: "rota",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": "#ffffff", "line-width": 9, "line-opacity": 0.9 },
+  });
+  map.addLayer({
+    id: "rota-linha",
+    type: "line",
+    source: "rota",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": "#1a73e8", "line-width": 5 },
+  });
+
+  const setRota = (features: GeoJSON.Feature[]) =>
+    (map.getSource("rota") as import("maplibre-gl").GeoJSONSource).setData({
+      type: "FeatureCollection",
+      features,
+    });
+
   // ---- busca + seleção ----
   const setSel = (features: GeoJSON.Feature[]) =>
     (map.getSource("sel") as import("maplibre-gl").GeoJSONSource).setData({
@@ -520,8 +561,12 @@ map.on("load", async () => {
 
   const sheet = document.createElement("div");
   sheet.id = "sheet";
-  sheet.innerHTML = `<div class="handle"></div><div id="sheetTitle"></div><div id="sheetSub"></div>`;
+  sheet.innerHTML =
+    `<div class="handle"></div><div id="sheetTitle"></div><div id="sheetSub"></div>` +
+    `<button id="sheetRota" type="button">Como chegar</button>`;
   document.body.appendChild(sheet);
+
+  const btnRota = document.getElementById("sheetRota") as HTMLButtonElement;
 
   function openSheet(title: string, sub: string): void {
     (document.getElementById("sheetTitle") as HTMLElement).textContent = title;
@@ -531,11 +576,47 @@ map.on("load", async () => {
   function closeSheet(): void {
     sheet.classList.remove("open");
     setSel([]);
+    setRota([]);
   }
-  sheet.addEventListener("click", closeSheet);
+  // o clique no botão não pode fechar a ficha junto
+  sheet.addEventListener("click", (e) => {
+    if (e.target !== btnRota) closeSheet();
+  });
+
+  let alvoRota: string | null = null;
+  btnRota.addEventListener("click", () => {
+    if (!alvoRota) return;
+    const destino = rotas.acesso(alvoRota);
+    if (!destino) {
+      (document.getElementById("sheetSub") as HTMLElement).textContent =
+        "sem ponto de acesso na malha";
+      return;
+    }
+    const r = rotas.daPortaMaisProxima(destino);
+    if (!r) {
+      (document.getElementById("sheetSub") as HTMLElement).textContent =
+        "sem caminho até nenhuma entrada";
+      return;
+    }
+    setRota([{
+      type: "Feature",
+      properties: {},
+      geometry: { type: "LineString", coordinates: rotas.enxuga(r.cels).map((c) => rotas.lngLat(c)) },
+    }]);
+    (document.getElementById("sheetSub") as HTMLElement).textContent =
+      `${Math.round(r.metros)} m a pé desde ${r.porta}`;
+    map.fitBounds(bboxDe(rotas.enxuga(r.cels).map((c) => rotas.lngLat(c))), {
+      padding: { top: 90, bottom: 190, left: 40, right: 40 },
+      bearing: VENUE_BEARING,
+      duration: 700,
+    });
+  });
 
   function pick(h: Hit, fly: boolean): void {
     setSel([h.feature]);
+    setRota([]);
+    alvoRota = h.code ?? h.name;
+    btnRota.hidden = !rotas.acesso(alvoRota);
     openSheet(h.name, subtitle(h));
     if (fly) {
       map.flyTo({
