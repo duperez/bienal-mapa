@@ -1,23 +1,34 @@
-// Screenshots de análise: várias vistas do mapa renderizado de verdade.
+// Screenshots do app real: várias vistas do mapa renderizado no browser.
+// Uso: node test-shots.mjs [porta]
 import { chromium } from "playwright";
 
+const porta = process.argv[2] ?? "5173";
 const vistas = [
-  { nome: "overview", zoom: 16.4, center: [-46.6364, -23.5166] },
-  { nome: "miolo-medio", zoom: 18.2, center: [-46.6372, -23.5163] },
-  { nome: "nordeste", zoom: 18.0, center: [-46.6355, -23.5159] },
-  { nome: "anexo", zoom: 18.0, center: [-46.6343, -23.5167] },
-  { nome: "detalhe", zoom: 19.5, center: [-46.637, -23.5164] },
+  // "abertura" usa o enquadramento inicial do próprio app (sem jumpTo)
+  { nome: "abertura" },
+  { nome: "miolo", zoom: 18.0, center: [-46.6371, -23.5164] },
+  { nome: "nordeste", zoom: 18.0, center: [-46.6356, -23.516] },
+  { nome: "anexo", zoom: 18.2, center: [-46.6349, -23.5167] },
+  { nome: "detalhe", zoom: 19.6, center: [-46.6369, -23.5165] },
 ];
 
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader"] });
-const page = await browser.newPage({ viewport: { width: 900, height: 650 } });
-await page.goto("http://localhost:8027/", { waitUntil: "networkidle" });
-await page.waitForTimeout(3000);
+const page = await browser.newPage({
+  viewport: { width: 960, height: 680 },
+  deviceScaleFactor: 2,
+});
+page.on("console", (m) => m.type() === "error" && console.log("console:", m.text()));
+await page.goto(`http://localhost:${porta}/`, { waitUntil: "networkidle" });
+await page.waitForFunction(() => window.__map?.isStyleLoaded?.(), null, { timeout: 30000 });
+await page.waitForTimeout(2500);
+
 for (const v of vistas) {
-  await page.evaluate((vv) => {
-    window.__map.jumpTo({ center: vv.center, zoom: vv.zoom, bearing: 4 });
-  }, v);
-  await page.waitForTimeout(1200);
+  if (v.center) {
+    await page.evaluate((vv) => {
+      window.__map.jumpTo({ center: vv.center, zoom: vv.zoom, bearing: 4 });
+    }, v);
+  }
+  await page.waitForTimeout(1500);
   await page.screenshot({ path: `shot-${v.nome}.png` });
   console.log(`shot-${v.nome}.png`);
 }

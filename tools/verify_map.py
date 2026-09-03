@@ -1,37 +1,33 @@
-"""Teste de aceite numérico: mapa.geojson vs PDF oficial.
+"""Teste de aceite VETORIAL: mapa.geojson vs PDF oficial.
 
-Rasteriza o GeoJSON que o app consome, alinha com o render do PDF e mede IoU
-por categoria. É o critério que faltava: sem isso, "ficou estranho" é opinião e
-cada correção empurra o erro pra outro canto.
+Mede o que importa — geometria — em vez de pixels. Para cada forma preenchida
+do PDF que o build deveria ter transcrito, procura a feature correspondente no
+GeoJSON e compara área, IoU e deriva de centroide em centímetros.
+
+Por que vetorial: o teste raster anterior punia antialiasing e formas de 2 px
+(a categoria "entidade" dava IoU 0,09 sendo geometricamente perfeita) e era
+enganado por logotipos desenhados por cima. Aqui, 1,0 é 1,0.
+
+Uso:
+    python tools/verify_map.py            # compara com o baseline
+    python tools/verify_map.py --aceitar  # grava o baseline atual
 """
 import json
 import math
 import sys
 
-import numpy as np
 import pymupdf
-from PIL import Image, ImageDraw
+from shapely.geometry import Polygon
+from shapely.strtree import STRtree
+
+sys.path.insert(0, "tools")
+from build_map import (MAP_CLIP, LEGENDA, TRAVESSA, VENUE, classificar,
+                       extrair, ring_area)  # noqa: E402
 
 GEOJSON = "web/public/data/mapa.geojson"
-VENUE = "data/venue.geojson"
-PDF = "reference/mapa-oficial.pdf"
-OUT = "reference/verificacao.png"
-
-MAP_CLIP = (62.0, 140.0, 1545.0, 955.0)
-HALL_M = 322.0
-PX_PER_M = 5.7
-
-CORES = {
-    "expositor": (187, 230, 251),
-    "cultural": (237, 33, 36),
-    "patrocinador": (250, 238, 19),
-    "entidade": (179, 127, 184),
-    "infra": (192, 226, 202),
-    "alimentacao": (250, 163, 26),
-}
-LEGENDA = (1068.0, 266.0, 1555.0, 485.0)   # legenda do PDF: não é planta
-BASELINE = "data/iou-baseline.json"
-TOLERANCIA = 0.01   # falha só em REGRESSÃO, não contra número mágico
+BASELINE = "data/aceite-baseline.json"
+TOL_IOU = 0.98        # forma considerada fiel
+TOL_DERIVA_CM = 5.0   # deriva máxima de centroide aceitável
 
 
 def inverso():
@@ -60,82 +56,124 @@ def inverso():
     return to_m
 
 
+def limpa(p):
+    return p if p.is_valid else p.buffer(0)
+
+
 def main():
     box = pymupdf.Rect(*MAP_CLIP)
-    W = int(box.width * HALL_M / box.width * PX_PER_M)
-    W = int(HALL_M * PX_PER_M)
-    H = int(box.height * (HALL_M / box.width) * PX_PER_M)
+    page = pymupdf.open("reference/mapa-oficial.pdf")[0]
+    formas, m_per_pt = extrair(page, box)
+
+    lx0, ly0 = ((LEGENDA[0] - box.x0) * m_per_pt, (LEGENDA[1] - box.y0) * m_per_pt)
+    lx1, ly1 = ((LEGENDA[2] - box.x0) * m_per_pt, (LEGENDA[3] - box.y0) * m_per_pt)
+
+    tv0, tv1 = ((TRAVESSA[0] - box.x0) * m_per_pt, (TRAVESSA[1] - box.y0) * m_per_pt)
+    tv2, tv3 = ((TRAVESSA[2] - box.x0) * m_per_pt, (TRAVESSA[3] - box.y0) * m_per_pt)
+
+    # o que o PDF manda existir, pela MESMA regra que o build usa
+    esperado = []
+    for f in formas:
+        ext = max(f["aneis"], key=lambda r: abs(ring_area(r)))
+        area = abs(ring_area(ext))
+        if area < 0.5 or all(lx0 <= x <= lx1 and ly0 <= y <= ly1 for x, y in ext):
+            continue
+        xs = [p[0] for p in ext]
+        ys = [p[1] for p in ext]
+        cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+        na_tv = tv0 <= cx <= tv2 and tv1 <= cy <= tv3
+        kind, cat = classificar(f["cor"], ext, area, na_tv)
+        if kind is None or kind == "poi":   # POI vira Point, não polígono
+            continue
+        buracos = [r for r in f["aneis"] if r is not ext and abs(ring_area(r)) > 1.0]
+        esperado.append((cat or kind, limpa(Polygon(ext, buracos))))
 
     to_m = inverso()
-    img = Image.new("RGB", (W, H), (250, 237, 210))
-    dr = ImageDraw.Draw(img)
-
     feats = json.load(open(GEOJSON))["features"]
-    ordem = {"piso": 0, "area": 1, "estande": 2}
-    for f in sorted(feats, key=lambda f: (ordem.get(f["properties"]["kind"], 3),
-                                          -f["properties"].get("area_m2", 0))):
-        cat = f["properties"].get("cat")
-        cor = CORES.get(cat, (198, 199, 200))
-        for ring in f["geometry"]["coordinates"][:1]:
-            pts = [tuple(v * PX_PER_M for v in to_m(*p)) for p in ring]
-            if len(pts) >= 3:
-                dr.polygon(pts, fill=cor)
-    img.save(OUT)
-
-    page = pymupdf.open(PDF)[0]
-    pm = page.get_pixmap(clip=box, dpi=200)
-    orig = Image.frombytes("RGB", (pm.width, pm.height), pm.samples).resize(
-        (W, H), Image.LANCZOS)
-
-    a = np.asarray(img).astype(int)
-    b = np.asarray(orig).astype(int)
-
-    # a caixa de legenda existe no PDF e não no modelo: comparar ali é ruído
-    m_per_pt = HALL_M / box.width
-    lx0 = int((LEGENDA[0] - box.x0) * m_per_pt * PX_PER_M)
-    ly0 = int((LEGENDA[1] - box.y0) * m_per_pt * PX_PER_M)
-    lx1 = int((LEGENDA[2] - box.x0) * m_per_pt * PX_PER_M)
-    ly1 = int((LEGENDA[3] - box.y0) * m_per_pt * PX_PER_M)
-    fora = np.ones(a.shape[:2], dtype=bool)
-    fora[ly0:ly1, lx0:lx1] = False
-
-    def mask(x, c, e=18):
-        return ((np.abs(x[:, :, 0] - c[0]) < e) & (np.abs(x[:, :, 1] - c[1]) < e)
-                & (np.abs(x[:, :, 2] - c[2]) < e))
-
-    try:
-        base = json.load(open(BASELINE))
-    except OSError:
-        base = {}
-
-    ok = True
-    atual = {}
-    tot = inter = 0
-    for cat, c in CORES.items():
-        m1, m2 = mask(a, c) & fora, mask(b, c) & fora
-        u = (m1 | m2).sum()
-        if not u:
+    modelo = []
+    for f in feats:
+        if f["geometry"]["type"] != "Polygon":
             continue
-        i = (m1 & m2).sum()
-        tot += i and i or 0
-        tot = tot
-        inter += i
-        iou = float(i) / float(u)
-        atual[cat] = round(iou, 4)
-        ref = base.get(cat)
-        if ref is None:
-            flag = "  (novo)"
-        elif iou < ref - TOLERANCIA:
-            flag = f"  REGREDIU (era {ref:.4f})"
-            ok = False
+        anel = [to_m(*p) for p in f["geometry"]["coordinates"][0]]
+        buracos = [[to_m(*p) for p in r] for r in f["geometry"]["coordinates"][1:]]
+        modelo.append((f["properties"], limpa(Polygon(anel, buracos))))
+
+    geoms = [g for _, g in modelo]
+    tree = STRtree(geoms)
+
+    res = {}
+    derivas = []
+    orfaos = []
+    for cat, alvo in esperado:
+        cand = tree.query(alvo)
+        melhor, iou = None, 0.0
+        for i in cand:
+            g = geoms[i]
+            u = alvo.union(g).area
+            if u <= 0:
+                continue
+            v = alvo.intersection(g).area / u
+            if v > iou:
+                iou, melhor = v, g
+        # bloco subdividido em N células: a união das células é que deve casar
+        if iou < TOL_IOU and cand.size:
+            partes = [geoms[i] for i in cand if alvo.contains(geoms[i].centroid)]
+            if partes:
+                from shapely.ops import unary_union
+                u = unary_union(partes)
+                v = alvo.intersection(u).area / alvo.union(u).area
+                if v > iou:
+                    iou, melhor = v, u
+        d = res.setdefault(cat, {"total": 0, "fiel": 0})
+        d["total"] += 1
+        if iou >= TOL_IOU:
+            d["fiel"] += 1
+            derivas.append(alvo.centroid.distance(melhor.centroid) * 100)
         else:
-            flag = "  OK" if iou <= ref + TOLERANCIA else f"  MELHOROU (era {ref:.4f})"
-        print(f"  IoU {cat:13s}: {iou:.4f}{flag}")
+            orfaos.append((cat, round(iou, 3),
+                           [round(v, 1) for v in alvo.centroid.coords[0]]))
+
+    print(f"{'categoria':14s} {'fiéis':>12s}   cobertura")
+    atual = {}
+    for cat in sorted(res):
+        d = res[cat]
+        cob = d["fiel"] / d["total"]
+        atual[cat] = round(cob, 4)
+        print(f"  {cat:12s} {d['fiel']:5d}/{d['total']:<5d}   {cob:6.1%}")
+
+    dmax = max(derivas) if derivas else 0.0
+    atual["_deriva_cm"] = round(dmax, 2)
+    print(f"\nderiva máxima de centroide: {dmax:.2f} cm "
+          f"({'OK' if dmax <= TOL_DERIVA_CM else 'ALTA'})")
+    if orfaos:
+        print(f"formas do PDF sem par fiel: {len(orfaos)}")
+        for o in sorted(orfaos, key=lambda o: o[1])[:8]:
+            print(f"   {o[0]:12s} IoU {o[1]:.3f}  em {o[2]} m")
 
     if "--aceitar" in sys.argv:
         json.dump(atual, open(BASELINE, "w"), indent=1)
         print(f"baseline gravado em {BASELINE}")
-    print(f"-> {OUT}")
+        return 0
+
+    try:
+        base = json.load(open(BASELINE))
+    except OSError:
+        print("sem baseline — rode com --aceitar")
+        return 0
+
+    ok = True
+    for cat, v in atual.items():
+        ref = base.get(cat)
+        if ref is None:
+            continue
+        if cat == "_deriva_cm":
+            if v > ref + 1.0:
+                print(f"REGREDIU deriva: {v} cm (era {ref})")
+                ok = False
+        elif v < ref - 0.01:
+            print(f"REGREDIU {cat}: {v:.1%} (era {ref:.1%})")
+            ok = False
+    print("aceite: OK" if ok else "aceite: FALHOU")
     return 0 if ok else 1
 
 

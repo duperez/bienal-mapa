@@ -10,3 +10,4 @@ reference/qa-*.png
 reference/mapa-oficial.svg
 reference/mapa-texto.html
 reference/extracao.json
+__pycache__/

@@ -26,7 +26,7 @@ HALL_M = 322.0
 # cores da LEGENDA do próprio PDF -> categoria. Nada inventado.
 PALETA = {
     (187, 230, 251): ("estande", "expositor"),
-    (237, 33, 36): ("estande", "cultural"),
+    (237, 33, 36): ("area", "cultural"),      # espaços nomeados, não estandes
     (250, 238, 19): ("estande", "patrocinador"),
     (179, 127, 184): ("estande", "entidade"),
     (192, 226, 202): ("area", "infra"),
@@ -37,7 +37,18 @@ PALETA = {
 # desenho, não área ocupável. Só o topo do bloco vira feature.
 ALIAS = {(235, 32, 40): (237, 33, 36), (238, 163, 26): (250, 163, 26)}
 CINZA = ((198, 199, 200), (128, 129, 129), (35, 31, 32))  # estrutura/halls
+RUA = (198, 177, 152)          # faixa/seta com o nome da rua
+# triângulos de acesso; a cor vem da LEGENDA do PDF e diz para quem é a porta
+POI = {(9, 146, 71): "entrada",            # acesso aos halls
+       (97, 186, 87): "entrada",           # público com ingresso
+       (205, 75, 147): "entrada-bilheteria",  # público sem ingresso
+       (225, 114, 38): "entrada-expositor",
+       (235, 44, 41): "saida",
+       (237, 33, 36): "saida",
+       (55, 185, 235): "escolas"}
+TRAVESSA = (795.0, 240.0, 905.0, 360.0)   # bbox da Travessa Literária no PDF
 CODE_RE = re.compile(r"[A-Z]{1,3}\d{1,3}[A-Z]?")
+RUA_RE = re.compile(r"RUA\s+[A-Z]{1,2}", re.I)
 
 
 def rgb(c):
@@ -239,6 +250,30 @@ def subdividir(ext, codes):
     return saida
 
 
+def classificar(cor, ext, area, na_travessa):
+    """Cor + forma -> (kind, cat). Regra ÚNICA, usada pelo build e pelo teste.
+
+    Duplicar essa decisão nos dois lados faria o teste validar a si mesmo e
+    divergir em silêncio.
+    """
+    if cor == RUA:
+        return "rua", None
+    if cor in POI and area < 4 and len(ext) <= 4:
+        return "poi", POI[cor]
+    if cor == (255, 255, 255) and area < 3.0 and na_travessa:
+        return "estande", "travessa"
+    alvo = snap(cor)
+    if alvo is not None and area >= 1.0:
+        kind, cat = PALETA[alvo]
+        # área de serviço/alimentação com 1 m2 é fragmento de ícone, não espaço
+        if kind == "area" and area < 5.0:
+            return None, None
+        return kind, cat
+    if cor in CINZA and area >= 1.0:
+        return "piso", None      # nome de camada que o app já desenha
+    return None, None
+
+
 def main():
     page = pymupdf.open(PDF)[0]
     box = pymupdf.Rect(*MAP_CLIP)
@@ -264,21 +299,63 @@ def main():
 
     feats = []
     usados = set()
-    for f in formas:
-        alvo = snap(f["cor"])
-        if alvo is None:
-            if f["cor"] in CINZA:
-                kind, cat = "piso", None  # nome de camada que o app já desenha
-            else:
-                continue
-        else:
-            kind, cat = PALETA[alvo]
+    ruas = []
+    tv0, tv1 = ((TRAVESSA[0] - box.x0) * m_per_pt, (TRAVESSA[1] - box.y0) * m_per_pt)
+    tv2, tv3 = ((TRAVESSA[2] - box.x0) * m_per_pt, (TRAVESSA[3] - box.y0) * m_per_pt)
+    tl_cells = []
 
+    for f in formas:
         ext = max(f["aneis"], key=lambda r: abs(ring_area(r)))
         area = abs(ring_area(ext))
-        if area < 1.0 or na_legenda(ext):
+        if area < 0.5 or na_legenda(ext):
+            continue
+        xs = [p[0] for p in ext]
+        ys = [p[1] for p in ext]
+        cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+
+        na_tv = tv0 <= cx <= tv2 and tv1 <= cy <= tv3
+        kind, cat = classificar(f["cor"], ext, area, na_tv)
+        if kind is None:
             continue
 
+        # ---- faixa de rua: o nome corre ao longo dela, como no PDF ----
+        if kind == "rua":
+            dentro = [t["txt"] for t in labels if in_ring((t["x"], t["y"]), ext)]
+            nome = " ".join(dentro).strip() or None
+            if nome and not RUA_RE.match(nome):
+                nome = None
+            feats.append(poly(ext, {"kind": "rua", "cat": None, "code": None,
+                                    "name": nome, "area_m2": round(area, 1)}))
+            if nome:
+                ruas.append({"type": "Feature", "properties": {
+                    "kind": "rua-eixo", "name": nome.upper()},
+                    "geometry": {"type": "LineString", "coordinates": [
+                        to_lnglat(min(xs), cy), to_lnglat(max(xs), cy)]}})
+            continue
+
+        # ---- POI: triângulo de entrada/saída, categoria pela cor da legenda ----
+        if kind == "poi":
+            perto = sorted(
+                (t for t in nomes if re.match(r"(ENTRADA|SA[ÍI]DA|ACESSO)", t["txt"], re.I)),
+                key=lambda t: (t["x"] - cx) ** 2 + (t["y"] - cy) ** 2)
+            nome = None
+            # o rótulo tem que estar colado no triângulo; senão é de OUTRO
+            # acesso e a "melhor aproximação" viraria nome errado no app
+            if perto and math.dist((perto[0]["x"], perto[0]["y"]), (cx, cy)) < 6.0:
+                linha = [t for t in nomes
+                         if abs(t["y"] - perto[0]["y"]) < 1.2
+                         and abs(t["x"] - perto[0]["x"]) < 22]
+                linha.sort(key=lambda t: t["x"])
+                nome = " ".join(t["txt"] for t in linha).strip()
+            feats.append({"type": "Feature", "properties": {
+                "kind": "poi", "cat": cat, "name": title_pt(nome)},
+                "geometry": {"type": "Point", "coordinates": to_lnglat(cx, cy)}})
+            continue
+
+        # ---- Travessa Literária: cabines desenhadas em branco com contorno ----
+        if cat == "travessa":
+            tl_cells.append((cy, cx, ext))
+            continue
         # o código é o rótulo QUE ESTÁ DENTRO da forma. Sem inferir sequência,
         # sem sortear por proximidade de fileira.
         dentro = [c for c in codigos
@@ -300,24 +377,56 @@ def main():
         texto = [t for t in nomes if in_ring((t["x"], t["y"]), ext)]
         texto.sort(key=lambda t: (t["y"], t["x"]))
         nome = title_pt(" ".join(t["txt"] for t in texto)) if texto else None
+        # as praças de alimentação não trazem texto dentro do bloco: o nome vem
+        # da própria legenda do PDF (categoria), sinalizado como derivado
+        derivado = False
+        if nome is None and cat == "alimentacao":
+            nome, derivado = "Praça de Alimentação", True
         rings = [ext] + [r for r in f["aneis"]
                          if r is not ext and area > abs(ring_area(r)) > 1.0]
         coords = [[to_lnglat(x, y) for x, y in r] + [to_lnglat(*r[0])] for r in rings]
+        props = {"kind": kind, "cat": cat,
+                 "code": dentro[0]["txt"] if dentro else None,
+                 "name": nome, "area_m2": round(area, 1),
+                 "peso": round(area, 1)}
+        if derivado:
+            props["nome_derivado"] = True
         feats.append({"type": "Feature", "geometry": {
-            "type": "Polygon", "coordinates": coords},
-            "properties": {"kind": kind, "cat": cat,
-                           "code": dentro[0]["txt"] if dentro else None,
-                           "name": nome, "area_m2": round(area, 1)}})
+            "type": "Polygon", "coordinates": coords}, "properties": props})
+
+    # ---- Travessa Literária: geometria é do PDF; a NUMERAÇÃO é derivada ----
+    # O PDF não imprime TL01..TL48 nas cabines. A ordem de leitura é uma
+    # suposição, marcada como tal — se estiver errada, troca o rótulo, não o
+    # desenho. É a diferença entre metadado errado e mapa errado.
+    travessa = json.load(open(STRUCT)).get("travessa", {})
+    tl_cells.sort(key=lambda t: (round(t[0] / 2), t[1]))
+    for i, (_, _, ring) in enumerate(tl_cells, start=1):
+        nome = travessa.get(str(i))
+        feats.append(poly(ring, {
+            "kind": "estande", "cat": "travessa", "code": f"TL{i:02d}",
+            "name": title_pt(nome), "mini": True, "numeracao_derivada": True,
+            "area_m2": round(abs(ring_area(ring)), 1)}))
+
+    feats.extend(ruas)
+
+    # propriedade nula não é ausência para o MapLibre: ["has","name"] dá true
+    # e o app acaba pintando pin de POI em área sem nome nenhum.
+    for f in feats:
+        pr = {k: v for k, v in f["properties"].items() if v is not None}
+        # peso = área: rótulo de espaço maior ganha a disputa por espaço na tela
+        if "area_m2" in pr:
+            pr["peso"] = pr["area_m2"]
+        f["properties"] = pr
 
     json.dump({"type": "FeatureCollection", "features": feats},
               open(OUT, "w"), ensure_ascii=False)
 
     por = {}
     for f in feats:
-        k = f["properties"]["cat"] or f["properties"]["kind"]
+        k = f["properties"].get("cat") or f["properties"]["kind"]
         por[k] = por.get(k, 0) + 1
-    com_code = sum(1 for f in feats if f["properties"]["code"])
-    com_nome = sum(1 for f in feats if f["properties"]["name"])
+    com_code = sum(1 for f in feats if f["properties"].get("code"))
+    com_nome = sum(1 for f in feats if f["properties"].get("name"))
     print(f"features: {len(feats)}  com código: {com_code}  com nome: {com_nome}")
     print("  " + "  ".join(f"{k}={v}" for k, v in sorted(por.items())))
 

@@ -1,66 +1,88 @@
 # Mapa Bienal do Livro SP 2026
 
 App pessoal de mapa da 28ª Bienal (Distrito Anhembi, 4–13/09/2026): mapa vetorial
-redesenhado a partir do PDF oficial, offline-first, com busca de expositor e (futuro)
-rota entre pontos + GPS difuso.
+**transcrito** do PDF oficial, offline-first, com busca de expositor e (futuro) rota
+entre pontos + GPS.
 
-## Estado atual (fase 1 — renderização, SEM rota)
+## A decisão que define o projeto
 
-Funcionando, verificado no browser:
-- Extração automática do PDF oficial (`reference/mapa-oficial.pdf`, vetorial do Illustrator):
-  **244 estandes** com código (A70/AA18/K4/K76 duplicados — ver pendências), **280 nomes**
-  no diretório, **48** da Travessa Literária, **54 áreas** (alimentação/cultural/serviço),
-  **55 faixas de rua**, grafo de corredores com 70 nós/104 arestas.
-- App (`app/index.html`): SVG com pan/zoom/pinch, tiers de zoom (Z0–Z3), busca
-  (estandes + áreas + travessa), seleção com bottom sheet, toggle do grafo, light/dark,
-  service worker offline (só registra em https). Design system em `docs/design-system.md`.
-- Revisado por `reviewer` + `ui-reviewer`; achados relevantes aplicados (tap via pointerup —
-  clique real testado —, pan de 2 dedos, SW stale-while-revalidate versionado, busca de áreas,
-  labels forçados em seleção/busca).
+As tentativas anteriores **sintetizavam** o mapa: partiam de constantes de design
+(largura de estande, passo de fileira, gutter) e encaixavam os dados nesse grid.
+O erro de cada célula somava com o da vizinha, então o fim da fileira saía longe
+do lugar — e cada exceção do PDF real virava um caso especial no gerador.
+
+O pipeline atual **transcreve**: a geometria sai dos paths vetoriais do próprio PDF
+(2767 paths, 745 retângulos), em metros, e só depois recebe semântica (categoria,
+código, nome) como metadado pendurado por cima. Se a classificação errar, o desenho
+continua no lugar certo. O erro para de se propagar.
+
+Consequência prática: o PDF oficial **não desenha a divisa entre estandes vizinhos** —
+imprime vários códigos dentro de um retângulo só. Era isso que empurrava para inventar
+um grid. A solução é cortar o bloco nos pontos médios reais entre os rótulos
+(`subdividir()`), o que mantém o erro **dentro do bloco** em vez de espalhar pela fileira.
+
+## Estado atual
+
+`web/public/data/mapa.geojson` — 438 features geradas do PDF:
+
+```
+expositor 202   travessa 48   cultural 19   piso 16   infra 14
+patrocinador 8  alimentacao 6 entidade 5    rua 55    rua-eixo 55
+POIs: entrada 5, saída 3, escolas 1, entrada-expositor 1
+287 com código · 405 com nome
+```
+
+Teste de aceite (`tools/verify_map.py`, vetorial com shapely):
+
+```
+alimentacao 6/6  cultural 19/19  entidade 5/5  expositor 201/201
+infra 14/14  patrocinador 8/8  rua 55/55  travessa 48/48   -> 100%
+piso 15/16 (93,8%; a forma restante tem IoU 0,978 - ambiguidade de casamento)
+deriva máxima de centroide: 2,37 cm
+```
+
+App (`web/`): MapLibre GL 100% local (nenhum tile ou fonte externa), pavilhão real do
+Anhembi (OSM way 203621978) como base, busca, seleção com bottom sheet, ícones de POI
+desenhados em canvas. Screenshots de verificação em `web/shot-*.png`.
 
 ## Como rodar
 
 ```bash
-sh tools/build.sh        # PDF -> data/map.json -> app/ (com versão do SW)
-python3 -m http.server 8027 -d app     # ou preview "bienal-app" no .claude/launch.json
+python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt
+sh tools/build.sh            # PDF -> mapa.geojson + teste de aceite
+sh tools/build.sh --aceitar  # regrava a baseline (só quando a mudança for intencional)
+
+cd web && npm install && npm run dev
+node test-shots.mjs <porta>  # screenshots do app real via Playwright
 ```
 
-Python: venv em `.venv` com `pymupdf`.
+`tools/transcribe.py` gera a prova de conceito da transcrição
+(`reference/transcrito.png`, 89,6% dos pixels idênticos ao PDF, IoU 0,92) — serve
+para conferir a olho que a leitura do PDF está correta.
 
-## Pendências (próxima sessão)
+## O que ainda não está resolvido
 
-1. **Blocos 3D fora do grid** (pedido do Eduardo): patrocinadores/atividades culturais são
-   cubos "3D" no PDF e ficaram deslocados — alinhar à fileira vizinha no build (achatar).
-2. **GPS não calibrado**: `GEO_REF = null` em `app/index.html`. Polígono real do pavilhão
-   (OSM way 203621978, ~322×220m, proporção bate com o hall do mapa 1.47):
-   N `-23.5155046,-46.6372162` / NE `-23.5156621,-46.6347654` /
-   SE `-23.5176723,-46.6349189` / SW `-23.5174697,-46.6380735`.
-   Falta decidir orientação (que lado real = topo do mapa) — Marginal Tietê fica ao SUL do
-   prédio; hipótese: entrada pública/Acesso Halls (base do mapa) = lado sul. Confirmar no
-   satélite antes de preencher a afim; caso contrário o GPS sai espelhado.
-3. **Curadoria de dados** (pós-auditoria de fidelidade de 02/09, 9 regiões vs PDF
-   original com 5 agentes): restam apenas — A70 duplicado (o próprio PDF oficial
-   imprime 2x, sem candidato claro); B65/K29 no diretório sem estande desenhado no
-   original; overlap pontual Chambril D20 x Editora BOC E21; banheiros sem
-   classificação própria (ícone genérico de serviço); entradas/portões/setas e
-   paredes do pavilhão não viram POIs/geometria.
-   [RESOLVIDO 02/09 — auditoria] snap de grid agora valida tamanho/centro antes de
-   aplicar (banheiros não são mais esmagados, K24/K26 não se fundem, cluster
-   IF14/04/15/16/04A intacto); polígonos em "L" legítimos preservados (IF10, K20);
-   códigos quebrados em 2 linhas no PDF fundidos (K40/K42); divisa de estandes
-   multi-código no ponto médio real dos rótulos (D80/D70); sub-áreas para códigos
-   extras (K18, K20, IF04, IF15, IF16, IF04A); EXT02 desduplicado; typos do mapa
-   oficial corrigidos via diretório (AA18→AA20, K76→K74); DD10 Cordel/DD20
-   Autógrafos e banheiro do anexo recuperados (filtro de legenda estava largo);
-   INDIGO capturada; painéis instagramáveis sintetizados do texto; marcadores
-   coloridos de ponta de fileira e calçada externa da Praça renderizados;
-   CC26/CC28 na fileira certa (desempate de linha pondera Y).
-   [RESOLVIDO 02/09] Travessa Literária extraída (área + 48 mini-lugares TL01–TL48,
-   buscáveis); faixa de rua sintética onde o original só tem o texto (RUA H col
-   676–783); rótulos com "cabe?" dinâmico por zoom e quebra de linha via CSS
-   translate em `em` (o atributo SVG dy="em" resolvia contra 16px no iOS).
-4. **Rota (fase 2)**: A* sobre `graph` + snap de origem/destino; grafo ainda precisa de
-   ajuste fino (anexo sem verticais, sem ligação hall↔anexo) — ideal via editor visual.
-5. **Deploy https** (GitHub Pages ou similar) pra service worker + geolocalização valerem.
-6. Achados menores dos reviewers não aplicados: bucketização frágil do diretório (ok pra
-   este PDF), `path_points` só 1º retângulo, halo/bordas conferir em aparelho real.
+1. **`data/structure.json` é o único insumo que não vem do PDF** — fornece o
+   diretório (código → nome do expositor) e os nomes da Travessa. Veio da extração
+   legada; não foi reauditado.
+2. **Numeração TL01–TL48 é derivada**, não impressa no PDF. As features carregam
+   `numeracao_derivada: true`. Se estiver errada, troca-se o rótulo, não o desenho.
+3. **12 estandes sem código** e 12 áreas de infra sem nome — o PDF não imprime.
+   Hoje ficam sem rótulo no app (melhor que rótulo inventado).
+4. **GPS não calibrado**: a afim atual ancora o canto NW no polígono OSM e usa o lado
+   maior do hall (322 m) como escala. Serve para o desenho; não foi validada contra
+   leitura de GPS real no local.
+5. **Rota (fase 2)**: não existe grafo no pipeline novo. O grafo do legado
+   (`legacy/`) não foi portado.
+6. **Deploy https** (Pages ou similar) para service worker e geolocalização valerem.
+
+## Layout
+
+```
+tools/build_map.py    PDF -> mapa.geojson (transcrição + classificação)
+tools/verify_map.py   teste de aceite vetorial contra o PDF
+tools/transcribe.py   prova de conceito PDF -> SVG -> PNG
+web/                  app MapLibre (Vite + TypeScript)
+reference/            PDF oficial e artefatos de comparação
+legacy/               app e geradores sintéticos anteriores (referência)
+```

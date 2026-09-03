@@ -52,9 +52,12 @@ const VENUE_URL = `${import.meta.env.BASE_URL}data/venue.geojson`;
 
 /** Centro e rotação: o prédio é ~4° torto em relação ao norte; giramos a
  * câmera para o pavilhão aparecer "endireitado", como apps de arena fazem. */
+// bbox real do mapa transcrito do PDF (tools/build_map.py), não do polígono do
+// pavilhão inteiro — a Bienal ocupa só a faixa norte do Distrito Anhembi, e
+// enquadrar o prédio todo deixava metade da tela vazia
 const VENUE_BOUNDS: [[number, number], [number, number]] = [
-  [-46.6385, -23.5181],
-  [-46.6343, -23.5151],
+  [-46.63802, -23.51712],
+  [-46.6348, -23.515476],
 ];
 // azimute do lado norte do prédio ≈ 94° (leste, 4° pro sul); para ele ficar
 // horizontal na tela o topo do mapa aponta pra 94−90 = +4°
@@ -221,7 +224,17 @@ map.on("load", async () => {
     type: "fill",
     source: "mapa",
     filter: ["==", ["get", "kind"], "estande"],
-    paint: { "fill-color": "#ffffff" },
+    paint: {
+      // expositor fica branco (chão quieto); as categorias da legenda oficial
+      // ganham um tom suave — cor com função, não decoração
+      "fill-color": [
+        "match", ["get", "cat"],
+        "patrocinador", "#fff6c9",
+        "entidade", "#efe4f4",
+        "travessa", "#f5f1e8",
+        "#ffffff",
+      ],
+    },
   });
   map.addLayer({
     id: "estandes-borda",
@@ -229,7 +242,12 @@ map.on("load", async () => {
     source: "mapa",
     filter: ["==", ["get", "kind"], "estande"],
     paint: {
-      "line-color": "#d3cfc7",
+      "line-color": [
+        "match", ["get", "cat"],
+        "patrocinador", "#d9b93a",
+        "entidade", "#a98bbd",
+        "#d3cfc7",
+      ],
       // borda hairline que só engrossa de leve com o zoom
       "line-width": ["interpolate", ["linear"], ["zoom"], 16, 0.4, 20, 1.2],
     },
@@ -327,7 +345,12 @@ map.on("load", async () => {
     filter: ["==", ["get", "kind"], "poi"],
     minzoom: 15,
     layout: {
-      "icon-image": ["case", ["==", ["get", "cat"], "saida"], "poi-saida", "poi-entrada"],
+      "icon-image": [
+        "match", ["get", "cat"],
+        "saida", "poi-saida",
+        "escolas", "poi-cultural",
+        "poi-entrada",
+      ],
       "icon-size": ["interpolate", ["linear"], ["zoom"], 15, 0.72, 18, 1],
       "text-field": ["get", "name"],
       "text-font": ["Klokantech Noto Sans Bold"],
