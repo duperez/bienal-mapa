@@ -21,22 +21,28 @@ imprime vários códigos dentro de um retângulo só. Era isso que empurrava par
 um grid. A solução é cortar o bloco nos pontos médios reais entre os rótulos
 (`subdividir()`), o que mantém o erro **dentro do bloco** em vez de espalhar pela fileira.
 
+A outra pegadinha: patrocinadores e atividades culturais são desenhados como
+**prismas "3D"**. A face de topo — a que tem a cor da legenda — fica ~1,4 m acima e
+à esquerda da posição real; a área ocupada é a **base**. `desextrudar()` reconhece o
+prisma pelas duas faces auxiliares e translada o topo para cima da base, o que põe
+esses blocos de volta na fileira.
+
 ## Estado atual
 
-`web/public/data/mapa.geojson` — 438 features geradas do PDF:
+`web/public/data/mapa.geojson` — 429 features geradas do PDF:
 
 ```
-expositor 202   travessa 48   cultural 19   piso 16   infra 14
-patrocinador 8  alimentacao 6 entidade 5    rua 55    rua-eixo 55
+expositor 200   travessa 48   cultural 17   piso 16   infra 10
+patrocinador 7  alimentacao 6 entidade 5    rua 55    rua-eixo 55
 POIs: entrada 5, saída 3, escolas 1, entrada-expositor 1
-287 com código · 405 com nome
+282 com código · 401 com nome
 ```
 
 Teste de aceite (`tools/verify_map.py`, vetorial com shapely):
 
 ```
-alimentacao 6/6  cultural 19/19  entidade 5/5  expositor 201/201
-infra 14/14  patrocinador 8/8  rua 55/55  travessa 48/48   -> 100%
+alimentacao 6/6  cultural 17/17  entidade 5/5  expositor 199/199
+infra 10/10  patrocinador 7/7  rua 55/55  travessa 48/48   -> 100%
 piso 15/16 (93,8%; a forma restante tem IoU 0,978 - ambiguidade de casamento)
 deriva máxima de centroide: 2,37 cm
 ```
@@ -67,7 +73,7 @@ para conferir a olho que a leitura do PDF está correta.
    legada; não foi reauditado.
 2. **Numeração TL01–TL48 é derivada**, não impressa no PDF. As features carregam
    `numeracao_derivada: true`. Se estiver errada, troca-se o rótulo, não o desenho.
-3. **12 estandes sem código** e 12 áreas de infra sem nome — o PDF não imprime.
+3. **Estandes sem código** e áreas de infra sem nome — o PDF não imprime.
    Hoje ficam sem rótulo no app (melhor que rótulo inventado).
 4. **GPS não calibrado**: a afim atual ancora o canto NW no polígono OSM e usa o lado
    maior do hall (322 m) como escala. Serve para o desenho; não foi validada contra

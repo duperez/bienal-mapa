@@ -163,7 +163,58 @@ def extrair(page, box):
             continue
         formas.append({"cor": rgb(d["fill"]), "aneis": aneis,
                        "seq": d.get("seqno", 0)})
-    return formas, m_per_pt
+    return desextrudar(formas), m_per_pt
+
+
+def bbox(anel):
+    xs = [p[0] for p in anel]
+    ys = [p[1] for p in anel]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def desextrudar(formas):
+    """Blocos "3D" do PDF: a área ocupada é a BASE, não a face de topo.
+
+    Patrocinadores e atividades culturais são desenhados como prismas: face de
+    topo na cor da legenda, mais uma face lateral direita e uma inferior em
+    outro tom. A face de topo fica deslocada ~1,4 m para cima e para a esquerda
+    da posição real — é isso que jogava esses blocos para fora da fileira.
+
+    Reconhece o prisma pelas DUAS faces auxiliares (embaixo e à direita, ambas
+    com a mesma profundidade) e translada o topo para cima da base. Exigir as
+    duas evita casar com vizinhança acidental de retângulo comum.
+    """
+    caixas = [bbox(f["aneis"][0]) for f in formas]
+    def achar(x0, y0, x1, y1, tol=0.25):
+        for i, c in enumerate(caixas):
+            if (abs(c[0] - x0) < tol and abs(c[1] - y0) < tol
+                    and abs(c[2] - x1) < tol and abs(c[3] - y1) < tol):
+                return i
+        return None
+
+    faces = set()
+    for k, (f, (x0, y0, x1, y1)) in enumerate(zip(formas, caixas)):
+        achou = None
+        for j, (gx0, gy0, gx1, gy1) in enumerate(caixas):
+            if abs(gy0 - y1) > 0.25 or abs(gx0 - x0) > 0.25:
+                continue
+            dx, dy = gx1 - x1, gy1 - y1
+            # profundidade da extrusão: positiva, pequena e igual nos dois eixos
+            if not (0.5 < dx < 2.5 and 0.5 < dy < 2.5 and abs(dx - dy) < 0.4):
+                continue
+            lado = achar(x1, y0, x1 + dx, y1 + dy)   # face lateral direita
+            if lado is not None:
+                achou = (dx, dy, j, lado)
+                break
+        if achou:
+            dx, dy, j, lado = achou
+            faces.update((j, lado))
+            formas[k]["extrudado"] = True
+            f["aneis"] = [[(round(x + dx, 3), round(y + dy, 3)) for x, y in a]
+                          for a in f["aneis"]]
+    # as faces laterais são desenho do prisma, não espaço: saem da lista para
+    # não virarem "estande" de 10 m2 nem serem cobradas pelo teste de aceite
+    return [f for i, f in enumerate(formas) if i not in faces]
 
 
 def rotulos(page, box, m_per_pt):
@@ -265,6 +316,12 @@ def classificar(cor, ext, area, na_travessa):
     alvo = snap(cor)
     if alvo is not None and area >= 1.0:
         kind, cat = PALETA[alvo]
+        # tarja fina na ponta da fileira: marcador colorido de desenho (mesma
+        # espessura da extrusão, altura da fileira inteira), não espaço ocupável
+        x0, y0, x1, y1 = bbox(ext)
+        lo, hi = sorted((x1 - x0, y1 - y0))
+        if lo < 1.8 and hi > 2.5 * lo:
+            return None, None
         # área de serviço/alimentação com 1 m2 é fragmento de ícone, não espaço
         if kind == "area" and area < 5.0:
             return None, None

@@ -10,6 +10,7 @@ const vistas = [
   { nome: "nordeste", zoom: 18.0, center: [-46.6356, -23.516] },
   { nome: "anexo", zoom: 18.2, center: [-46.6349, -23.5167] },
   { nome: "detalhe", zoom: 19.6, center: [-46.6369, -23.5165] },
+  { nome: "fileiras-g-h", zoom: 19.2, center: [-46.63655, -23.51605] },
 ];
 
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader"] });
