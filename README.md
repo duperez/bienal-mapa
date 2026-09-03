@@ -182,36 +182,32 @@ para conferir a olho que a leitura do PDF está correta.
    `numeracao_derivada: true`. Se estiver errada, troca-se o rótulo, não o desenho.
 3. **Estandes sem código** e áreas de infra sem nome — o PDF não imprime.
    Hoje ficam sem rótulo no app (melhor que rótulo inventado).
-4. **A âncora ainda é palpite, só a escala foi medida.** Na escala correta o
-   desenho ocupa 293 x 149 m dentro de um prédio de 323 x 224 m. A regra está
-   declarada em `build_map.ancora()` — o bloco desenhado mais a noroeste encosta
-   no canto noroeste do prédio — e o teste cobra a consequência (0 blocos fora
-   do prédio). Mas o desenho oficial sai da página à esquerda (blocos de serviço
-   aparecem cortados na borda), então sobram ~30 m em x e ~75 m em y sem
-   explicação: o canto certo pode ser o NE. Faltam pontos de controle — tentei
-   sanitários, portões e contorno da planta oficial do Anhembi e nenhum casou,
-   porque o mapa da Bienal não desenha nenhuma feição permanente do prédio.
+4. **A âncora está errada e já se sabe como.** A regra de hoje, declarada em
+   `build_map.ancora()`, encosta o bloco mais a noroeste no canto noroeste do
+   prédio. O teste cobra só a consequência fraca (0 blocos fora do prédio), e
+   com ela as 13 portas do evento ficam a 71 m em média de qualquer marquise:
+   abrem para o meio do prédio, sem nada atrás.
 
-   **Primeira medida (`tools/afere_ancora.py`).** O OSM não mapeia nada dentro
-   do pavilhão, mas mapeia três marquises (`building=roof`) — e marquise cobre
-   entrada. As 13 portas do evento (5 "Acesso Hall", 2 "Acesso Crianças",
-   1 "Entrada", 3 "Saída" na borda oeste, 2 "Saída") deveriam cair sob alguma:
+   **Resolvido pelos documentos oficiais (`tools/afere_ancora.py`,
+   `tools/orientacoes.py`).** O desenho entra **girado 180 graus**. Três
+   rótulos independentes dizem a mesma coisa, e nenhum depende de parecer
+   com alguma forma:
 
-   | orientação do desenho | distância média das portas à marquise |
-   | --- | --- |
-   | âncora de hoje | 71,2 m |
-   | espelhada no eixo horizontal | **10,2 m** |
-   | espelhada nos dois eixos | 26,0 m |
-   | espelhada no eixo vertical | 117,7 m |
+   - a borda de baixo do PDF da Bienal diz `ENTRADA PÚBLICO`; a de cima diz
+     `ACESSO SERVIÇO HALL 01..05` com os portões 7, 8 e 9, que a planta
+     oficial põe do lado da Marginal. A marquise do público é a face que no
+     nosso referencial é o norte, então a borda de baixo tem que ir para lá;
+   - o `ACESSO HALL 01` está à direita no PDF, e a planta técnica o põe no
+     Expo 01, colado na Alameda de Conexão, que é a face oeste;
+   - as três saídas da borda esquerda batem com o Expo 05, único pavilhão
+     com sanitários laterais na especificação do Anhembi.
 
-   Ou seja: hoje as portas do evento abrem para o meio do prédio, sem nada
-   atrás. Espelhado o desenho, encostam nas marquises. O segundo colocado fica
-   2,5x pior, então o eixo está decidido pelo dado — mas é **indício, não
-   prova**: "Acesso Hall" pode ser porta interna para o hall do pavilhão, e o
-   ajuste ainda quer empurrar o desenho 10 m para além da parede oeste. Nada
-   foi reposicionado. Vale notar que a rota **não depende disto**: origem e
-   destino são apontados no desenho, então o erro da âncora se cancela. Quem
-   depende é só a camada de GPS. Resolver com leitura de GPS no local.
+   É rotação, não espelhamento: ninguém imprime mapa espelhado. A métrica de
+   distância às marquises preferia o espelhamento (10,2 m contra 26,0 m),
+   mas ela não sabe distinguir uma coisa da outra — os rótulos sabem.
+
+   **Não aplicado ainda**, porque o mesmo cruzamento derrubou o defeito 8.
+
 5. **Rota sem instrução falada**: o caminho existe, é ótimo e já vai de
    qualquer ponto a qualquer ponto, mas o app só desenha a linha. Falta cruzar
    os trechos com as vias para escrever "siga pela RUA E, vire na Transversal
@@ -224,6 +220,33 @@ para conferir a olho que a leitura do PDF está correta.
    não há service worker: `main.ts` hoje só *desregistra* os SW residuais do app
    legado. Falta escrever o SW próprio e publicar em https (Pages ou similar) —
    sem isso, e sem https, nem o cache nem a geolocalização valem.
+
+8. **A escala está provavelmente 35% pequena.** `ESCALA_M_PT = 0.194875` saiu
+   de varrer a escala até os lados de estande caírem em múltiplos de 1 m. O
+   método tem alias: um grid de 1 m continua sendo um grid de 1 m em várias
+   escalas, e a "confirmação" que eu tinha anotado (os cinco Acessos Hall a
+   36,2 m, "vão estrutural") era racionalização, não conferência.
+
+   Os cinco `ACESSO HALL` existem nos dois documentos. Os vãos entre eles são
+   proporcionais numa razão constante — 3,44, 3,47, 3,52, 3,45 — o que prova
+   que são as mesmas portas. Mas na planta técnica esses vãos dão perto de
+   51 m, não 36,2 m. Na escala de hoje o pavilhão teria 148 m de profundidade;
+   o OSM e a planta dão perto de 224 m.
+
+   Não corrigido porque não fechei a calibração absoluta da planta técnica:
+   a única âncora limpa que achei foi o Auditório B (355,04 m² rotulados,
+   0,917 m/pt), e a proporção do bloco dos Expo que consegui medir nos
+   vetores (1,70) não bate com a do polígono do OSM (1,44). Uma das duas
+   leituras está errada e não sei qual. Enquanto não souber, mexer na escala
+   é trocar um número inventado por outro.
+
+   Consequência prática: as distâncias e os tempos a pé que o app mostra hoje
+   estão subestimados na mesma proporção. A topologia da rota não muda.
+
+9. **`MAP_CLIP` corta a borda de cima do desenho.** A janela de leitura começa
+   em `y=140` e os rótulos da borda de serviço estão em `y≈112`: perdemos 5
+   `ACESSO SERVIÇO HALL` e 5 `SAÍDA DE EMERGÊNCIA`. Como só a borda do público
+   sobrou, a aferição da âncora chegou a parecer assimétrica quando não é.
 
 ## Layout
 
