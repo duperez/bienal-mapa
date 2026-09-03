@@ -29,13 +29,13 @@ esses blocos de volta na fileira.
 
 ## Estado atual
 
-`web/public/data/mapa.geojson` — 400 features geradas do PDF:
+`web/public/data/mapa.geojson` — 408 features geradas do PDF:
 
 ```
-expositor 199   travessa 48   cultural 17   piso 16   infra 10
-patrocinador 7  alimentacao 6 entidade 5    rua 55    via 25   circulacao 2
-POIs: entrada 5, saída 3, escolas 1, entrada-expositor 1
-282 com código · 366 com nome
+expositor 199   travessa 48   cultural 17   piso 19   infra 10
+patrocinador 7  alimentacao 6 entidade 5    rua 55    via 26   circulacao 2
+POIs: entrada 6, saída 6, escolas 1, entrada-expositor 1
+282 com código · 367 com nome
 ```
 
 Teste de aceite (`tools/verify_map.py`, vetorial com shapely):
@@ -43,12 +43,13 @@ Teste de aceite (`tools/verify_map.py`, vetorial com shapely):
 ```
 alimentacao 6/6  cultural 17/17  entidade 5/5  expositor 198/198
 infra 10/10  patrocinador 7/7  rua 55/55  travessa 48/48   -> 100%
-piso 15/16 (93,8%; a forma restante tem IoU 0,979 - ambiguidade de casamento)
-deriva máxima de centroide: 2,07 cm
+piso 18/19 (94,7%; a forma restante tem IoU 0,957 - ambiguidade de casamento)
+deriva máxima de centroide: 2,17 cm
 
-vias: 25, sendo as 14 ruas nomeadas no PDF
+vias: 26, sendo as 14 ruas nomeadas no PDF
 nenhuma via atravessa bloco · 0/286 blocos navegáveis sem circulação ao lado
 escala: desvio ao módulo de 1 m = 13,8 cm em 1173 lados (acaso seria 25,0 cm)
+fora do prédio: 0 blocos
 ```
 
 ### Escala
@@ -60,10 +61,17 @@ grande.
 
 O que resolveu foi evidência interna. Estande de feira é modular: as frentes são
 múltiplos inteiros de 1 m. Varrendo a escala, o desvio médio dos lados ao
-múltiplo mais próximo tem mínimo único e agudo em **289,0 m** (13,8 cm, contra
-24,8 cm nos 322 m — indistinguível de sorteio). Duas conferências que não entram
-na conta concordam: o lado mais frequente vira **6,01 m** (frente padrão de
-estande) e os cinco Acessos Hall ficam a **36,2 m** entre si (vão estrutural).
+múltiplo mais próximo tem mínimo único e agudo em **0,194875 m/pt** (13,8 cm,
+contra 24,8 cm na escala antiga — indistinguível de sorteio). Duas conferências
+que não entram na conta concordam: o lado mais frequente vira **6,01 m** (frente
+padrão de estande) e os cinco Acessos Hall ficam a **36,2 m** entre si (vão
+estrutural).
+
+A escala é dada em metros por ponto do PDF, não como largura do salão: amarrá-la
+ao enquadramento fazia a janela de leitura virar régua, e a janela é arbitrária.
+Ela hoje é só um filtro (o que é planta, o que é cabeçalho) e tem folga — a
+versão anterior cortava 23 pt de estandes reais, que ficavam com coordenada
+negativa e apareciam do lado de fora da parede no app.
 
 Reproduzir com `python tools/calibra.py`. O teste de aceite mede o desvio a cada
 build, então a escala não pode regredir em silêncio.
@@ -107,13 +115,15 @@ para conferir a olho que a leitura do PDF está correta.
 3. **Estandes sem código** e áreas de infra sem nome — o PDF não imprime.
    Hoje ficam sem rótulo no app (melhor que rótulo inventado).
 4. **A âncora ainda é palpite, só a escala foi medida.** Na escala correta o
-   desenho ocupa 289 x 145 m dentro de um prédio de 319 x 236 m, e a afim
-   encosta o canto NW dele no canto NW do polígono OSM. Mas o desenho é cortado
-   à esquerda e no rodapé, então sobram 30 m em x e 90 m em y sem explicação: o
-   canto certo pode ser o NE. Faltam pontos de controle — tentei sanitários,
-   portões e contorno da planta oficial do Anhembi e nenhum casou, porque o mapa
-   da Bienal não desenha nenhuma feição permanente do prédio. Resolver com
-   leitura de GPS no local.
+   desenho ocupa 293 x 149 m dentro de um prédio de 323 x 224 m. A regra está
+   declarada em `build_map.ancora()` — o bloco desenhado mais a noroeste encosta
+   no canto noroeste do prédio — e o teste cobra a consequência (0 blocos fora
+   do prédio). Mas o desenho oficial sai da página à esquerda (blocos de serviço
+   aparecem cortados na borda), então sobram ~30 m em x e ~75 m em y sem
+   explicação: o canto certo pode ser o NE. Faltam pontos de controle — tentei
+   sanitários, portões e contorno da planta oficial do Anhembi e nenhum casou,
+   porque o mapa da Bienal não desenha nenhuma feição permanente do prédio.
+   Resolver com leitura de GPS no local.
 5. **Rota (fase 2)**: as vias existem como LineString, mas ainda não há grafo
    nodado nos cruzamentos nem ponto de acesso por estande.
 6. **`LARG_MIN = 2 m` e `AVENTAL = 6 m` são julgamento meu**, não saem do PDF.

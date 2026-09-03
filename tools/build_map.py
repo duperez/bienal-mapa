@@ -25,20 +25,24 @@ VENUE = "data/venue.geojson"
 STRUCT = "data/structure.json"
 OUT = "web/public/data/mapa.geojson"
 
-MAP_CLIP = (62.0, 140.0, 1545.0, 955.0)
+# Janela de LEITURA do PDF: separa a planta do cabeçalho e do rodapé.
+# NÃO é a extensão do desenho. A versão anterior confundia as duas coisas: a
+# borda esquerda cortava 23 pt de estandes reais, que ficavam com coordenada
+# negativa e vazavam para fora do prédio no app. Folga proposital nos lados.
+MAP_CLIP = (30.0, 140.0, 1560.0, 955.0)
 LEGENDA = (1068.0, 266.0, 1555.0, 485.0)   # caixa da legenda: não é planta
-# Largura do DESENHO recortado (MAP_CLIP), não do prédio. A distinção importa:
-# o mapa oficial é cortado à esquerda e no rodapé, então o recorte não cobre o
-# salão inteiro e casar sua largura com os 322 m do polígono OSM era um palpite
-# errado — inflava tudo em 11%.
+
+# Escala, em metros por ponto do PDF. Antes saía de dividir uma largura suposta
+# do salão pela largura do recorte — o que amarrava a escala a um enquadramento
+# arbitrário e a um palpite sobre o prédio, e estava 11% grande.
 #
-# O valor abaixo é MEDIDO, não escolhido: varrendo a escala, o desvio médio dos
-# lados de estande ao múltiplo de 1 m mais próximo tem mínimo único e agudo aqui
-# (13,8 cm, contra 24,8 cm na escala antiga, que é indistinguível de aleatório).
-# Confirmam, sem entrar na conta: o lado mais frequente vira 6,01 m (frente
-# padrão de estande) e os cinco Acessos Hall ficam a 36,2 m entre si (vão
-# estrutural). Reproduzir com: python tools/calibra.py
-DESENHO_M = 289.0
+# Agora é MEDIDA, e independente do recorte: varrendo a escala, o desvio médio
+# dos lados de estande ao múltiplo de 1 m mais próximo tem mínimo único e agudo
+# aqui (13,8 cm, contra 24,8 cm na escala antiga, que é indistinguível de
+# aleatório). Confirmam, sem entrar na conta: o lado mais frequente vira 6,01 m
+# (frente padrão de estande) e os cinco Acessos Hall ficam a 36,2 m entre si
+# (vão estrutural). Reproduzir com: python tools/calibra.py
+ESCALA_M_PT = 0.194875
 
 # cores da LEGENDA do próprio PDF -> categoria. Nada inventado.
 PALETA = {
@@ -114,7 +118,7 @@ def title_pt(s):
 # ---------------------------------------------------------------- geometria
 def extrair(page, box):
     """Cada path preenchido do PDF -> anéis em METROS. Sem heurística."""
-    m_per_pt = DESENHO_M / box.width
+    m_per_pt = ESCALA_M_PT
 
     def to_m(x, y):
         return (round((x - box.x0) * m_per_pt, 3), round((y - box.y0) * m_per_pt, 3))
@@ -277,6 +281,41 @@ def georef():
         return [round(nw[0] + mx / mlon, 7), round(nw[1] + my / mlat, 7)]
 
     return to_lnglat
+
+
+def ancora(formas, box, m_per_pt):
+    """Deslocamento do desenho até o canto noroeste do prédio, em metros.
+
+    A janela de leitura tem folga proposital, e o desenho oficial ainda sai da
+    página à esquerda (blocos de serviço aparecem cortados na borda). Logo nem
+    o canto da janela nem a borda do papel servem de referência: sem isto, o
+    que está antes da janela vira coordenada negativa e aparece do lado de fora
+    da parede no app.
+
+    A regra é: o bloco desenhado mais a noroeste encosta no canto noroeste do
+    prédio. Continua sendo uma escolha — a posição real do desenho dentro do
+    pavilhão é o defeito nº 4 do README — mas é declarada em um lugar só, e o
+    teste de aceite cobra a consequência (nada desenhado fora do prédio).
+    """
+    lx0, ly0 = (LEGENDA[0] - box.x0) * m_per_pt, (LEGENDA[1] - box.y0) * m_per_pt
+    lx1, ly1 = (LEGENDA[2] - box.x0) * m_per_pt, (LEGENDA[3] - box.y0) * m_per_pt
+    tv0, tv1 = (TRAVESSA[0] - box.x0) * m_per_pt, (TRAVESSA[1] - box.y0) * m_per_pt
+    tv2, tv3 = (TRAVESSA[2] - box.x0) * m_per_pt, (TRAVESSA[3] - box.y0) * m_per_pt
+    ox, oy = 1e9, 1e9
+    for f in formas:
+        ext = max(f["aneis"], key=lambda r: abs(ring_area(r)))
+        area = abs(ring_area(ext))
+        if area < 0.5:
+            continue
+        xs, ys = [p[0] for p in ext], [p[1] for p in ext]
+        if all(lx0 <= x <= lx1 and ly0 <= y <= ly1 for x, y in ext):
+            continue                                   # legenda não é planta
+        cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+        na_tv = tv0 <= cx <= tv2 and tv1 <= cy <= tv3
+        if classificar(f["cor"], ext, area, na_tv)[0] is None:
+            continue
+        ox, oy = min(ox, min(xs)), min(oy, min(ys))
+    return ox, oy
 
 
 def subdividir(ext, codes):
@@ -511,7 +550,12 @@ def main():
         return all(lx0 <= x <= lx1 and ly0 <= y <= ly1 for x, y in r)
 
     directory = json.load(open(STRUCT)).get("directory", {})
-    to_lnglat = georef()
+
+    ox, oy = ancora(formas, box, m_per_pt)
+    base = georef()
+
+    def to_lnglat(x, y):
+        return base(x - ox, y - oy)
 
     def poly(ring, props):
         return {"type": "Feature", "properties": props,

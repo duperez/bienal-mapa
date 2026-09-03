@@ -13,7 +13,7 @@ escala de 0,80 a 1,15 do palpite antigo, isso dá uma curva com mínimo único.
     python tools/calibra.py
 
 Saída: a escala do desenho em metros, o desvio residual e o intervalo de
-confiança por bootstrap. O resultado alimenta DESENHO_M em tools/build_map.py.
+confiança por bootstrap. O resultado alimenta ESCALA_M_PT em tools/build_map.py.
 """
 import random
 import sys
@@ -22,7 +22,7 @@ import pymupdf
 from shapely.geometry import Polygon
 
 sys.path.insert(0, "tools")
-from build_map import (DESENHO_M, LEGENDA, MAP_CLIP, TRAVESSA, classificar,  # noqa: E402
+from build_map import (ESCALA_M_PT, LEGENDA, MAP_CLIP, TRAVESSA, classificar,  # noqa: E402
                         extrair, ring_area)
 
 MIN_L, MAX_L = 0.5, 40.0   # abaixo é ruído de traço, acima não é lado de estande
@@ -87,8 +87,8 @@ def main():
     s = melhor(am)
     print(f"lados medidos      : {len(am)}")
     print(f"escala relativa    : {s:.4f}")
-    print(f"largura do desenho : {DESENHO_M * s:.1f} m  "
-          f"(constante atual {DESENHO_M:.1f} m x {s:.4f})")
+    print(f"escala medida      : {ESCALA_M_PT * s:.6f} m/pt  "
+          f"(constante atual {ESCALA_M_PT:.6f} x {s:.4f})")
     print(f"desvio residual    : {desvio(am, s) * 100:.1f} cm   "
           f"(aleatório seria 25,0 cm)")
     print(f"desvio em s=1      : {desvio(am, 1.0) * 100:.1f} cm")
@@ -100,7 +100,7 @@ def main():
 
     print("\ncurva (cm de desvio por escala):")
     for i in range(80, 116, 2):
-        print(f"   s={i / 100:4.2f}  {DESENHO_M * i / 100:6.1f} m  "
+        print(f"   s={i / 100:4.2f}  {ESCALA_M_PT * i / 100:.6f} m/pt  "
               f"{desvio(am, i / 100) * 100:5.1f}")
 
 

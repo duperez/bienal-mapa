@@ -21,7 +21,7 @@ from shapely.geometry import Polygon
 from shapely.strtree import STRtree
 
 sys.path.insert(0, "tools")
-from build_map import (MAP_CLIP, LEGENDA, TRAVESSA, VENUE, classificar,
+from build_map import (MAP_CLIP, LEGENDA, TRAVESSA, VENUE, ancora, classificar,
                        extrair, ring_area)  # noqa: E402
 
 GEOJSON = "web/public/data/mapa.geojson"
@@ -30,8 +30,12 @@ TOL_IOU = 0.98        # forma considerada fiel
 TOL_DERIVA_CM = 5.0   # deriva máxima de centroide aceitável
 
 
-def inverso():
-    """lng/lat -> metros no frame do prédio (inverso exato do build)."""
+def inverso(ox=0.0, oy=0.0):
+    """lng/lat -> metros no frame do desenho (inverso exato do build).
+
+    (ox, oy) é a âncora de build_map.ancora(): sem ela o teste mede num frame
+    deslocado do que o build gravou e reprova tudo.
+    """
     ring = json.load(open(VENUE))["features"][0]["geometry"]["coordinates"][0]
     lat0 = ring[0][1]
     mlat, mlon = 111320.0, 111320.0 * math.cos(math.radians(lat0))
@@ -51,7 +55,7 @@ def inverso():
     def to_m(lng, lat):
         mx = (lng - nw[0]) * mlon
         my = (lat - nw[1]) * mlat
-        return (mx * ux[0] + my * ux[1], mx * uy[0] + my * uy[1])
+        return (mx * ux[0] + my * ux[1] + ox, mx * uy[0] + my * uy[1] + oy)
 
     return to_m
 
@@ -67,7 +71,7 @@ def confere_escala(feats, to_m):
     """A escala do desenho ainda cai em cima do módulo de 1 m dos estandes?
 
     Guarda contra o erro que já custou duas reescritas: escala escolhida por
-    palpite. Se DESENHO_M sair do lugar, os lados param de bater em números
+    palpite. Se ESCALA_M_PT sair do lugar, os lados param de bater em números
     inteiros e o desvio médio sobe na direção dos 25 cm do puro acaso.
     Ver tools/calibra.py para a medida completa.
     """
@@ -90,6 +94,38 @@ def confere_escala(feats, to_m):
     print(f"\nescala: desvio ao módulo de 1 m = {d:.1f} cm em {len(lados)} lados "
           f"({'OK' if ok else 'FORA'}; acaso = 25,0 cm)")
     return ok
+
+
+def confere_dentro(feats, to_m):
+    """Nada desenhado pode cair fora do prédio.
+
+    É a consequência checável da âncora (build_map.ancora). Enquanto a posição
+    real do desenho dentro do pavilhão for desconhecida, esta é a única
+    afirmação que dá para cobrar: se um bloco aparece atravessando a parede no
+    app, ou a âncora escorregou ou a janela de leitura voltou a cortar planta.
+    """
+    from shapely.geometry import Polygon
+
+    ring = json.load(open(VENUE))["features"][0]["geometry"]["coordinates"][0]
+    pred = limpa(Polygon([to_m(*c) for c in ring]))
+    fora = []
+    for f in feats:
+        p = f["properties"]
+        if p.get("kind") not in ("estande", "area", "piso"):
+            continue
+        if f["geometry"]["type"] != "Polygon":
+            continue
+        g = limpa(Polygon([to_m(*c) for c in f["geometry"]["coordinates"][0]]))
+        if g.is_empty:
+            continue
+        vaza = g.difference(pred).area
+        if vaza > 0.5:
+            fora.append((p.get("code") or p.get("name") or p["kind"],
+                         round(100 * vaza / g.area)))
+    print(f"\nfora do prédio: {len(fora)} blocos")
+    for nome, pct in sorted(fora, key=lambda t: -t[1])[:8]:
+        print(f"    {nome} ({pct}% fora)")
+    return not fora
 
 
 def confere_vias(feats, to_m, modelo):
@@ -119,10 +155,16 @@ def confere_vias(feats, to_m, modelo):
               and (p.get("code") or p.get("name"))]
     circ = unary_union([g for p, g in modelo if p["kind"] == "circulacao"])
 
+    # Erosão de 30 cm antes de acusar: uma via que corre rente ao bloco é
+    # colinear com a borda dele, e a interseção crua devolve o comprimento
+    # inteiro do contato. Isso é tangência, que é o comportamento desejado —
+    # travessia de verdade entra pelo miolo do bloco e sobrevive à erosão.
+    ROCE = 0.3
     invasoes = []
     for nome, linha in vias.items():
         for g in blocos:
-            if linha.intersection(g).length > 0.5:
+            miolo = g.buffer(-ROCE)
+            if not miolo.is_empty and linha.intersection(miolo).length > 0.5:
                 invasoes.append(nome)
                 break
 
@@ -170,7 +212,7 @@ def main():
         buracos = [r for r in f["aneis"] if r is not ext and abs(ring_area(r)) > 1.0]
         esperado.append((cat or kind, limpa(Polygon(ext, buracos))))
 
-    to_m = inverso()
+    to_m = inverso(*ancora(formas, box, m_per_pt))
     feats = json.load(open(GEOJSON))["features"]
     modelo = []
     for f in feats:
@@ -234,6 +276,7 @@ def main():
 
     vias_ok = confere_vias(feats, to_m, modelo)
     escala_ok = confere_escala(feats, to_m)
+    dentro_ok = confere_dentro(feats, to_m)
 
     if "--aceitar" in sys.argv:
         json.dump(atual, open(BASELINE, "w"), indent=1)
@@ -258,8 +301,9 @@ def main():
         elif v < ref - 0.01:
             print(f"REGREDIU {cat}: {v:.1%} (era {ref:.1%})")
             ok = False
-    print("aceite: OK" if ok and vias_ok and escala_ok else "aceite: FALHOU")
-    return 0 if ok and vias_ok and escala_ok else 1
+    bom = ok and vias_ok and escala_ok and dentro_ok
+    print("aceite: OK" if bom else "aceite: FALHOU")
+    return 0 if bom else 1
 
 
 if __name__ == "__main__":
