@@ -32,23 +32,41 @@ esses blocos de volta na fileira.
 `web/public/data/mapa.geojson` — 400 features geradas do PDF:
 
 ```
-expositor 200   travessa 48   cultural 17   piso 16   infra 10
-patrocinador 7  alimentacao 6 entidade 5    rua 55    via 24   circulacao 2
+expositor 199   travessa 48   cultural 17   piso 16   infra 10
+patrocinador 7  alimentacao 6 entidade 5    rua 55    via 25   circulacao 2
 POIs: entrada 5, saída 3, escolas 1, entrada-expositor 1
-282 com código · 370 com nome
+282 com código · 366 com nome
 ```
 
 Teste de aceite (`tools/verify_map.py`, vetorial com shapely):
 
 ```
-alimentacao 6/6  cultural 17/17  entidade 5/5  expositor 199/199
+alimentacao 6/6  cultural 17/17  entidade 5/5  expositor 198/198
 infra 10/10  patrocinador 7/7  rua 55/55  travessa 48/48   -> 100%
-piso 15/16 (93,8%; a forma restante tem IoU 0,978 - ambiguidade de casamento)
-deriva máxima de centroide: 2,37 cm
+piso 15/16 (93,8%; a forma restante tem IoU 0,979 - ambiguidade de casamento)
+deriva máxima de centroide: 2,07 cm
 
-vias: 24, sendo as 14 ruas nomeadas no PDF
+vias: 25, sendo as 14 ruas nomeadas no PDF
 nenhuma via atravessa bloco · 0/286 blocos navegáveis sem circulação ao lado
+escala: desvio ao módulo de 1 m = 13,8 cm em 1173 lados (acaso seria 25,0 cm)
 ```
+
+### Escala
+
+A escala do desenho não podia sair do prédio: o PDF da Bienal é peça de
+divulgação, é cortado à esquerda e no rodapé, e nem nomeia o local. Casar a
+largura do recorte com os 322 m do Distrito Anhembi era palpite — e estava 11%
+grande.
+
+O que resolveu foi evidência interna. Estande de feira é modular: as frentes são
+múltiplos inteiros de 1 m. Varrendo a escala, o desvio médio dos lados ao
+múltiplo mais próximo tem mínimo único e agudo em **289,0 m** (13,8 cm, contra
+24,8 cm nos 322 m — indistinguível de sorteio). Duas conferências que não entram
+na conta concordam: o lado mais frequente vira **6,01 m** (frente padrão de
+estande) e os cinco Acessos Hall ficam a **36,2 m** entre si (vão estrutural).
+
+Reproduzir com `python tools/calibra.py`. O teste de aceite mede o desvio a cada
+build, então a escala não pode regredir em silêncio.
 
 ### Ruas e circulação
 
@@ -88,9 +106,14 @@ para conferir a olho que a leitura do PDF está correta.
    `numeracao_derivada: true`. Se estiver errada, troca-se o rótulo, não o desenho.
 3. **Estandes sem código** e áreas de infra sem nome — o PDF não imprime.
    Hoje ficam sem rótulo no app (melhor que rótulo inventado).
-4. **GPS não calibrado**: a afim atual ancora o canto NW no polígono OSM e usa o lado
-   maior do hall (322 m) como escala. Serve para o desenho; não foi validada contra
-   leitura de GPS real no local.
+4. **A âncora ainda é palpite, só a escala foi medida.** Na escala correta o
+   desenho ocupa 289 x 145 m dentro de um prédio de 319 x 236 m, e a afim
+   encosta o canto NW dele no canto NW do polígono OSM. Mas o desenho é cortado
+   à esquerda e no rodapé, então sobram 30 m em x e 90 m em y sem explicação: o
+   canto certo pode ser o NE. Faltam pontos de controle — tentei sanitários,
+   portões e contorno da planta oficial do Anhembi e nenhum casou, porque o mapa
+   da Bienal não desenha nenhuma feição permanente do prédio. Resolver com
+   leitura de GPS no local.
 5. **Rota (fase 2)**: as vias existem como LineString, mas ainda não há grafo
    nodado nos cruzamentos nem ponto de acesso por estande.
 6. **`LARG_MIN = 2 m` e `AVENTAL = 6 m` são julgamento meu**, não saem do PDF.

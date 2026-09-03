@@ -27,7 +27,18 @@ OUT = "web/public/data/mapa.geojson"
 
 MAP_CLIP = (62.0, 140.0, 1545.0, 955.0)
 LEGENDA = (1068.0, 266.0, 1555.0, 485.0)   # caixa da legenda: não é planta
-HALL_M = 322.0
+# Largura do DESENHO recortado (MAP_CLIP), não do prédio. A distinção importa:
+# o mapa oficial é cortado à esquerda e no rodapé, então o recorte não cobre o
+# salão inteiro e casar sua largura com os 322 m do polígono OSM era um palpite
+# errado — inflava tudo em 11%.
+#
+# O valor abaixo é MEDIDO, não escolhido: varrendo a escala, o desvio médio dos
+# lados de estande ao múltiplo de 1 m mais próximo tem mínimo único e agudo aqui
+# (13,8 cm, contra 24,8 cm na escala antiga, que é indistinguível de aleatório).
+# Confirmam, sem entrar na conta: o lado mais frequente vira 6,01 m (frente
+# padrão de estande) e os cinco Acessos Hall ficam a 36,2 m entre si (vão
+# estrutural). Reproduzir com: python tools/calibra.py
+DESENHO_M = 289.0
 
 # cores da LEGENDA do próprio PDF -> categoria. Nada inventado.
 PALETA = {
@@ -103,7 +114,7 @@ def title_pt(s):
 # ---------------------------------------------------------------- geometria
 def extrair(page, box):
     """Cada path preenchido do PDF -> anéis em METROS. Sem heurística."""
-    m_per_pt = HALL_M / box.width
+    m_per_pt = DESENHO_M / box.width
 
     def to_m(x, y):
         return (round((x - box.x0) * m_per_pt, 3), round((y - box.y0) * m_per_pt, 3))

@@ -52,10 +52,11 @@ const VENUE_URL = `${import.meta.env.BASE_URL}data/venue.geojson`;
 
 /** Centro e rotação: o prédio é ~4° torto em relação ao norte; giramos a
  * câmera para o pavilhão aparecer "endireitado", como apps de arena fazem. */
-// bbox real do mapa transcrito do PDF (tools/build_map.py), não do polígono do
-// pavilhão inteiro — a Bienal ocupa só a faixa norte do Distrito Anhembi, e
-// enquadrar o prédio todo deixava metade da tela vazia
-const VENUE_BOUNDS: [[number, number], [number, number]] = [
+// Enquadrar pelo polígono do prédio deixava um terço da tela vazio: o desenho
+// oficial não cobre o Distrito Anhembi inteiro. O bbox abaixo é só o palpite
+// inicial — assim que o mapa.geojson chega, `frameVenue` reenquadra pelo bbox
+// real dos dados, para a constante nunca mais envelhecer junto com a escala.
+let VENUE_BOUNDS: [[number, number], [number, number]] = [
   [-46.63802, -23.51712],
   [-46.6348, -23.515476],
 ];
@@ -155,6 +156,25 @@ map.on("load", async () => {
   });
 
   map.addSource("mapa", { type: "geojson", data: mapa });
+
+  // bbox real do que foi transcrito -> reenquadra. Feito depois do fetch e
+  // antes das camadas, para o primeiro frame já sair no lugar certo.
+  let x0 = 180, y0 = 90, x1 = -180, y1 = -90;
+  const varre = (c: unknown): void => {
+    if (typeof (c as number[])[0] === "number") {
+      const [x, y] = c as number[];
+      if (x < x0) x0 = x;
+      if (y < y0) y0 = y;
+      if (x > x1) x1 = x;
+      if (y > y1) y1 = y;
+    } else for (const f of c as unknown[]) varre(f);
+  };
+  for (const f of mapa.features) varre(f.geometry.coordinates);
+  if (x0 < x1 && y0 < y1) {
+    VENUE_BOUNDS = [[x0, y0], [x1, y1]];
+    cameraSet = false;
+    frameVenue();
+  }
 
   // piso da tenda do anexo (mesma linguagem visual do prédio)
   map.addLayer({

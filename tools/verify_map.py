@@ -60,6 +60,38 @@ def limpa(p):
     return p if p.is_valid else p.buffer(0)
 
 
+TOL_MODULO_CM = 18.0   # desvio médio ao módulo de 1 m; aleatório seria 25 cm
+
+
+def confere_escala(feats, to_m):
+    """A escala do desenho ainda cai em cima do módulo de 1 m dos estandes?
+
+    Guarda contra o erro que já custou duas reescritas: escala escolhida por
+    palpite. Se DESENHO_M sair do lugar, os lados param de bater em números
+    inteiros e o desvio médio sobe na direção dos 25 cm do puro acaso.
+    Ver tools/calibra.py para a medida completa.
+    """
+    lados = []
+    for f in feats:
+        if f["properties"].get("kind") not in ("estande", "area"):
+            continue
+        if f["geometry"]["type"] != "Polygon":
+            continue
+        pts = [to_m(*c) for c in f["geometry"]["coordinates"][0]]
+        for a, b in zip(pts, pts[1:]):
+            L = math.hypot(a[0] - b[0], a[1] - b[1])
+            if 0.5 < L < 40.0:
+                lados.append(L)
+    if not lados:
+        print("escala: sem lados para medir")
+        return False
+    d = 100 * sum(min(L % 1.0, 1 - L % 1.0) for L in lados) / len(lados)
+    ok = d <= TOL_MODULO_CM
+    print(f"\nescala: desvio ao módulo de 1 m = {d:.1f} cm em {len(lados)} lados "
+          f"({'OK' if ok else 'FORA'}; acaso = 25,0 cm)")
+    return ok
+
+
 def confere_vias(feats, to_m, modelo):
     """As vias são derivadas, não transcritas — então precisam de teste próprio.
 
@@ -201,6 +233,7 @@ def main():
             print(f"   {o[0]:12s} IoU {o[1]:.3f}  em {o[2]} m")
 
     vias_ok = confere_vias(feats, to_m, modelo)
+    escala_ok = confere_escala(feats, to_m)
 
     if "--aceitar" in sys.argv:
         json.dump(atual, open(BASELINE, "w"), indent=1)
@@ -225,8 +258,8 @@ def main():
         elif v < ref - 0.01:
             print(f"REGREDIU {cat}: {v:.1%} (era {ref:.1%})")
             ok = False
-    print("aceite: OK" if ok and vias_ok else "aceite: FALHOU")
-    return 0 if ok and vias_ok else 1
+    print("aceite: OK" if ok and vias_ok and escala_ok else "aceite: FALHOU")
+    return 0 if ok and vias_ok and escala_ok else 1
 
 
 if __name__ == "__main__":
