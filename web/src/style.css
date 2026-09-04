@@ -437,3 +437,42 @@ body.ficha #rota.open {
 body.escolhendo .maplibregl-canvas {
   cursor: crosshair;
 }
+
+/* ---- bússola ---- */
+/* Fica abaixo da busca, do lado direito: o polegar alcança e não cobre o mapa
+   nem a ficha. Só existe na tela quando o mapa está torto. */
+#bussola {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 74px);
+  right: 12px;
+  z-index: 11;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text-2);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+#bussola[hidden] {
+  display: none;
+}
+
+/* a agulha desgira o quanto o mapa girou, então aponta sempre para o "cima"
+   do prédio — é o que o botão devolve ao ser tocado */
+#bussola svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+  transform: rotate(var(--giro, 0deg));
+}
+
+/* vermelho porque a agulha tem que ser lida de relance, com o mapa girando */
+#bussola svg path {
+  fill: #d93025;
+}

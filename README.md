@@ -171,6 +171,43 @@ filtrava, e vinha com simulação para teste. O aprendizado que ficou: a regra
 no meio do salão quase sempre há uma saída nesse raio e o app escolhia por conta
 própria um lugar onde o visitante não estava.
 
+### Girar o mapa com o dedo
+
+O visitante está de pé dentro do pavilhão olhando para uma direção física, e o
+mapa na mão dele aponta para outra. Casar os dois é o gesto mais básico de quem
+se localiza — e por muito tempo o app proibia: `dragRotate` desligado, `bearing`
+travado no ângulo que endireita o prédio.
+
+Não dá para resolver isso pela bússola do aparelho. O telhado é metálico e
+distorce o magnetômetro, que é o mesmo motivo que tirou o GPS do caminho
+crítico. O dedo é a única entrada que funciona sem sinal nenhum, então é ela que
+manda. A inclinação continua travada: planta baixa em perspectiva só esconde o
+fundo da tela.
+
+Liberar o gesto é uma linha. O que custou foram duas coisas em volta:
+
+**O giro tem que sobreviver ao uso do app.** Cada `flyTo` e cada `fitBounds`
+carregava `bearing: VENUE_BEARING`, então bastava tocar num estande ou montar
+uma rota para o mapa desfazer o alinhamento que a pessoa tinha acabado de fazer.
+Enquadrar não é motivo para reorientar. Esse defeito não aparece em tela parada,
+só girando e depois usando o app normalmente — é o que `test-mapa.mjs` cobre.
+
+**Tem que existir caminho de volta.** O pavilhão é um retângulo quase simétrico
+e os rótulos ficam de pé em qualquer ângulo, então dá para girar até se perder
+sem nada no desenho denunciar. Daí a bússola, que só aparece com o mapa torto.
+Ela aponta para o **prédio**, não para o norte geográfico: as ruas A–K são
+horizontais e o passo a passo fala nos eixos do prédio, então mostrar o norte só
+naquele canto da tela seria introduzir um segundo referencial que nada mais usa.
+Pelo mesmo motivo o encaixe de fim de gesto é feito à mão — o `bearingSnap` do
+MapLibre encaixa no norte, que aqui é justamente o ângulo errado, e por isso ele
+está zerado.
+
+Um detalhe que já estava certo e que só o giro colocaria à prova: as setas da
+rota são o texto `▶` com `symbol-placement: line`, e o MapLibre gira rótulos de
+linha 180° para mantê-los legíveis. Numa seta isso seria apontar **para trás**.
+`text-keep-upright: false` impede, e o teste verifica — porque é o tipo de erro
+que o mapa não denuncia.
+
 ### Paradas múltiplas e a melhor ordem
 
 Numa Bienal ninguém vai a um lugar só. O caso real é "quero passar na Companhia
@@ -221,6 +258,7 @@ cd web && npm install && npm run dev
 node test-shots.mjs <porta>       # screenshots do app real via Playwright
 node test-rota.mjs <porta>        # percurso na UI + carga de 300 pares
 node test-instrucoes.mjs <porta>  # passo a passo, com a lateralidade conferida
+node test-mapa.mjs <porta>        # câmera: girar o mapa e o giro sobreviver
 node test-offline.mjs             # sobe o build, mata o servidor e usa o app
 node gera-icones.mjs              # refaz o ícone a partir do mapa
 ```

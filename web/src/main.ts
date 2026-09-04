@@ -123,12 +123,84 @@ map.addControl(
   "bottom-right",
 );
 
-// mapa de pavilhão: rotação e inclinação livres só desorientam — travadas.
-// O bearing fixo "endireita" o prédio (ele é ~4° torto em relação ao norte).
-map.dragRotate.disable();
-map.touchZoomRotate.disableRotation();
+// Girar o mapa é liberado de propósito. O visitante está de pé dentro do
+// pavilhão olhando para uma direção física, e o único jeito de casar o mapa com
+// o que ele vê é girar até bater. Não dá para fazer isso pela bússola do
+// aparelho: o telhado é metálico e distorce o magnetômetro — o mesmo motivo que
+// tirou o GPS do caminho crítico. O dedo funciona sem sinal nenhum.
+//
+// A inclinação continua travada: um mapa de planta baixa em perspectiva só
+// esconde o fundo da tela e não acrescenta nada.
+map.touchZoomRotate.enableRotation();
 map.touchPitch.disable();
-map.keyboard.disableRotation();
+
+/**
+ * Volta o mapa para o prédio endireitado.
+ *
+ * Sem este botão, liberar o giro seria uma armadilha: dá para girar até se
+ * perder e não existe nada no desenho que devolva a referência — o pavilhão é
+ * um retângulo quase simétrico e os rótulos ficam de pé em qualquer ângulo.
+ *
+ * A agulha aponta para o prédio, não para o norte geográfico, porque é essa a
+ * referência do resto do app: as ruas A–K são horizontais e o passo a passo
+ * fala nos eixos do prédio. Mostrar o norte só neste canto da tela seria
+ * introduzir um segundo referencial que nada mais usa.
+ */
+const bussola = document.createElement("button");
+bussola.id = "bussola";
+bussola.type = "button";
+bussola.hidden = true;
+bussola.title = "Endireitar o mapa";
+bussola.setAttribute("aria-label", "Endireitar o mapa");
+bussola.innerHTML =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 16.8 20.4 12 16.7 7.2 20.4Z"/></svg>';
+document.body.appendChild(bussola);
+bussola.addEventListener("click", () => map.easeTo({ bearing: VENUE_BEARING, duration: 300 }));
+
+/** o quanto o mapa está torto em relação ao prédio, em graus, em (-180, 180] */
+function torto(): number {
+  let d = (map.getBearing() - VENUE_BEARING) % 360;
+  if (d > 180) d -= 360;
+  if (d <= -180) d += 360;
+  return d;
+}
+
+// só aparece com o mapa torto: com o prédio no lugar, o botão não faria nada
+map.on("rotate", () => {
+  const d = torto();
+  bussola.hidden = Math.abs(d) < 0.5;
+  bussola.style.setProperty("--giro", `${-d}deg`);
+});
+
+// Encaixe no endireitado. O `bearingSnap` do MapLibre encaixa no norte
+// geográfico, que aqui é justamente o ângulo errado — por isso ele está zerado
+// no construtor e o encaixe é feito à mão, no eixo do prédio. Sem isso não há
+// como voltar ao alinhamento exato com o dedo, só com o botão.
+const SNAP_GRAUS = 7;
+let girouSozinho = false;
+map.on("rotateend", () => {
+  const d = torto();
+  if (girouSozinho || d === 0 || Math.abs(d) > SNAP_GRAUS) return;
+  girouSozinho = true;
+  map.easeTo({ bearing: VENUE_BEARING, duration: 180 });
+  map.once("moveend", () => {
+    girouSozinho = false;
+  });
+});
+
+/**
+ * O giro escolhido pelo visitante sobrevive a voos e reenquadramentos.
+ *
+ * Este é o defeito que anda junto com liberar a rotação: cada `flyTo` e cada
+ * `fitBounds` do app carregava `bearing: VENUE_BEARING`, então bastava tocar
+ * num estande para o mapa desfazer o alinhamento que a pessoa tinha acabado de
+ * fazer com o dedo. Enquadrar não é motivo para reorientar.
+ */
+let usuarioGirou = false;
+map.on("rotatestart", (e) => {
+  if ("originalEvent" in e && e.originalEvent) usuarioGirou = true;
+});
+const bearingAtual = (): number => (usuarioGirou ? map.getBearing() : VENUE_BEARING);
 
 // Enquadramento inicial robusto: fitBounds com container 0x0 manda a câmera
 // pra zoom máximo num ponto qualquer (tela "vazia"). Só enquadra com medida
@@ -137,7 +209,7 @@ let cameraSet = false;
 function frameVenue(): void {
   const el = document.getElementById("map")!;
   if (!el.clientWidth || !el.clientHeight) return;
-  map.fitBounds(VENUE_BOUNDS, { padding: 24, bearing: VENUE_BEARING, animate: false });
+  map.fitBounds(VENUE_BOUNDS, { padding: 24, bearing: bearingAtual(), animate: false });
   cameraSet = true;
 }
 
@@ -704,7 +776,7 @@ map.on("load", async () => {
     enquadra: (cels) =>
       map.fitBounds(bboxDe(cels.map((c) => rotas.lngLat(c))), {
         padding: { top: 90, bottom: 300, left: 40, right: 40 },
-        bearing: VENUE_BEARING,
+        bearing: bearingAtual(),
         duration: 700,
       }),
     instrucoes: (cels, destino) => instrucoes(cels, vias, rotas, destino),
@@ -752,7 +824,7 @@ map.on("load", async () => {
       map.flyTo({
         center: h.center,
         zoom: h.kind === "area" ? 17.8 : 19.4,
-        bearing: VENUE_BEARING,
+        bearing: bearingAtual(),
         duration: 900,
         // sheet cobre a base da tela: puxa o alvo um pouco pra cima
         offset: [0, -40],
