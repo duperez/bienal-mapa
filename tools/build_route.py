@@ -26,7 +26,7 @@ from shapely.ops import unary_union
 from shapely.prepared import prep
 
 sys.path.insert(0, "tools")
-from build_map import MAP_CLIP, PDF, ancora, extrair, georef  # noqa: E402
+from build_map import MAP_CLIP, PDF, assentamento, extrair, georef  # noqa: E402
 from verify_map import inverso  # noqa: E402
 
 SAIDA = "web/public/data/malha.json"
@@ -123,12 +123,16 @@ def main():
     page = pymupdf.open(PDF)[0]
     box = pymupdf.Rect(*MAP_CLIP)
     formas, mpp = extrair(page, box)
-    ox, oy = ancora(formas, box, mpp)
-    to_m = inverso(ox, oy)
+    para_predio, para_desenho = assentamento(formas, box, mpp)
+    predio_to_m = inverso()
+
+    def to_m(lng, lat):
+        return para_desenho(*predio_to_m(lng, lat))
+
     base = georef()
 
     def to_lnglat(x, y):
-        return base(x - ox, y - oy)
+        return base(*para_predio(x, y))
 
     feats = json.load(open(GEOJSON))["features"]
     circ = unary_union([em_metros(f["geometry"], to_m) for f in feats

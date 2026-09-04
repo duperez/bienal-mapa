@@ -112,64 +112,69 @@ def main():
         print("\nsem acessos no desenho: nada a aferir")
         return 1
 
-    # ---- as quatro orientações possíveis ----
-    # O desenho é uma peça de divulgação: não tem norte, não nomeia o prédio e
-    # não desenha parede. Nada garante que ele esteja na orientação em que foi
-    # colado. As portas do evento, porém, têm que dar para algum lugar — e o
-    # prédio real só tem marquise em duas faces. Isso é testável: para cada
-    # orientação, procura-se o deslocamento que mais aproxima as portas de uma
-    # marquise, sem tirar o desenho de dentro do prédio. Se uma orientação
-    # ganhar por larga margem, ela é a resposta.
+    # ---- afere o assentamento aplicado ----
+    # A ORIENTAÇÃO já foi decidida, e por rótulo, não por ajuste: ver
+    # build_map.assentamento(). Caçar orientação aqui era um erro de método —
+    # a métrica de distância não distingue reflexão de rotação, e por isso
+    # preferia o mapa espelhado, que ninguém imprime. O que sobra para medir é
+    # a POSIÇÃO do desenho dentro do prédio, que é o defeito 4 do README.
+    #
+    # O critério tem duas pontas, e é isso que o torna difícil de enganar:
+    # as portas de PÚBLICO têm que dar para a marquise (é por onde o visitante
+    # entra) e as de SERVIÇO para a fachada oposta (é por onde entra caminhão).
+    # Um deslocamento que agrada uma ponta piora a outra.
     dx0, dy0, dx1, dy1 = min(xs), min(ys), max(xs), max(ys)
     marq = [m[2] for m in marquises]
+    # a marquise do público é a grande da face y=0; as outras duas são de
+    # outros acessos do complexo e não recebem o público da Bienal
+    publica = max(marq, key=lambda b: b[2] - b[0])
 
-    def perto_marquise(p):
+    def dist_caixa(p, b):
         x, y = p
-        return min(
-            math.hypot(max(x0 - x, 0, x - x1), max(y0 - y, 0, y - y1))
-            for x0, y0, x1, y1 in marq
-        )
+        x0, y0, x1, y1 = b
+        return math.hypot(max(x0 - x, 0, x - x1), max(y0 - y, 0, y - y1))
 
-    portas = [
-        para_m(*f["geometry"]["coordinates"])
-        for f in feats
-        if f["properties"]["kind"] == "poi"
-        and (
-            f["properties"].get("cat") in ("entrada", "saida")
-            or "acesso" in (f["properties"].get("name") or "").lower()
-        )
-    ]
-    print(f"\nportas consideradas: {len(portas)}")
+    def eh_servico(f):
+        n = (f["properties"].get("name") or "").lower()
+        return "serviço" in n or "servico" in n or "emergência" in n or "emergencia" in n
 
-    def vira(p, esp, sul):
-        x, y = p
-        return (dx0 + dx1 - x if esp else x, dy0 + dy1 - y if sul else y)
+    todas = [f for f in feats if f["properties"]["kind"] == "poi"
+             and (f["properties"].get("cat") in ("entrada", "saida", "escolas",
+                                                 "entrada-expositor", "entrada-bilheteria")
+                  or "acesso" in (f["properties"].get("name") or "").lower())]
+    pub = [para_m(*f["geometry"]["coordinates"]) for f in todas if not eh_servico(f)]
+    srv = [para_m(*f["geometry"]["coordinates"]) for f in todas if eh_servico(f)]
+    print(f"\nportas de público: {len(pub)}   de serviço: {len(srv)}")
 
-    print("\norientação   deslocamento         distância média das portas à marquise")
-    ranking = []
-    for esp in (False, True):
-        for sul in (False, True):
-            virados = [vira(p, esp, sul) for p in portas]
-            melhor = None
-            # folga real dentro do prédio, em passos de 1 m
-            for ddx in range(int(min(px) - dx0), int(max(px) - dx1) + 1):
-                for ddy in range(int(min(py) - dy0), int(max(py) - dy1) + 1):
-                    d = sum(perto_marquise((x + ddx, y + ddy)) for x, y in virados) / len(virados)
-                    if melhor is None or d < melhor[0]:
-                        melhor = (d, ddx, ddy)
-            nome = ("norte" if not sul else "sul") + "/" + ("oeste" if not esp else "leste")
-            ranking.append((melhor[0], nome, melhor[1], melhor[2]))
-            print(f"  {nome:12s} dx={melhor[1]:+5d} dy={melhor[2]:+5d} m   {melhor[0]:6.1f} m")
+    # a fachada de serviço é a face oposta à marquise pública, no fundo do
+    # prédio: uma faixa, não uma caixa desenhada
+    fundo = max(py)
 
-    ranking.sort()
-    d1, n1, ddx, ddy = ranking[0]
-    d2 = ranking[1][0]
-    print(f"\nmelhor: {n1} com dx={ddx:+d} dy={ddy:+d} -> portas a {d1:.1f} m da marquise")
-    print(f"segunda melhor fica a {d2:.1f} m ({d2 / d1:.1f}x pior)")
-    atual = sum(perto_marquise(p) for p in portas) / len(portas)
-    print(f"âncora de hoje: portas a {atual:.1f} m da marquise mais próxima")
-    if d2 / d1 < 2:
-        print("\nas duas primeiras empatam: isto NÃO decide a orientação")
+    def custo(ddx, ddy):
+        a = sum(dist_caixa((x + ddx, y + ddy), publica) for x, y in pub) / max(1, len(pub))
+        b = sum(abs(fundo - (y + ddy)) for _, y in srv) / max(1, len(srv))
+        return a, b, (a + b) / 2
+
+    print("\nassentamento de hoje:")
+    a, b, m = custo(0, 0)
+    print(f"  público -> marquise : {a:6.1f} m")
+    print(f"  serviço -> fachada  : {b:6.1f} m")
+    print(f"  média               : {m:6.1f} m")
+
+    melhor = None
+    for ddx in range(int(min(px) - dx0), int(max(px) - dx1) + 1):
+        for ddy in range(int(min(py) - dy0), int(max(py) - dy1) + 1):
+            c = custo(ddx, ddy)
+            if melhor is None or c[2] < melhor[0][2]:
+                melhor = (c, ddx, ddy)
+    (a, b, m), ddx, ddy = melhor
+    print(f"\nmelhor deslocamento possível: dx={ddx:+d} dy={ddy:+d} m")
+    print(f"  público -> marquise : {a:6.1f} m")
+    print(f"  serviço -> fachada  : {b:6.1f} m")
+    print(f"  média               : {m:6.1f} m")
+    print("\nO resíduo que sobra é o defeito 4: o desenho é menor que o prédio\n"
+          "e nada no PDF diz onde ele encosta. Só uma planta cotada do piso\n"
+          "resolve isso de vez.")
     return 0
 
 

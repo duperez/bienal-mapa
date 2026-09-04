@@ -21,7 +21,7 @@ from shapely.geometry import Polygon
 from shapely.strtree import STRtree
 
 sys.path.insert(0, "tools")
-from build_map import (MAP_CLIP, LEGENDA, TRAVESSA, VENUE, ancora, classificar,
+from build_map import (MAP_CLIP, LEGENDA, TRAVESSA, VENUE, assentamento, classificar,
                        extrair, ring_area)  # noqa: E402
 
 GEOJSON = "web/public/data/mapa.geojson"
@@ -212,7 +212,12 @@ def main():
         buracos = [r for r in f["aneis"] if r is not ext and abs(ring_area(r)) > 1.0]
         esperado.append((cat or kind, limpa(Polygon(ext, buracos))))
 
-    to_m = inverso(*ancora(formas, box, m_per_pt))
+    _, para_desenho = assentamento(formas, box, m_per_pt)
+    predio_to_m = inverso()
+
+    def to_m(lng, lat):
+        return para_desenho(*predio_to_m(lng, lat))
+
     feats = json.load(open(GEOJSON))["features"]
     modelo = []
     for f in feats:

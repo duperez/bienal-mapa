@@ -61,11 +61,15 @@ grande.
 
 O que resolveu foi evidência interna. Estande de feira é modular: as frentes são
 múltiplos inteiros de 1 m. Varrendo a escala, o desvio médio dos lados ao
-múltiplo mais próximo tem mínimo único e agudo em **0,194875 m/pt** (13,8 cm,
-contra 24,8 cm na escala antiga — indistinguível de sorteio). Duas conferências
-que não entram na conta concordam: o lado mais frequente vira **6,01 m** (frente
-padrão de estande) e os cinco Acessos Hall ficam a **36,2 m** entre si (vão
-estrutural).
+múltiplo mais próximo tem mínimo em **0,194875 m/pt**.
+
+O sinal fica muito mais nítido separando os eixos, que é o que
+`tools/anisotropia.py` faz. As ruas correm em X, então o eixo **Y** carrega a
+*profundidade* do estande, que é padronizada, enquanto a *frente* (X) é
+negociada. Medido só em Y, o mínimo é agudo e profundo em **s=1,0002** — 8,1 cm
+de desvio contra 25,0 cm de acaso, com o alias ×2 esperado em s=2,00. As
+profundidades mais frequentes saem em **6,0 m (93×), 3,0 m (59×) e 1,0 m (48×)**,
+que são medidas de feira; o eixo X segue módulo de painel de 1,2 m.
 
 A escala é dada em metros por ponto do PDF, não como largura do salão: amarrá-la
 ao enquadramento fazia a janela de leitura virar régua, e a janela é arbitrária.
@@ -73,7 +77,8 @@ Ela hoje é só um filtro (o que é planta, o que é cabeçalho) e tem folga —
 versão anterior cortava 23 pt de estandes reais, que ficavam com coordenada
 negativa e apareciam do lado de fora da parede no app.
 
-Reproduzir com `python tools/calibra.py`. O teste de aceite mede o desvio a cada
+Reproduzir com `python tools/anisotropia.py` (por eixo, é o que vale) ou
+`python tools/calibra.py` (junta os eixos e dilui o sinal). O teste de aceite mede o desvio a cada
 build, então a escala não pode regredir em silêncio.
 
 ### Rota
@@ -193,15 +198,9 @@ para conferir a olho que a leitura do PDF está correta.
    `numeracao_derivada: true`. Se estiver errada, troca-se o rótulo, não o desenho.
 3. **Estandes sem código** e áreas de infra sem nome — o PDF não imprime.
    Hoje ficam sem rótulo no app (melhor que rótulo inventado).
-4. **A âncora está errada e já se sabe como.** A regra de hoje, declarada em
-   `build_map.ancora()`, encosta o bloco mais a noroeste no canto noroeste do
-   prédio. O teste cobra só a consequência fraca (0 blocos fora do prédio), e
-   com ela as 13 portas do evento ficam a 71 m em média de qualquer marquise:
-   abrem para o meio do prédio, sem nada atrás.
-
-   **Resolvido pelos documentos oficiais (`tools/afere_ancora.py`,
-   `tools/orientacoes.py`).** O desenho entra **girado 180 graus**. Três
-   rótulos independentes dizem a mesma coisa, e nenhum depende de parecer
+4. **A orientação foi resolvida; a posição exata, não.** O desenho entra
+   **girado 180 graus**, e isso já está aplicado em `build_map.assentamento()`.
+   Três rótulos independentes dizem a mesma coisa, e nenhum depende de parecer
    com alguma forma:
 
    - a borda de baixo do PDF da Bienal diz `ENTRADA PÚBLICO`; a de cima diz
@@ -215,9 +214,17 @@ para conferir a olho que a leitura do PDF está correta.
 
    É rotação, não espelhamento: ninguém imprime mapa espelhado. A métrica de
    distância às marquises preferia o espelhamento (10,2 m contra 26,0 m),
-   mas ela não sabe distinguir uma coisa da outra — os rótulos sabem.
+   mas ela não sabe distinguir uma coisa da outra — os rótulos sabem. Por isso
+   `tools/afere_ancora.py` parou de caçar orientação: ele agora só **afere** o
+   assentamento aplicado, com um critério de duas pontas (porta de público
+   perto da marquise, porta de serviço perto da fachada oposta).
 
-   **Não aplicado ainda**, porque o mesmo cruzamento derrubou o defeito 8.
+   O que sobra é a posição fina. Hoje as 14 portas de público ficam a **28 m**
+   da marquise e as 15 de serviço a **74 m** da fachada de trás. Varrendo todos
+   os deslocamentos possíveis dentro da folga, nenhum melhora a média: a âncora
+   atual já é ótima. O resíduo não é erro de encaixe, é **tamanho** — ver o
+   defeito 8. Nada no PDF diz onde o desenho encosta; só uma planta cotada do
+   piso resolve isso de vez.
 
 5. **Rota sem instrução falada**: o caminho existe, é ótimo e já vai de
    qualquer ponto a qualquer ponto, mas o app só desenha a linha. Falta cruzar
@@ -232,27 +239,40 @@ para conferir a olho que a leitura do PDF está correta.
    legado. Falta escrever o SW próprio e publicar em https (Pages ou similar) —
    sem isso, e sem https, nem o cache nem a geolocalização valem.
 
-8. **A escala está provavelmente 35% pequena.** `ESCALA_M_PT = 0.194875` saiu
-   de varrer a escala até os lados de estande caírem em múltiplos de 1 m. O
-   método tem alias: um grid de 1 m continua sendo um grid de 1 m em várias
-   escalas, e a "confirmação" que eu tinha anotado (os cinco Acessos Hall a
-   36,2 m, "vão estrutural") era racionalização, não conferência.
+8. **A escala está confirmada; o que não fecha é o polígono do prédio.**
+   A suspeita de que `ESCALA_M_PT = 0.194875` estivesse 35% pequena caiu com
+   medição melhor, e vale registrar por que a suspeita existia: ela vinha de
+   duas inferências encadeadas — calibrar o Auditório B da planta técnica em
+   0,917 m/pt e multiplicar pela razão dos vãos entre os documentos. O
+   Auditório B foi mal medido. Com a escala de hoje o vão real dá 35,9 m e a
+   planta técnica sai em 0,676 m/pt, não 0,917.
 
-   Os cinco `ACESSO HALL` existem nos dois documentos. Os vãos entre eles são
-   proporcionais numa razão constante — 3,44, 3,47, 3,52, 3,45 — o que prova
-   que são as mesmas portas. Mas na planta técnica esses vãos dão perto de
-   51 m, não 36,2 m. Na escala de hoje o pavilhão teria 148 m de profundidade;
-   o OSM e a planta dão perto de 224 m.
+   O que derruba a suspeita de vez é `tools/anisotropia.py`. Ele separa os
+   lados por eixo antes de calibrar, coisa que `calibra.py` não fazia — e a
+   diferença importa, porque os dois eixos do desenho não são a mesma coisa.
+   As ruas correm em X, então o eixo **Y** carrega a *profundidade* do estande,
+   que é padronizada. O eixo Y tem mínimo agudo e profundo em **s=1,0002**
+   (8,1 cm contra 25,0 cm de acaso), com o alias ×2 esperado em s=2,00. Se a
+   escala estivesse 1,36× errada, as profundidades mais comuns seriam 8,2 m e
+   4,1 m; na escala de hoje são **6,0 m (93×), 3,0 m (59×) e 1,0 m (48×)** —
+   medidas de feira. O eixo X é mais fraco porque a *frente* é negociada, e
+   segue módulo de painel de 1,2 m; testado com 1,2 m e com 0,5 m, o mínimo
+   também cai em s≈0,995. `calibra.py` juntava os dois eixos e diluía o sinal.
 
-   Não corrigido porque não fechei a calibração absoluta da planta técnica:
-   a única âncora limpa que achei foi o Auditório B (355,04 m² rotulados,
-   0,917 m/pt), e a proporção do bloco dos Expo que consegui medir nos
-   vetores (1,70) não bate com a do polígono do OSM (1,44). Uma das duas
-   leituras está errada e não sei qual. Enquanto não souber, mexer na escala
-   é trocar um número inventado por outro.
+   O que continua aberto é outra coisa: o desenho mede 290,6 × 143,3 m
+   (razão 2,03) e o polígono do OSM mede 322,8 × 224,3 m (razão 1,44). Como o
+   desenho é isotrópico e a escala está certa, a conclusão é que **o desenho
+   não preenche o `venue.geojson`** — sobram uns 81 m de profundidade. A
+   brochura do Anhembi diz "mais de 76 mil m² … dividido em Pavilhão Norte,
+   Sul e Oeste", e as cotas oficiais (A 236 m, B 246 m, C 221 m, D 73 m)
+   batem com o polígono, não com o desenho. A hipótese é que o polígono seja o
+   Pavilhão de Exposições inteiro e a Bienal ocupe só parte dele. Isso também
+   explica os cinco `ACESSO HALL`: eles estão a 35,9 m entre si e cobrem 780
+   dos 1491 pt de largura, ou seja, são as cinco portas de **um hall**, não os
+   cinco pavilhões.
 
-   Consequência prática: as distâncias e os tempos a pé que o app mostra hoje
-   estão subestimados na mesma proporção. A topologia da rota não muda.
+   Consequência prática: as distâncias e os tempos a pé estão certos dentro do
+   desenho. O que está errado é a moldura em volta dele.
 
 9. **`MAP_CLIP` corta a borda de cima do desenho.** A janela de leitura começa
    em `y=140` e os rótulos da borda de serviço estão em `y≈112`: perdemos 5

@@ -312,7 +312,7 @@ def georef():
 
 
 def ancora(formas, box, m_per_pt):
-    """Deslocamento do desenho até o canto noroeste do prédio, em metros.
+    """Caixa do desenho em metros: (x0, y0, x1, y1).
 
     A janela de leitura tem folga proposital, e o desenho oficial ainda sai da
     página à esquerda (blocos de serviço aparecem cortados na borda). Logo nem
@@ -329,7 +329,7 @@ def ancora(formas, box, m_per_pt):
     lx1, ly1 = (LEGENDA[2] - box.x0) * m_per_pt, (LEGENDA[3] - box.y0) * m_per_pt
     tv0, tv1 = (TRAVESSA[0] - box.x0) * m_per_pt, (TRAVESSA[1] - box.y0) * m_per_pt
     tv2, tv3 = (TRAVESSA[2] - box.x0) * m_per_pt, (TRAVESSA[3] - box.y0) * m_per_pt
-    ox, oy = 1e9, 1e9
+    ox, oy, fx, fy = 1e9, 1e9, -1e9, -1e9
     for f in formas:
         ext = max(f["aneis"], key=lambda r: abs(ring_area(r)))
         area = abs(ring_area(ext))
@@ -343,7 +343,44 @@ def ancora(formas, box, m_per_pt):
         if classificar(f["cor"], ext, area, na_tv)[0] is None:
             continue
         ox, oy = min(ox, min(xs)), min(oy, min(ys))
-    return ox, oy
+        fx, fy = max(fx, max(xs)), max(fy, max(ys))
+    return ox, oy, fx, fy
+
+
+def assentamento(formas, box, m_per_pt):
+    """Como o desenho assenta dentro do prédio: ida e volta, em metros.
+
+    ROTAÇÃO DE 180°. O desenho oficial entra de cabeça para baixo, e três
+    rótulos independentes provam isso:
+
+    1. a borda de BAIXO do PDF é ENTRADA PÚBLICO; a de cima é ACESSO SERVIÇO
+       HALL 01..05 com PORTÃO 7/8/9, que a planta oficial do Anhembi põe do
+       lado da Marginal Tietê. A marquise do público é a face y=0 deste
+       referencial (way OSM 1298216404, 258,7 m de frente).
+    2. ACESSO HALL 01 está à DIREITA no PDF; a planta técnica o põe no Expo 01,
+       colado na Alameda de Conexão, que é a face oeste (x=0, way 1298216400).
+    3. as três saídas da borda esquerda do PDF batem com o Expo 05, único
+       pavilhão com "Lateral 01/02" na tabela oficial de sanitários.
+
+    Os três apontam para o MESMO giro, e nos dois eixos ao mesmo tempo — que é
+    exatamente o que separa rotação de espelhamento. Espelhar dá distância
+    menor às marquises (10,2 m contra 26,0 m), mas ninguém imprime mapa
+    espelhado: a métrica de distância não sabe distinguir reflexão de giro, e
+    quem decide isso é o rótulo, não o ajuste.
+
+    Continua sendo o defeito 4 do README a POSIÇÃO exata do desenho dentro do
+    pavilhão; o que esta função resolve é a orientação.
+    """
+    ox, oy, fx, fy = ancora(formas, box, m_per_pt)
+    largura, fundo = fx - ox, fy - oy
+
+    def para_predio(x, y):
+        return (largura - (x - ox), fundo - (y - oy))
+
+    def para_desenho(x, y):
+        return (largura - x + ox, fundo - y + oy)
+
+    return para_predio, para_desenho
 
 
 def subdividir(ext, codes):
@@ -586,11 +623,11 @@ def main():
 
     directory = json.load(open(STRUCT)).get("directory", {})
 
-    ox, oy = ancora(formas, box, m_per_pt)
+    para_predio, _ = assentamento(formas, box, m_per_pt)
     base = georef()
 
     def to_lnglat(x, y):
-        return base(x - ox, y - oy)
+        return base(*para_predio(x, y))
 
     def poly(ring, props):
         return {"type": "Feature", "properties": props,
