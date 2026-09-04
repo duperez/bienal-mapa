@@ -29,7 +29,14 @@ OUT = "web/public/data/mapa.geojson"
 # NÃO é a extensão do desenho. A versão anterior confundia as duas coisas: a
 # borda esquerda cortava 23 pt de estandes reais, que ficavam com coordenada
 # negativa e vazavam para fora do prédio no app. Folga proposital nos lados.
-MAP_CLIP = (30.0, 140.0, 1560.0, 955.0)
+#
+# O topo era 140 e cortava a borda de SERVIÇO inteira: cinco ACESSO SERVIÇO
+# HALL (triângulos em y=132,9) e dez SAÍDA DE EMERGÊNCIA (y=130,4), com os
+# rótulos em y=111,8..125. Eram 15 dos 35 acessos do desenho — quase metade —
+# e justamente os da fachada oposta ao público, que é a referência que prova a
+# orientação. Fica em 105: pega rótulo e triângulo, e ainda exclui os círculos
+# de PORTÃO 7..10 (y≈60..100), que são portões do terreno, não do pavilhão.
+MAP_CLIP = (30.0, 105.0, 1560.0, 955.0)
 LEGENDA = (1068.0, 266.0, 1555.0, 485.0)   # caixa da legenda: não é planta
 
 # Escala, em metros por ponto do PDF. Antes saía de dividir uma largura suposta
@@ -238,10 +245,31 @@ def desextrudar(formas):
     return [f for i, f in enumerate(formas) if i not in faces]
 
 
-def rotulos(page, box, m_per_pt):
+def rotulos(page, box, m_per_pt, por_linha=False):
+    """Rótulos do PDF em metros.
+
+    Por SPAN (padrão) para achar códigos de estande, que vêm soltos. Por LINHA
+    (`por_linha`) para nomes: a linha é a unidade que o próprio PDF declara, e
+    reconstruir o nome por proximidade de spans é o que produzia frankensteins
+    como "Saída de Emergência Acesso Serviço Hall 03" — na borda de serviço os
+    rótulos de acessos vizinhos ficam na mesma altura, e qualquer varredura
+    lateral pega o do vizinho.
+    """
     out = []
     for blk in page.get_text("dict", clip=box)["blocks"]:
         for line in blk.get("lines", []):
+            if por_linha:
+                t = " ".join(sp["text"] for sp in line["spans"]).strip()
+                if not t:
+                    continue
+                bb = line["bbox"]
+                out.append({
+                    "txt": t,
+                    "x": round(((bb[0] + bb[2]) / 2 - box.x0) * m_per_pt, 3),
+                    "y": round(((bb[1] + bb[3]) / 2 - box.y0) * m_per_pt, 3),
+                    "size": max(sp["size"] for sp in line["spans"]) * m_per_pt,
+                })
+                continue
             for sp in line["spans"]:
                 t = sp["text"].strip()
                 if not t:
@@ -539,8 +567,15 @@ def main():
     box = pymupdf.Rect(*MAP_CLIP)
     formas, m_per_pt = extrair(page, box)
     labels = rotulos(page, box, m_per_pt)
+    linhas_txt = rotulos(page, box, m_per_pt, por_linha=True)
     codigos = [l for l in labels if CODE_RE.fullmatch(l["txt"])]
-    nomes = [l for l in labels if not CODE_RE.fullmatch(l["txt"]) and l["size"] > 1.0]
+    # o corte de tamanho separa rótulo de planta de miudeza de desenho. Estava
+    # em 1,0 m e derrubava a faixa de 0,97 m inteira — que não é miudeza: são
+    # AUDITÓRIO, ESPAÇO EDUCAÇÃO, ESPAÇO BEM-ESTAR, PAPO DE MERCADO, PODCAST,
+    # LOCKERS e os dez rótulos da borda de serviço. Abaixo de 0,9 m só há a
+    # numeração da Travessa (0,55 m) e a tradução em inglês (0,78 m), que
+    # duplicaria todo nome. O degrau é limpo: o corte fica entre os dois.
+    nomes = [l for l in linhas_txt if not CODE_RE.fullmatch(l["txt"]) and l["size"] > 0.9]
 
     # a caixa da LEGENDA é desenho de legenda, não planta: fora.
     lx0, ly0 = ((LEGENDA[0] - box.x0) * m_per_pt, (LEGENDA[1] - box.y0) * m_per_pt)
@@ -608,13 +643,12 @@ def main():
                 key=lambda t: (t["x"] - cx) ** 2 + (t["y"] - cy) ** 2)
             nome = None
             # o rótulo tem que estar colado no triângulo; senão é de OUTRO
-            # acesso e a "melhor aproximação" viraria nome errado no app
-            if perto and math.dist((perto[0]["x"], perto[0]["y"]), (cx, cy)) < 6.0:
-                linha = [t for t in nomes
-                         if abs(t["y"] - perto[0]["y"]) < 1.2
-                         and abs(t["x"] - perto[0]["x"]) < 22]
-                linha.sort(key=lambda t: t["x"])
-                nome = " ".join(t["txt"] for t in linha).strip()
+            # acesso e a "melhor aproximação" viraria nome errado no app.
+            # 8 m sai de medir os 35 triângulos contra o rótulo mais próximo: os
+            # que têm dono ficam entre 2,03 e 3,93 m, o primeiro órfão está a
+            # 14,59 m. O vão é limpo, e o corte fica no meio dele.
+            if perto and math.dist((perto[0]["x"], perto[0]["y"]), (cx, cy)) < 8.0:
+                nome = perto[0]["txt"]
             feats.append({"type": "Feature", "properties": {
                 "kind": "poi", "cat": cat, "name": title_pt(nome)},
                 "geometry": {"type": "Point", "coordinates": to_lnglat(cx, cy)}})
