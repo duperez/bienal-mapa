@@ -208,6 +208,30 @@ linha 180° para mantê-los legíveis. Numa seta isso seria apontar **para trás
 `text-keep-upright: false` impede, e o teste verifica — porque é o tipo de erro
 que o mapa não denuncia.
 
+### A orientação de partida é medida, não escolhida
+
+O pavilhão é **290 x 143 m** — deitado, quase 2:1. Um celular em pé é 1:2,2. Com
+o prédio sempre endireitado do mesmo jeito, enquadrá-lo inteiro deixava o mapa
+ocupando **23% da altura** da tela, com o resto vazio e os rótulos pequenos
+demais para ler andando. É o defeito mais grave que o app tinha para quem ia
+usá-lo de verdade, e ele não aparece em nenhum monitor.
+
+A correção é a mesma conta do `fitBounds`, feita antes para decidir por onde
+entrar: das duas orientações que deixam o prédio reto na tela, vale a que dá
+mais zoom no viewport atual. Num monitor largo continua a de sempre; num celular
+em pé o prédio nasce deitado ao longo da tela. Medido na mesma tela, o ganho é
+**0,83 nível de zoom, ou 1,78x de escala linear** — e o teste mede assim, nas
+duas orientações do mesmo viewport, porque comparar zoom entre telas de tamanhos
+diferentes não diz nada.
+
+Virar o aparelho reenquadra — mas só para quem não girou o mapa com o dedo. Quem
+girou escolheu, e a escolha dele manda. Pelo mesmo motivo a bússola volta para o
+reto **daquela tela**, não para um ângulo fixo no código.
+
+O `manifest.webmanifest` deixou de travar `orientation: portrait`. Travar era
+contraditório: o mapa agora se vira sozinho, e a tela deitada é a que mais
+mostra do prédio.
+
 ### Paradas múltiplas e a melhor ordem
 
 Numa Bienal ninguém vai a um lugar só. O caso real é "quero passar na Companhia
@@ -259,6 +283,7 @@ node test-shots.mjs <porta>       # screenshots do app real via Playwright
 node test-rota.mjs <porta>        # percurso na UI + carga de 300 pares
 node test-instrucoes.mjs <porta>  # passo a passo, com a lateralidade conferida
 node test-mapa.mjs <porta>        # câmera: girar o mapa e o giro sobreviver
+node test-pages.mjs              # o app servido em subcaminho, como no Pages
 node test-offline.mjs             # sobe o build, mata o servidor e usa o app
 node gera-icones.mjs              # refaz o ícone a partir do mapa
 ```
@@ -392,8 +417,16 @@ para conferir a olho que a leitura do PDF está correta.
      isso `test-offline.mjs` **mata o servidor**. E mata o binário direto, não
      via `npx`, senão o processo fica órfão e o teste "offline" roda com rede.
 
-   Falta publicar em https (Pages ou similar) — sem isso o service worker não
-   registra fora de localhost.
+   **Publicado.** O app está no ar em <https://duperez.github.io/bienal-mapa/>,
+   por workflow do Actions a cada push na `main`. O que faltava era https, sem o
+   qual o service worker não registra fora de localhost — mas publicar num
+   subcaminho (`/bienal-mapa/`) é uma segunda armadilha, e silenciosa: `vite
+   dev` e `vite preview` servem na raiz, então todos os outros testes passam com
+   o app publicado quebrado. `test-pages.mjs` sobe um servidor estático próprio
+   embaixo do prefixo, com `Vary` e com 404 seco (sem fallback de SPA, que é o
+   que o Pages faz), e confere que nada é pedido fora do prefixo, que o escopo
+   do service worker é o subcaminho, que o precache não guarda URL de raiz e
+   que, morto o servidor, o app ainda abre e traça rota.
 
 8. **A escala está confirmada; o que não fecha é o polígono do prédio.**
    A suspeita de que `ESCALA_M_PT = 0.194875` estivesse 35% pequena caiu com

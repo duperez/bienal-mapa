@@ -27,6 +27,8 @@ const checa = (nome, ok, detalhe = "") => {
 
 /** o ângulo do prédio endireitado; o mapa "reto" nunca é o norte geográfico */
 const RETO = 4;
+/** numa tela em pé, o prédio deita ao longo dela — 90° a mais */
+const RETO_EM_PE = RETO + 90;
 
 const navegador = await chromium.launch();
 const pagina = await navegador.newPage({ viewport: { width: 900, height: 800 } });
@@ -121,6 +123,66 @@ await girar(RETO + 25);
 await pagina.waitForTimeout(600);
 const livre = await bearing();
 checa("longe do reto não é puxado", Math.abs(livre - (RETO + 25)) < 1, `${livre}°`);
+
+// ---- a tela em pé vira o prédio, porque é onde ele cabe ----
+// O pavilhão é 290x143 m e um celular em pé é 1:2,2. Com o prédio sempre
+// deitado, ele ocupava 23% da altura da tela e os rótulos ficavam pequenos
+// demais para ler andando. Deitá-lo AO LONGO do celular dobra a escala linear.
+// Precisa de página nova: quem já girou com o dedo manda na orientação, e é
+// justamente isso que a última verificação confere.
+const emPe = await navegador.newPage({ viewport: { width: 390, height: 844 } });
+await emPe.goto(`http://localhost:${porta}/`, { waitUntil: "networkidle" });
+await emPe.waitForFunction(() => window.__map?.isStyleLoaded?.());
+await emPe.waitForTimeout(2500);
+const bEmPe = await emPe.evaluate(() => Math.round(window.__map.getBearing()));
+checa("tela em pé nasce com o prédio em pé", Math.abs(bEmPe - RETO_EM_PE) < 1, `${bEmPe}°`);
+
+// O ganho tem que ser medido NA MESMA tela, nas duas orientações: comparar o
+// zoom entre viewports de tamanhos diferentes não diz nada, porque tela maior
+// já rende mais zoom sozinha. Aqui é o mesmo celular, o mesmo prédio, e a
+// única diferença é por onde ele entra.
+const ganho = await emPe.evaluate(async () => {
+  const m = window.__map;
+  const b = m.getBounds();
+  const cx = [
+    [b.getWest(), b.getSouth()],
+    [b.getEast(), b.getNorth()],
+  ];
+  const zoomCom = (bearing) => {
+    m.fitBounds(cx, { padding: 24, bearing, animate: false });
+    return m.getZoom();
+  };
+  return { deitado: zoomCom(4), emPe: zoomCom(94) };
+});
+checa(
+  "e é isso que rende mais zoom, que é o motivo",
+  ganho.emPe > ganho.deitado + 0.5,
+  `${ganho.emPe.toFixed(2)} em pé contra ${ganho.deitado.toFixed(2)} deitado, mesma tela`,
+);
+await emPe.evaluate(() => window.__map.setBearing(94));
+await emPe.waitForTimeout(400);
+checa("sem bússola: em pé é o lugar certo do prédio aqui", !(await emPe.locator("#bussola").isVisible()));
+
+// a bússola devolve a orientação DESTA tela, não um ângulo fixo no código
+await emPe.evaluate(
+  () =>
+    new Promise((pronto) => {
+      window.__map.once("moveend", () => setTimeout(pronto, 300));
+      window.__map.setBearing(200);
+      window.__map.fire("rotatestart", { originalEvent: new Event("touchstart") });
+      window.__map.fire("rotate");
+      window.__map.fire("rotateend");
+    }),
+);
+checa("bússola aparece na tela em pé", await emPe.locator("#bussola").isVisible());
+await emPe.click("#bussola");
+await emPe.waitForTimeout(700);
+const voltouEmPe = await emPe.evaluate(() => Math.round(window.__map.getBearing()));
+checa(
+  "bússola volta para o reto DESTA tela",
+  Math.abs(voltouEmPe - RETO_EM_PE) < 1,
+  `${voltouEmPe}°`,
+);
 
 checa("nenhum erro de página", errosDePagina.length === 0, errosDePagina[0] || "");
 

@@ -155,11 +155,40 @@ bussola.setAttribute("aria-label", "Endireitar o mapa");
 bussola.innerHTML =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 16.8 20.4 12 16.7 7.2 20.4Z"/></svg>';
 document.body.appendChild(bussola);
-bussola.addEventListener("click", () => map.easeTo({ bearing: VENUE_BEARING, duration: 300 }));
+bussola.addEventListener("click", () => map.easeTo({ bearing: bearingBase(), duration: 300 }));
+
+/**
+ * A orientação em que o desenho cabe melhor na tela que existe.
+ *
+ * O pavilhão é 290 x 143 m — deitado, quase 2:1. Um celular em pé é 1:2,2. Com
+ * o prédio sempre "endireitado", enquadrá-lo inteiro deixava o mapa ocupando
+ * **23% da altura** da tela e o resto vazio, com os rótulos pequenos demais
+ * para ler andando. Deitando o prédio ao longo do celular a mesma coisa ocupa
+ * 94%, ou seja, o dobro de escala linear.
+ *
+ * Então a orientação de partida é medida, não escolhida: das duas que deixam o
+ * prédio reto na tela, vale a que dá mais zoom no viewport atual. Num monitor
+ * largo continua a de sempre; num celular em pé o prédio nasce em pé. É a
+ * mesma conta do `fitBounds`, feita antes para decidir por onde entrar.
+ */
+function bearingBase(): number {
+  const el = document.getElementById("map");
+  const larguraTela = el?.clientWidth ?? 0;
+  const alturaTela = el?.clientHeight ?? 0;
+  if (!larguraTela || !alturaTela) return VENUE_BEARING;
+  const [[x0, y0], [x1, y1]] = VENUE_BOUNDS;
+  // graus de longitude encolhem com a latitude; sem isso o prédio parece mais
+  // largo do que é e a comparação sai errada justamente perto do empate
+  const largura = (x1 - x0) * Math.cos((((y0 + y1) / 2) * Math.PI) / 180);
+  const altura = y1 - y0;
+  const deitado = Math.min(larguraTela / largura, alturaTela / altura);
+  const emPe = Math.min(larguraTela / altura, alturaTela / largura);
+  return emPe > deitado ? VENUE_BEARING + 90 : VENUE_BEARING;
+}
 
 /** o quanto o mapa está torto em relação ao prédio, em graus, em (-180, 180] */
 function torto(): number {
-  let d = (map.getBearing() - VENUE_BEARING) % 360;
+  let d = (map.getBearing() - bearingBase()) % 360;
   if (d > 180) d -= 360;
   if (d <= -180) d += 360;
   return d;
@@ -182,7 +211,7 @@ map.on("rotateend", () => {
   const d = torto();
   if (girouSozinho || d === 0 || Math.abs(d) > SNAP_GRAUS) return;
   girouSozinho = true;
-  map.easeTo({ bearing: VENUE_BEARING, duration: 180 });
+  map.easeTo({ bearing: bearingBase(), duration: 180 });
   map.once("moveend", () => {
     girouSozinho = false;
   });
@@ -200,7 +229,7 @@ let usuarioGirou = false;
 map.on("rotatestart", (e) => {
   if ("originalEvent" in e && e.originalEvent) usuarioGirou = true;
 });
-const bearingAtual = (): number => (usuarioGirou ? map.getBearing() : VENUE_BEARING);
+const bearingAtual = (): number => (usuarioGirou ? map.getBearing() : bearingBase());
 
 // Enquadramento inicial robusto: fitBounds com container 0x0 manda a câmera
 // pra zoom máximo num ponto qualquer (tela "vazia"). Só enquadra com medida
@@ -215,9 +244,22 @@ function frameVenue(): void {
 
 // o container pode medir 0x0 no primeiro paint (webview/painel abrindo);
 // garante que o canvas acompanhe o tamanho real assim que ele existir
+let baseEnquadrada = bearingBase();
 new ResizeObserver(() => {
   map.resize();
-  if (!cameraSet) frameVenue();
+  if (!cameraSet) {
+    frameVenue();
+    baseEnquadrada = bearingBase();
+    return;
+  }
+  // virar o aparelho troca a orientação que cabe melhor; reenquadrar aqui é o
+  // que faz o prédio continuar ocupando a tela em vez de encolher na diagonal.
+  // Só vale para quem não girou o mapa: se girou, a escolha é dele.
+  const base = bearingBase();
+  if (base !== baseEnquadrada && !usuarioGirou) {
+    baseEnquadrada = base;
+    frameVenue();
+  }
 }).observe(document.getElementById("map")!);
 
 // acesso de debug no console (sem efeito em produção)
