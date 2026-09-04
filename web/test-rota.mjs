@@ -151,7 +151,43 @@ const r = await p.evaluate(async () => {
   // snap: um ponto qualquer no meio do salão tem que achar corredor perto
   const centro = R.lngLat([(m.w / 2) | 0, (m.h / 2) | 0]);
 
+  // O traçado tem que correr pelo meio do corredor, não de quina a quina.
+  // Este era um defeito só de olho: a rota era válida (nunca atravessava
+  // parede) e mesmo assim aparecia cortando o quarteirão na diagonal, porque
+  // dentro de um corredor toda corda tem o mesmo comprimento do percurso pelo
+  // meio, e o enxugamento por visibilidade escolhia a corda. Aqui a rota é
+  // reamostrada célula a célula e se mede a folga até a parede.
+  //
+  // O critério é a folga MÉDIA e a fração do percurso colado na parede, não a
+  // folga mínima: qualquer rota passa em algum momento por uma fresta de 2 m,
+  // onde o melhor possível é 1 m de folga, então o mínimo é sempre o mesmo e
+  // não discrimina nada. Medido no traçado que cortava as quinas: 0,29 m de
+  // folga média e 96,5% do percurso colado. Corrigido: 2,44 m e 4,4%.
+  let colado = 0;
+  let folgaSoma = 0;
+  let folgaN = 0;
+  for (let n = 0; n < 120; n++) {
+    const de = m.acessos[chaves[(n * 7) % chaves.length]];
+    const para = m.acessos[chaves[(n * 31 + 13) % chaves.length]];
+    const rt = R.rota(de, para);
+    if (!rt || rt.metros < 40) continue;
+    // as pontas são portas de estande, coladas na parede por definição
+    for (let k = 2; k < rt.cels.length - 1; k++) {
+      const [x0, y0] = rt.cels[k - 1];
+      const [x1, y1] = rt.cels[k];
+      const n2 = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0)));
+      for (let s = 0; s <= n2; s++) {
+        const f = R.folgaEm([x0 + ((x1 - x0) * s) / n2, y0 + ((y1 - y0) * s) / n2]);
+        folgaSoma += f;
+        folgaN++;
+        if (f < 1) colado++;
+      }
+    }
+  }
+
   return {
+    pctColado: +((colado / Math.max(1, folgaN)) * 100).toFixed(1),
+    folgaMedia: +(folgaSoma / Math.max(1, folgaN)).toFixed(2),
     destinos: chaves.length,
     semPorta: semPorta.length,
     falhas,
@@ -165,7 +201,8 @@ const r = await p.evaluate(async () => {
 console.log(
   `destinos ${r.destinos} · sem porta ${r.semPorta} · ` +
     `pares 300 · sem rota ${r.falhas} · mediana ${r.mediana_m} m · ` +
-    `máx ${r.max_m} m · ${r.curvas_medias} curvas · ${r.ms_por_par} ms/par · snap ${r.snap}`,
+    `máx ${r.max_m} m · ${r.curvas_medias} curvas · ${r.ms_por_par} ms/par · snap ${r.snap} · ` +
+    `folga média ${r.folgaMedia} m · colado ${r.pctColado}%`,
 );
 await b.close();
 
@@ -181,6 +218,8 @@ const checa = [
   ["remover encolhe a lista", nDepois === nAntes - 1],
   ["roteiro lembrado", lembrada === origemAntes],
   ["nenhum destino ilhado", !r.semPorta && !r.falhas && r.snap],
+  ["traçado corre pelo meio do corredor", r.folgaMedia >= 2],
+  ["traçado não corre colado na parede", r.pctColado <= 15],
 ];
 const maus = checa.filter(([, ok]) => !ok);
 for (const [nome] of maus) console.log("FALHOU:", nome);

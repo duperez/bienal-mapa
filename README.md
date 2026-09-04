@@ -96,16 +96,51 @@ não cobrem praça nem avental. Costurar isso à mão é justamente o que o proj
 se proíbe. A grade é a própria superfície livre, amostrada.
 
 ```
-282 destinos · 0 ilhados das portas
-300 pares estande->estande · 0 sem rota · mediana 108 m · máx 281 m
-7,1 curvas por rota · 1,5 ms por par
-malha.json: 34,1 KB
+283 destinos · 0 ilhados das portas
+300 pares estande->estande · 0 sem rota · mediana 114 m · máx 319 m
+12,4 curvas por rota · 2,3 ms por par
+folga média até a parede 2,44 m · 4,4% do percurso colado
+malha.json: 34,5 KB
 ```
 
 Detalhes que custaram cuidado: diagonal só passa se os dois ortogonais também
 estiverem livres (senão a rota corta a quina do estande); e o caminho cru é uma
-escada de 0,5 m, enxugada por varredura de visibilidade — sem isso o traço sai
-serrilhado e daria um "vire à esquerda" a cada meio metro.
+escada de 0,5 m, que precisa ser enxugada — sem isso o traço sai serrilhado e
+daria um "vire à esquerda" a cada meio metro.
+
+**O traçado tem que correr pelo meio da rua, e isso não sai de graça.** Durante
+boa parte do projeto ele cortava os quarteirões na diagonal. A rota era válida —
+nunca atravessava parede, e por isso nenhuma verificação de validade acusava
+nada; o defeito só aparecia no olho. Eram duas causas somadas, e as duas são
+instrutivas:
+
+1. **O custo do A* era distância pura.** Dentro de um corredor, uma corda de
+   quina a quina tem o mesmo comprimento do percurso pelo meio. Empatados, o A*
+   devolve qualquer um. Hoje o custo do passo ganha um desconto por folga:
+   `passo * (1 + PENA_PAREDE * (1 - conforto))`, com `conforto` saturando em
+   `CONFORTO_M = 3,0 m` — que é a meia-largura de rua *medida* (ver "Ruas"), não
+   um número escolhido. A folga vem de um chanfro de duas varreduras calculado
+   no navegador (~10 ms), porque gravá-la no `malha.json` levaria o arquivo de
+   34 KB para mais de 200. Como o custo do passo é sempre ≥ a distância, a
+   heurística octile continua admissível.
+
+2. **O enxugamento desfazia o trabalho, e esta era a causa maior.** Ele usava
+   visibilidade: "dá para ir reto de A até C sem bater? então corta o B". Só que
+   dentro de um corredor o outro extremo é visível desde o começo — então o
+   percurso centrado que o A* tinha achado era trocado por exatamente a corda
+   que a correção (1) existia para evitar. Era o *desenho* errando, não a rota.
+   Hoje o critério é Douglas-Peucker: só se descarta um vértice que fique a
+   menos de `DESVIO_MAX = 1,0` célula da reta. Uma célula é o tamanho exato da
+   escada de uma grade de 0,5 m com 8 vizinhos, então isso apaga o serrilhado e
+   nada além dele.
+
+O número que fecha o caso: **folga média até a parede de 0,29 m antes e 2,44 m
+depois; percurso colado na parede de 96,5% para 4,4%.** As curvas por rota
+subiram de 6,8 para 12,4 — é o preço de contornar em vez de cortar, e a fusão de
+trechos do passo a passo absorve. Efeito colateral que não era esperado: os
+passos sem nome de rua caíram de 13,7% para 9,6%, porque o traçado passou a
+correr dentro das faixas das vias. `test-rota.mjs` mede a folga média e reprova
+abaixo de 2 m, para o defeito não voltar sem ninguém ver.
 
 ### Percurso: paradas apontadas, sem GPS
 
