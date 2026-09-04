@@ -64,12 +64,14 @@ múltiplos inteiros de 1 m. Varrendo a escala, o desvio médio dos lados ao
 múltiplo mais próximo tem mínimo em **0,194875 m/pt**.
 
 O sinal fica muito mais nítido separando os eixos, que é o que
-`tools/anisotropia.py` faz. As ruas correm em X, então o eixo **Y** carrega a
-*profundidade* do estande, que é padronizada, enquanto a *frente* (X) é
-negociada. Medido só em Y, o mínimo é agudo e profundo em **s=1,0002** — 8,1 cm
-de desvio contra 25,0 cm de acaso, com o alias ×2 esperado em s=2,00. As
-profundidades mais frequentes saem em **6,0 m (93×), 3,0 m (59×) e 1,0 m (48×)**,
-que são medidas de feira; o eixo X segue módulo de painel de 1,2 m.
+`tools/anisotropia.py` faz — e `calibra.py` não fazia, o que diluía a evidência.
+Os dois eixos do desenho não se comportam igual: medido só nos lados
+**verticais**, o mínimo é agudo e profundo em **s=1,0002** (8,1 cm de desvio
+contra 25,0 cm de acaso, com o alias ×2 esperado em s=2,00); nos horizontais a
+curva é quase plana com módulo de 1 m, e só ganha forma com módulo de painel de
+1,2 m. Os comprimentos verticais mais frequentes saem em **6,0 m (93×), 3,0 m
+(59×) e 1,0 m (48×)** — medidas de feira. Se a escala estivesse 1,36× errada,
+seriam 8,2 m e 4,1 m, que não são medida de nada.
 
 A escala é dada em metros por ponto do PDF, não como largura do salão: amarrá-la
 ao enquadramento fazia a janela de leitura virar régua, e a janela é arbitrária.
@@ -249,15 +251,14 @@ para conferir a olho que a leitura do PDF está correta.
 
    O que derruba a suspeita de vez é `tools/anisotropia.py`. Ele separa os
    lados por eixo antes de calibrar, coisa que `calibra.py` não fazia — e a
-   diferença importa, porque os dois eixos do desenho não são a mesma coisa.
-   As ruas correm em X, então o eixo **Y** carrega a *profundidade* do estande,
-   que é padronizada. O eixo Y tem mínimo agudo e profundo em **s=1,0002**
-   (8,1 cm contra 25,0 cm de acaso), com o alias ×2 esperado em s=2,00. Se a
-   escala estivesse 1,36× errada, as profundidades mais comuns seriam 8,2 m e
-   4,1 m; na escala de hoje são **6,0 m (93×), 3,0 m (59×) e 1,0 m (48×)** —
-   medidas de feira. O eixo X é mais fraco porque a *frente* é negociada, e
-   segue módulo de painel de 1,2 m; testado com 1,2 m e com 0,5 m, o mínimo
-   também cai em s≈0,995. `calibra.py` juntava os dois eixos e diluía o sinal.
+   diferença importa, porque os dois eixos do desenho não se comportam igual.
+   Os lados **verticais** dão mínimo agudo e profundo em **s=1,0002** (8,1 cm
+   contra 25,0 cm de acaso), com o alias ×2 esperado em s=2,00, e caem em
+   **6,0 m (93×), 3,0 m (59×) e 1,0 m (48×)** — medidas de feira. Se a escala
+   estivesse 1,36× errada, seriam 8,2 m e 4,1 m, que não são medida de nada.
+   Os **horizontais** são mais frouxos porque a frente do estande é negociada
+   caso a caso; com módulo de painel de 1,2 m (ou de 0,5 m) o mínimo também
+   cai em s≈0,995. `calibra.py` juntava os dois eixos e diluía o sinal.
 
    O que continua aberto é outra coisa: o desenho mede 290,6 × 143,3 m
    (razão 2,03) e o polígono do OSM mede 322,8 × 224,3 m (razão 1,44). Como o
