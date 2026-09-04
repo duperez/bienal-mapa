@@ -118,6 +118,23 @@ try {
   ok(sw.itens >= 15, `precache cheio (${sw.itens} itens)`);
   ok(sw.foraDoPrefixo.length === 0, `nada cacheado fora do prefixo (${sw.foraDoPrefixo[0] || "—"})`);
 
+  // Traçar uma rota AINDA COM SERVIDOR é o que pega pedido faltando. Antes esta
+  // parte só rodava offline, e aí um 404 vira uma falha de fetch silenciosa,
+  // sem resposta para o listener ver: foi assim que um glifo ausente passou
+  // batido até o app estar publicado.
+  await pagina.fill("#searchInput", "Rocco");
+  await pagina.waitForTimeout(500);
+  await pagina.click("#searchResults > *:first-child");
+  await pagina.waitForTimeout(400);
+  await pagina.click("#sheetRota");
+  await pagina.waitForTimeout(1500);
+  ok(
+    respostasRuins.length === 0,
+    `nenhum 404 ao traçar rota com servidor no ar (${respostasRuins.join(", ") || "—"})`,
+  );
+  await pagina.click("#rotaFechar").catch(() => {});
+  await pagina.waitForTimeout(300);
+
   // ---- agora sem servidor, que é o dia do evento ----
   await new Promise((r) => servidor.close(r));
   servidor.closeAllConnections?.();

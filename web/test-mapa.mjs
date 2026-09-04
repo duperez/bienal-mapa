@@ -98,13 +98,22 @@ await pagina.waitForTimeout(1600);
 const depoisDaRota = await bearing();
 checa("enquadrar a rota não desfaz o giro", Math.abs(depoisDaRota - 75) < 1, `${depoisDaRota}°`);
 
-// as setas da rota são texto em linha; sem keep-upright falso o MapLibre as
-// virava de cabeça para baixo para "ficarem legíveis" e a seta apontaria para
-// trás — erro que só existe depois que o mapa pode girar
-const seta = await pagina.evaluate(() =>
-  window.__map.getLayoutProperty("rota-seta", "text-keep-upright"),
+// A seta da rota gira junto com a linha, e virá-la é apontar para trás — erro
+// que só passa a existir depois que o mapa pode girar. Ela também não pode ser
+// texto: era o caractere U+25B6, de uma faixa de glifos que o app não carrega,
+// então quem a desenhava era a fonte do navegador. Ver icons.ts.
+const seta = await pagina.evaluate(() => ({
+  icone: window.__map.getLayoutProperty("rota-seta", "icon-image"),
+  texto: window.__map.getLayoutProperty("rota-seta", "text-field"),
+  vira: window.__map.getLayoutProperty("rota-seta", "icon-keep-upright"),
+  temImagem: window.__map.hasImage("seta-rota"),
+}));
+checa(
+  "seta da rota é ícone do app, não glifo da fonte do aparelho",
+  seta.icone === "seta-rota" && !seta.texto && seta.temImagem,
+  `icone=${seta.icone} texto=${seta.texto}`,
 );
-checa("seta da rota não inverte ao girar", seta === false, String(seta));
+checa("seta da rota não inverte ao girar", seta.vira !== true, String(seta.vira));
 
 // ---- o caminho de volta ----
 await pagina.click("#bussola");
