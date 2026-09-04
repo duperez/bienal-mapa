@@ -156,3 +156,47 @@ export function addPoiIcons(map: MlMap): void {
     map.addImage(nome, makeIcon(cor, draw), { pixelRatio: 2 });
   }
 }
+
+/**
+ * A seta que mostra o sentido da rota.
+ *
+ * Era o texto "▶" numa camada de símbolo, e isso escondia um problema que só o
+ * site publicado revelou: o caractere é U+25B6, que cai na faixa de glifos
+ * 9472–9727, e o app só carrega as faixas 0–255 e 256–511. O pedido dava **404
+ * com zero byte** e mesmo assim a seta aparecia — porque quem a desenhava era
+ * a fonte do navegador, não o app. Funcionava por acidente, num aparelho que
+ * por acaso tem o caractere, com um desenho que muda de aparelho para aparelho.
+ *
+ * Desenhada aqui, é a mesma seta em todo lugar, não pede nada da rede e não
+ * depende de o sistema do visitante ter um símbolo geométrico na fonte. É o
+ * mesmo princípio dos outros ícones: canvas, zero asset externo.
+ *
+ * Aponta para +x porque o MapLibre gira o ícone no sentido da linha, e a linha
+ * da rota é gravada da origem para o destino.
+ */
+function setaDeRota(): ImageData {
+  const L = 32; // px @2x, rende ~16 px na tela
+  const c = document.createElement("canvas");
+  c.width = L;
+  c.height = L;
+  const ctx = c.getContext("2d")!;
+  const m = 4;
+  ctx.beginPath();
+  ctx.moveTo(L - m, L / 2);
+  ctx.lineTo(m, m);
+  ctx.lineTo(m, L - m);
+  ctx.closePath();
+  // contorno na cor da rota e miolo branco: é o que dá contraste tanto sobre a
+  // linha azul quanto sobre o piso claro quando a seta escapa da linha
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.lineWidth = 3.5;
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#1a73e8";
+  ctx.stroke();
+  return ctx.getImageData(0, 0, L, L);
+}
+
+export function addRouteArrow(map: MlMap): void {
+  map.addImage("seta-rota", setaDeRota(), { pixelRatio: 2 });
+}

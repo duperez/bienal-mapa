@@ -1,6 +1,6 @@
 import { Map as MlMap, AttributionControl, setWorkerUrl } from "maplibre-gl";
 import { attachSearchUI, buildIndex, subtitle, type Hit } from "./search";
-import { addPoiIcons } from "./icons";
+import { addPoiIcons, addRouteArrow } from "./icons";
 import { Rotas, type Malha } from "./rotas";
 import { Percurso, type Ponto } from "./percurso";
 import { instrucoes, viasDaMalha } from "./instrucoes";
@@ -437,6 +437,7 @@ map.on("load", async () => {
 
   // ---- rótulos: colisão e densidade por zoom são do motor ----
   addPoiIcons(map);
+  addRouteArrow(map);
 
   // áreas como POI: pin circular colorido + nome (linguagem do Google Maps).
   // Serviço sem nome = banheiro (pin WC, só ícone).
@@ -688,13 +689,16 @@ map.on("load", async () => {
     layout: {
       "symbol-placement": "line",
       "symbol-spacing": 60,
-      "text-field": "▶",
-      "text-font": ["Klokantech Noto Sans Bold"],
-      "text-size": 11,
-      "text-keep-upright": false,
-      "text-allow-overlap": true,
+      // ícone, não texto: o "▶" é U+25B6 e cai numa faixa de glifos que o app
+      // não carrega — o pedido dava 404 e quem desenhava a seta era a fonte do
+      // navegador. Ver `setaDeRota` em icons.ts.
+      "icon-image": "seta-rota",
+      // gira junto com a linha; `icon-keep-upright` é falso por padrão, que é o
+      // que impede a seta de ser virada e passar a apontar para trás
+      "icon-rotation-alignment": "map",
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
     },
-    paint: { "text-color": "#ffffff", "text-halo-color": "#1a73e8", "text-halo-width": 1 },
   });
 
   const setRota = (features: GeoJSON.Feature[]) =>

@@ -202,11 +202,11 @@ Pelo mesmo motivo o encaixe de fim de gesto é feito à mão — o `bearingSnap`
 MapLibre encaixa no norte, que aqui é justamente o ângulo errado, e por isso ele
 está zerado.
 
-Um detalhe que já estava certo e que só o giro colocaria à prova: as setas da
-rota são o texto `▶` com `symbol-placement: line`, e o MapLibre gira rótulos de
-linha 180° para mantê-los legíveis. Numa seta isso seria apontar **para trás**.
-`text-keep-upright: false` impede, e o teste verifica — porque é o tipo de erro
-que o mapa não denuncia.
+A seta da rota gira junto com a linha, e o MapLibre vira rótulos de linha 180°
+para mantê-los legíveis — numa seta, isso é apontar **para trás**. Isso já
+estava tratado, mas o giro colocou a camada sob escrutínio e apareceu um defeito
+maior embaixo: **a seta era o caractere `▶`, e quem a desenhava era a fonte do
+navegador, não o app.** Ver "A seta que a fonte do aparelho desenhava".
 
 ### A orientação de partida é medida, não escolhida
 
@@ -231,6 +231,37 @@ reto **daquela tela**, não para um ângulo fixo no código.
 O `manifest.webmanifest` deixou de travar `orientation: portrait`. Travar era
 contraditório: o mapa agora se vira sozinho, e a tela deitada é a que mais
 mostra do prédio.
+
+### A seta que a fonte do aparelho desenhava
+
+Achado só depois de publicar, e por isso vale contar. A seta de sentido da rota
+era o texto `▶` numa camada de símbolo. Publicado, o app pedia
+`glyphs/Klokantech Noto Sans Bold/9472-9727.pbf` e levava **404 com zero byte** —
+o `▶` é U+25B6, cai nessa faixa, e o app só embarca as faixas `0-255` e
+`256-511`. Confirmado abrindo o `.pbf`: 193 glifos, nenhum acima de 255.
+
+E a seta aparecia mesmo assim, idêntica no ar e em desenvolvimento. Não vinha do
+projeto: **o navegador rasterizava o caractere com a fonte do sistema.** O app
+dependia, sem saber, de o aparelho do visitante ter um símbolo geométrico na
+fonte — e o desenho mudava de aparelho para aparelho.
+
+Três coisas esconderam isso:
+
+- `vite dev` e `vite preview` fazem *fallback* para o `index.html`, então o
+  arquivo inexistente voltava **200** com HTML. Nunca houve 404 em
+  desenvolvimento.
+- `test-pages.mjs` traçava rota só **depois** de matar o servidor. Sem servidor,
+  um pedido faltando é falha de `fetch`, não resposta 404 — não havia o que o
+  ouvinte visse. Hoje ele traça uma rota com o servidor no ar, que é a
+  verificação que pega isso.
+- `queryRenderedFeatures` devolvia 2 setas, o que **não** prova desenho, e
+  esconder a camada mudava a imagem, o que também não prova: sem as setas,
+  outros rótulos ganham espaço e aparecem. As duas medições "óbvias" mentiam.
+  Só ampliar o pixel resolveu.
+
+A seta agora é desenhada em canvas, como todos os outros ícones do app: mesma
+figura em qualquer aparelho, nada pedido da rede, nada dependendo da fonte do
+sistema.
 
 ### Paradas múltiplas e a melhor ordem
 
