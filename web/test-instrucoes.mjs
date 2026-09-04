@@ -124,7 +124,10 @@ ok(
     (r.exemplos.length ? ` ex: ${JSON.stringify(r.exemplos[0])}` : ""),
 );
 const semNome = (100 * r.semVia) / Math.max(1, r.passos - r.pares);
-ok(semNome < 25, `menos de 25% dos passos sem nome de via (${semNome.toFixed(1)}%)`);
+// era 25%, com a regra de ângulo. A regra de cobertura mais o teto de largura
+// corrigido no build derrubaram para ~14%; o limite acompanha, senão ele para
+// de guardar coisa nenhuma.
+ok(semNome < 17, `menos de 17% dos passos sem nome de via (${semNome.toFixed(1)}%)`);
 
 console.log(falhas.length ? `\n${falhas.length} falha(s)` : "\ntudo certo");
 process.exit(falhas.length ? 1 : 0);

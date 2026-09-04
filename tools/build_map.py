@@ -501,6 +501,22 @@ def _maior(geom):
     return max(partes, key=lambda p: p.length) if partes else None
 
 
+def _pedacos(geom, minimo):
+    """Todos os pedaços do recorte que valem como trecho de rua.
+
+    Antes daqui só saía o maior. Mas um cruzamento largo parte a linha da rua em
+    dois, e ficar com o maior é jogar fora metade da rua — foi assim que 29% do
+    corredor ficou sem via em cima, e o passo a passo do app dizia "siga em
+    frente por 50 m" no meio de um corredor que tem placa.
+
+    Os pedaços saem todos da MESMA trilha, isto é, da mesma sequência de
+    amostras com centro estável, então são o mesmo corredor por construção — não
+    é o caso de fundir a RUA C do miolo com o corredor do anexo, que a trilha já
+    separa por estarem em pontas opostas do salão.
+    """
+    return [p for p in getattr(geom, "geoms", [geom]) if p.length >= minimo]
+
+
 def _trecho(geom, alvo):
     """Do recorte, o pedaço que passa pelo ponto alvo (o resto é outra rua)."""
     for p in getattr(geom, "geoms", [geom]):
@@ -542,7 +558,7 @@ def semente(seta, corr, ocupado):
             # vão maior que uma rua = a via corre na borda e o outro lado é
             # salão aberto; o eixo continua sendo o da seta, que é o dado real
             "largura": round(min(larg, LARG_MAX), 1), "aberta": larg > LARG_MAX,
-            "ext": trecho.length, "linha": list(trecho.coords),
+            "ext": trecho.length, "linhas": [list(trecho.coords)],
             "nome": seta["nome"], "derivado": False}
 
 
@@ -550,8 +566,13 @@ def eixos(ocupado, corr, eixo):
     """Corredores retos, achados pela largura LOCAL do vão.
 
     Em cada amostra perpendicular ao eixo, os trechos livres viram candidatos:
-    um trecho entre 2 e 12 m é vão de corredor; abaixo é fresta de montagem,
-    acima é praça (que já está na circulação e não precisa virar rua).
+    abaixo de LARG_MIN é fresta de montagem, e o teto é LARG_ABERTA — o mesmo
+    que `semente` já usa, pela mesma razão: uma via que corre rente à borda do
+    salão não tem quarteirão do outro lado, então o vão medido ali é a rua mais
+    o vazio, e não a rua. Cortar em LARG_MAX (12 m) deixava 8% do corredor sem
+    via nenhuma em cima, e o app dizia "siga em frente por 50 m" num corredor
+    de 17,5 m de largura por 36 m de extensão. Acima de LARG_ABERTA nada mais
+    aparece: o teto é um patamar do dado, não um número escolhido.
     Candidatos com o mesmo centro ao longo do eixo formam uma via.
 
     Medir o vão local, e não a fatia inteira do salão, é o que faz a RUA A e as
@@ -566,7 +587,7 @@ def eixos(ocupado, corr, eixo):
     while a <= a1:
         corte = _corte("x" if eixo == "y" else "y", a, b0, b1)
         for p in getattr(corte.intersection(corr), "geoms", [corte.intersection(corr)]):
-            if LARG_MIN <= p.length <= LARG_MAX:
+            if LARG_MIN <= p.length <= LARG_ABERTA:
                 (px0, py0, px1, py1) = p.bounds
                 centro = (py0 + py1) / 2 if eixo == "y" else (px0 + px1) / 2
                 achados.append((a, centro, p.length))
@@ -591,11 +612,19 @@ def eixos(ocupado, corr, eixo):
         centro = sorted(s[1] for s in t)[len(t) // 2]
         larg = sorted(s[2] for s in t)[len(t) // 2]
         corte = _corte(eixo, centro, t[0][0], t[-1][0])
-        maior = _maior(corte.intersection(corr))
-        if maior is None or maior.length < EXT_MIN:
+        # o piso de um pedaço é a própria largura da rua: mais curto que largo
+        # é a boca do cruzamento, não um trecho que se ande. Sai do dado, não
+        # de constante nova.
+        partes = _pedacos(corte.intersection(corr), larg)
+        if not partes:
             continue
-        vias.append({"eixo": eixo, "centro": centro, "largura": round(larg, 1),
-                     "ext": maior.length, "linha": list(maior.coords)})
+        ext = sum(p.length for p in partes)
+        if ext < EXT_MIN:
+            continue
+        vias.append({"eixo": eixo, "centro": centro,
+                     "largura": round(min(larg, LARG_MAX), 1),
+                     "aberta": larg > LARG_MAX,
+                     "ext": ext, "linhas": [list(p.coords) for p in partes]})
     return vias
 
 
@@ -764,7 +793,8 @@ def main():
     for v in longit + transv:
         # a seta tem que cair DENTRO da via, não só no mesmo eixo: a RUA C do
         # miolo e o corredor do anexo compartilham o y e são ruas diferentes
-        faixa = LineString(v["linha"]).buffer(v["largura"] / 2 + 1.0, cap_style=2)
+        faixa = unary_union([LineString(l) for l in v["linhas"]]).buffer(
+            v["largura"] / 2 + 1.0, cap_style=2)
         cand = [s["nome"] for s in setas if s["eixo"] == v["eixo"]
                 and faixa.contains(shp_point(s["cx"], s["cy"]))]
         v["nome"] = Counter(cand).most_common(1)[0][0] if cand else None
@@ -796,12 +826,12 @@ def main():
     for (nome, eixo), partes in juntas.items():
         props = {"kind": "via", "name": nome, "eixo": eixo,
                  "largura_m": round(sum(p["largura"] for p in partes) / len(partes), 1),
-                 "extensao_m": round(sum(LineString(p["linha"]).length for p in partes), 1)}
+                 "extensao_m": round(sum(p["ext"] for p in partes), 1)}
         if any(p["derivado"] for p in partes):
             props["nome_derivado"] = True
         if any(p.get("aberta") for p in partes):
             props["borda_aberta"] = True
-        linhas = [[to_lnglat(x, y) for x, y in p["linha"]] for p in partes]
+        linhas = [[to_lnglat(x, y) for x, y in l] for p in partes for l in p["linhas"]]
         feats.append({"type": "Feature", "properties": props, "geometry": (
             {"type": "LineString", "coordinates": linhas[0]} if len(linhas) == 1
             else {"type": "MultiLineString", "coordinates": linhas})})

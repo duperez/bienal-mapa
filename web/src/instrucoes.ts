@@ -37,10 +37,29 @@ export interface Passo {
 
 /** ângulo mínimo, em graus, para virar de fato — abaixo disso é desvio de corredor */
 const VIRADA_MIN = 30;
-/** tolerância de paralelismo entre trecho e via, em graus */
-const PARALELO_MAX = 25;
-/** folga lateral além da meia-largura da via, em metros */
-const FOLGA_M = 4;
+/**
+ * Folga lateral além da meia-largura da via, em metros.
+ *
+ * Não é chute: é o maior valor em que as faixas de duas ruas vizinhas ainda não
+ * se encostam. As ruas do miolo (A a K) têm passo de 11,1 a 11,4 m entre
+ * centros e largura de 4,2 a 5,6 m; medindo par a par, a folga máxima dá
+ * 2,98 a 3,00 m em seis pares seguidos. Acima disso um passo na RUA E passaria
+ * a caber também na faixa da RUA F, e a instrução viraria loteria.
+ */
+const FOLGA_M = 3.0;
+/**
+ * Fração do trecho que precisa correr dentro da faixa para a via valer.
+ *
+ * A regra anterior era ângulo mais o ponto do meio dentro da faixa, e errava
+ * dos dois lados: reprovava quem anda pela rua em diagonal (o A* devolve o
+ * corredor como uma corda inclinada, e 38% dos passos sem nome eram isso) e
+ * não tinha o que dizer sobre quem só atravessa. Cobertura resolve as duas de
+ * uma vez, e sem constante de ângulo: andar pela rua cobre quase tudo,
+ * atravessar cobre a largura dela dividida pelo tamanho do passo.
+ */
+const COBERTURA_MIN = 0.7;
+/** amostras ao longo do trecho para medir a cobertura */
+const AMOSTRAS = 16;
 /**
  * Abaixo disto um trecho sem nome não vira instrução própria.
  *
@@ -93,13 +112,28 @@ function aoSegmento(p: [number, number], a: [number, number], b: [number, number
   return Math.hypot(p[0] - (a[0] + t * vx), p[1] - (a[1] + t * vy));
 }
 
+/** fração do trecho que corre dentro da faixa da via */
+function cobertura(
+  a: [number, number],
+  b: [number, number],
+  v: Via,
+  passo: number,
+): number {
+  const faixa = v.largura / 2 + FOLGA_M;
+  let dentro = 0;
+  for (let i = 0; i <= AMOSTRAS; i++) {
+    const t = i / AMOSTRAS;
+    const p: [number, number] = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    if (aoSegmento(p, v.a, v.b) * passo <= faixa) dentro++;
+  }
+  return dentro / (AMOSTRAS + 1);
+}
+
 /**
  * Via que melhor explica um trecho, ou null.
  *
- * Duas condições, ambas necessárias: o trecho tem que ser paralelo à via
- * (senão é só um cruzamento) e o meio dele tem que cair dentro da faixa da
- * via mais uma folga. Entre as candidatas ganha a mais próxima; empate em
- * distância é desempatado pela mais larga, que é a que tem placa.
+ * Ganha a via que cobre a maior parte do trecho, desde que cubra o bastante.
+ * Empate é desempatado pela mais larga, que é a que tem placa.
  */
 function viaDoTrecho(
   a: [number, number],
@@ -107,22 +141,16 @@ function viaDoTrecho(
   vias: Via[],
   passo: number,
 ): Via | null {
-  const dir: [number, number] = [b[0] - a[0], b[1] - a[1]];
-  const meio: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   let melhor: Via | null = null;
-  let dmin = Infinity;
+  let cmax = 0;
   for (const v of vias) {
-    const dv: [number, number] = [v.b[0] - v.a[0], v.b[1] - v.a[1]];
-    const ang = anguloEntre(dir, dv);
-    if (Math.min(ang, 180 - ang) > PARALELO_MAX) continue;
-    const d = aoSegmento(meio, v.a, v.b) * passo;
-    if (d > v.largura / 2 + FOLGA_M) continue;
-    if (d < dmin - 0.01 || (Math.abs(d - dmin) <= 0.01 && melhor && v.largura > melhor.largura)) {
-      dmin = Math.min(d, dmin);
+    const c = cobertura(a, b, v, passo);
+    if (c > cmax + 1e-9 || (Math.abs(c - cmax) <= 1e-9 && melhor && v.largura > melhor.largura)) {
+      cmax = Math.max(c, cmax);
       melhor = v;
     }
   }
-  return melhor;
+  return cmax >= COBERTURA_MIN ? melhor : null;
 }
 
 /**

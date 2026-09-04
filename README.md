@@ -235,12 +235,35 @@ para conferir a olho que a leitura do PDF está correta.
    defeito 8. Nada no PDF diz onde o desenho encosta; só uma planta cotada do
    piso resolve isso de vez.
 
-5. **Instrução passo a passo: feita, com 23% dos passos sem nome.** O caminho
+5. **Instrução passo a passo: feita, com 14% dos passos sem nome.** O caminho
    agora vira texto ("siga pela RUA G por 40 m, vire à direita na Transversal
-   04"). Cada trecho só recebe nome se houver uma via do PDF paralela a ele e
-   dentro da faixa dela mais 4 m; sem isso o passo sai sem nome, em vez de
-   ganhar um nome plausível. Sobram 23% de passos anônimos, quase todos nas
-   pontas: o pedaço entre a porta do estande e a rua, que não é rua nenhuma.
+   04"). Um trecho só recebe nome se uma via do PDF cobrir a maior parte dele;
+   sem isso o passo sai sem nome, em vez de ganhar um nome plausível.
+
+   A primeira versão deixava 23% dos passos anônimos, e eu tinha atribuído isso
+   às pontas (porta do estande até a rua). Medindo, era falso: a mediana do
+   passo anônimo era 19,5 m e a maioria estava no **meio** da rota. Eram dois
+   defeitos somados.
+
+   O primeiro estava no build. `eixos()` descartava vão acima de `LARG_MAX`
+   (12 m) chamando de praça, mas praça é larga nos **dois** eixos — e o que
+   estava sendo descartado era um corredor de 17,5 m de largura por 36 m de
+   comprimento. Erodindo os buracos de cobertura, nenhum passava de 20 m de
+   largura local: não havia praça nenhuma ali. O teto passou para
+   `LARG_ABERTA` (20 m), que `semente` já usava pela mesma razão, e acima disso
+   nada mais aparece — é patamar do dado. Cobertura do corredor: 72% -> 80%.
+
+   O segundo estava na regra de casamento. Ângulo mais o ponto do meio dentro
+   da faixa reprovava quem anda pela rua em diagonal, que é como o A* devolve
+   um corredor. Trocado por **fração do trecho dentro da faixa**: andar pela
+   rua cobre quase tudo, atravessar cobre a largura dela dividida pelo tamanho
+   do passo. Some a constante de ângulo, e a folga lateral deixou de ser
+   arbitrária: 3,0 m é o maior valor em que as faixas de duas ruas vizinhas
+   ainda não se encostam, medido em seis pares seguidos do miolo (passo de
+   11,1 a 11,4 m entre centros).
+
+   `tools/cobertura_vias.py` mede isso sem depender de rota sorteada: pergunta
+   que fração do corredor derivado tem via em cima.
 
    O que exigiu cuidado foi a lateralidade. O frame de células da malha é
    espelhado em relação a leste/norte, e com o sinal trocado **todo** "vire à
