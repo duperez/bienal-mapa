@@ -125,8 +125,15 @@ function viaDoTrecho(
   return melhor;
 }
 
+/**
+ * Distância do passo, em passos de 5 m.
+ *
+ * Não é para parecer preciso: ninguém conta metro andando. É para não
+ * contradizer o total do trecho, que aparece logo acima e é exato — arredondar
+ * de 10 em 10 fazia "66 m" virar "siga 70 m" na mesma tela.
+ */
 function arredonda(m: number): number {
-  return m < 20 ? Math.round(m / 5) * 5 : Math.round(m / 10) * 10;
+  return Math.max(5, Math.round(m / 5) * 5);
 }
 
 /**

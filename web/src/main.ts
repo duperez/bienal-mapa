@@ -44,14 +44,27 @@ window.addEventListener("unhandledrejection", (e) =>
   showError(`Erro: ${e.reason?.message ?? e.reason}`),
 );
 
-// a origem :8027 já serviu o app legado com service worker cache-first;
-// qualquer SW residual dessa era intercepta os requests — remove todos
-// (o app novo ganhará SW próprio via vite-plugin-pwa em outra rodada)
+// Service worker: é ele que faz o app abrir dentro do pavilhão, onde o wifi
+// do evento não vence a multidão e o 4G não atravessa a laje. Sem isso, o
+// projeto inteiro depende de uma rede que a gente sabe que não vai ter.
+//
+// Só no build: em dev o SW serviria a versão em cache e esconderia a edição.
+// O arquivo é gerado por vite.config.ts com a lista real do bundle.
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .getRegistrations()
-    .then((rs) => rs.forEach((r) => r.unregister()))
-    .catch(() => {});
+  if (import.meta.env.PROD) {
+    addEventListener("load", () => {
+      // BASE_URL e não import.meta.url: o bundle mora em assets/, e registrar
+      // relativo a ele deixaria o escopo do SW preso em /assets/
+      navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
+    });
+  } else {
+    // a origem :8027 já serviu o app legado com SW cache-first; em dev,
+    // qualquer registro residual (dele ou do build) intercepta os requests
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((rs) => rs.forEach((r) => r.unregister()))
+      .catch(() => {});
+  }
 }
 
 /**

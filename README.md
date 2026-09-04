@@ -29,13 +29,13 @@ esses blocos de volta na fileira.
 
 ## Estado atual
 
-`web/public/data/mapa.geojson` — 408 features geradas do PDF:
+`web/public/data/mapa.geojson` — 423 features geradas do PDF:
 
 ```
 expositor 199   travessa 48   cultural 17   piso 19   infra 10
 patrocinador 7  alimentacao 6 entidade 5    rua 55    via 26   circulacao 2
-POIs: entrada 6, saída 6, escolas 1, entrada-expositor 1
-282 com código · 367 com nome
+POIs: entrada 11, saída 16, escolas 1, entrada-expositor 1
+282 com código · 387 com nome · 25 portas em 14 nomes
 ```
 
 Teste de aceite (`tools/verify_map.py`, vetorial com shapely):
@@ -43,8 +43,8 @@ Teste de aceite (`tools/verify_map.py`, vetorial com shapely):
 ```
 alimentacao 6/6  cultural 17/17  entidade 5/5  expositor 198/198
 infra 10/10  patrocinador 7/7  rua 55/55  travessa 48/48   -> 100%
-piso 18/19 (94,7%; a forma restante tem IoU 0,957 - ambiguidade de casamento)
-deriva máxima de centroide: 2,17 cm
+piso 18/19 (94,7%; a forma restante tem IoU 0,963 - ambiguidade de casamento)
+deriva máxima de centroide: 2,02 cm
 
 vias: 26, sendo as 14 ruas nomeadas no PDF
 nenhuma via atravessa bloco · 0/286 blocos navegáveis sem circulação ao lado
@@ -183,9 +183,16 @@ sh tools/build.sh            # PDF -> mapa.geojson + malha.json + teste de aceit
 sh tools/build.sh --aceitar  # regrava a baseline (só quando a mudança for intencional)
 
 cd web && npm install && npm run dev
-node test-shots.mjs <porta>  # screenshots do app real via Playwright
-node test-rota.mjs <porta>   # percurso na UI + carga de 300 pares de estandes
+node test-shots.mjs <porta>       # screenshots do app real via Playwright
+node test-rota.mjs <porta>        # percurso na UI + carga de 300 pares
+node test-instrucoes.mjs <porta>  # passo a passo, com a lateralidade conferida
+node test-offline.mjs             # sobe o build, mata o servidor e usa o app
+node gera-icones.mjs              # refaz o ícone a partir do mapa
 ```
+
+`test-offline.mjs` é o único que roda contra o build, não contra o dev server:
+em desenvolvimento o service worker não é registrado, senão ele serviria a
+versão em cache e esconderia a edição.
 
 `tools/transcribe.py` gera a prova de conceito da transcrição
 (`reference/transcrito.png`, 89,6% dos pixels idênticos ao PDF, IoU 0,92) — serve
@@ -228,18 +235,47 @@ para conferir a olho que a leitura do PDF está correta.
    defeito 8. Nada no PDF diz onde o desenho encosta; só uma planta cotada do
    piso resolve isso de vez.
 
-5. **Rota sem instrução falada**: o caminho existe, é ótimo e já vai de
-   qualquer ponto a qualquer ponto, mas o app só desenha a linha. Falta cruzar
-   os trechos com as vias para escrever "siga pela RUA E, vire na Transversal
-   04".
+5. **Instrução passo a passo: feita, com 23% dos passos sem nome.** O caminho
+   agora vira texto ("siga pela RUA G por 40 m, vire à direita na Transversal
+   04"). Cada trecho só recebe nome se houver uma via do PDF paralela a ele e
+   dentro da faixa dela mais 4 m; sem isso o passo sai sem nome, em vez de
+   ganhar um nome plausível. Sobram 23% de passos anônimos, quase todos nas
+   pontas: o pedaço entre a porta do estande e a rua, que não é rua nenhuma.
+
+   O que exigiu cuidado foi a lateralidade. O frame de células da malha é
+   espelhado em relação a leste/norte, e com o sinal trocado **todo** "vire à
+   esquerda" sairia invertido em silêncio — o traçado desenhado continua certo,
+   então nada no mapa denuncia. O sinal vem de `Rotas.orientacao()`, medido do
+   `ex`/`ey` que o build gravou, e `web/test-instrucoes.mjs` recalcula cada
+   virada em coordenadas geográficas para comparar. Invertendo o sinal de
+   propósito, o teste reprova 35 das 112 rotas.
+
 6. **`LARG_MIN = 2 m` e `AVENTAL = 6 m` são julgamento meu**, não saem do PDF.
    As 9 transversais e 1 alameda sem seta carregam `nome_derivado: true`; a RUA
    AA corre na borda do anexo e carrega `borda_aberta: true`.
-7. **Não abre offline ainda.** Todos os assets já são locais (~650 KB, nenhum
-   tile ou fonte externa) e o roteamento não faz uma única chamada de rede, mas
-   não há service worker: `main.ts` hoje só *desregistra* os SW residuais do app
-   legado. Falta escrever o SW próprio e publicar em https (Pages ou similar) —
-   sem isso, e sem https, nem o cache nem a geolocalização valem.
+7. **Offline: feito.** O app abre e roteia sem servidor nenhum. O service
+   worker é gerado no build (`web/vite.config.ts`) com a lista real do que o
+   bundle produziu — 16 arquivos, 2,1 MB, incluindo o mapa, a malha e os
+   glifos. Lista escrita à mão erra calada: some um glifo e o defeito só
+   aparece no dia do evento, offline, sem conserto.
+
+   A versão do cache é o hash do conteúdo de tudo, então publicar sem mudar
+   nada não invalida o cache de ninguém, e qualquer mudança real invalida.
+
+   Dois detalhes custaram tempo e ficam registrados porque nenhum dos dois dá
+   erro visível:
+
+   - `caches.match` precisa de `ignoreVary: true`. O servidor responde com
+     `Vary`, e sem isso a mesma URL dá MISS quando a request vem de uma tag
+     `<script>` (que manda `Origin`) em vez de um `fetch()`. O app abria com os
+     dados e sem código nem estilo.
+   - `context.setOffline()` do Playwright derruba subresource antes de a
+     request chegar ao service worker: ele reprova um app que funciona. Por
+     isso `test-offline.mjs` **mata o servidor**. E mata o binário direto, não
+     via `npx`, senão o processo fica órfão e o teste "offline" roda com rede.
+
+   Falta publicar em https (Pages ou similar) — sem isso o service worker não
+   registra fora de localhost.
 
 8. **A escala está confirmada; o que não fecha é o polígono do prédio.**
    A suspeita de que `ESCALA_M_PT = 0.194875` estivesse 35% pequena caiu com
@@ -275,10 +311,24 @@ para conferir a olho que a leitura do PDF está correta.
    Consequência prática: as distâncias e os tempos a pé estão certos dentro do
    desenho. O que está errado é a moldura em volta dele.
 
-9. **`MAP_CLIP` corta a borda de cima do desenho.** A janela de leitura começa
-   em `y=140` e os rótulos da borda de serviço estão em `y≈112`: perdemos 5
-   `ACESSO SERVIÇO HALL` e 5 `SAÍDA DE EMERGÊNCIA`. Como só a borda do público
-   sobrou, a aferição da âncora chegou a parecer assimétrica quando não é.
+9. **`MAP_CLIP`: resolvido.** A janela de leitura começava em `y=140` e os
+   rótulos da borda de serviço estão em `y≈112`; faltavam 5 `ACESSO SERVIÇO
+   HALL` e 10 `SAÍDA DE EMERGÊNCIA`. Baixando para `y=105`, as portas foram de
+   10 para **25, em 14 nomes**, e a aferição da âncora deixou de parecer
+   assimétrica.
+
+   Recuperar as formas foi a parte fácil; dar nome a elas expôs dois filtros
+   calibrados com folga de menos. O raio que amarra rótulo a POI estava em 6 m:
+   medidos os 35 triângulos, os que têm dono ficam entre 2,03 e 3,93 m e o
+   primeiro órfão está a 14,59 m — 8 m separa os dois grupos com sobra. E o
+   corte de tamanho de rótulo em 1,0 m descartava `AUDITÓRIO`, `LOCKERS` e
+   toda a borda de serviço, que estão em 0,97 m; abaixo de 0,9 m só há
+   numeração de travessa e tradução em inglês.
+
+   O primeiro conserto produziu nomes-frankenstein
+   (`"Saída de Emergência Acesso Serviço Hall 03"`) porque a montagem varria
+   ±22 m para os lados. O certo era agrupar por **linha** do PDF, que é como o
+   documento separa um rótulo do outro — `rotulos(..., por_linha=True)`.
 
 ## Layout
 
@@ -286,11 +336,15 @@ para conferir a olho que a leitura do PDF está correta.
 tools/build_map.py    PDF -> mapa.geojson (transcrição + classificação)
 tools/verify_map.py   teste de aceite vetorial contra o PDF
 tools/build_route.py  superfície caminhável -> malha.json (grade + acessos)
-tools/calibra.py      mede a escala pelo módulo dos estandes
+tools/calibra.py      mede a escala pelo módulo dos estandes (junta os eixos)
+tools/anisotropia.py  mede a escala eixo a eixo — é a medição que vale
+tools/afere_ancora.py afere o assentamento do desenho contra as marquises reais
 tools/transcribe.py   prova de conceito PDF -> SVG -> PNG
 web/                  app MapLibre (Vite + TypeScript)
 web/src/rotas.ts      A* sobre a malha, snap e inversa da afim
 web/src/percurso.ts   lista de paradas, trechos e a melhor ordem
+web/src/instrucoes.ts traçado + vias do PDF -> passo a passo falado
+web/vite.config.ts    gera o service worker com a lista real do bundle
 reference/            PDF oficial e artefatos de comparação
 legacy/               app e geradores sintéticos anteriores (referência)
 ```
