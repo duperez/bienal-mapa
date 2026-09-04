@@ -10,3 +10,7 @@ reference/qa-*.png
 reference/mapa-oficial.svg
 reference/mapa-texto.html
 reference/extracao.json
+__pycache__/
+reference/planta-anhembi.pdf
+reference/planta-oficial-2026.pdf
+reference/planta-ilustrada-2024.pdf

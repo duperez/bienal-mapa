@@ -1,6 +1,9 @@
 import { Map as MlMap, AttributionControl, setWorkerUrl } from "maplibre-gl";
 import { attachSearchUI, buildIndex, subtitle, type Hit } from "./search";
 import { addPoiIcons } from "./icons";
+import { Rotas, type Malha } from "./rotas";
+import { Percurso, type Ponto } from "./percurso";
+import { instrucoes, viasDaMalha } from "./instrucoes";
 import "maplibre-gl/dist/maplibre-gl.css";
 // O worker do MapLibre v6 vive num arquivo separado resolvido via
 // import.meta.url — no dev do Vite esse caminho não existe no diretório de
@@ -16,6 +19,17 @@ setWorkerUrl(maplibreWorkerUrl);
 
 // erros visíveis: tela muda esconde a causa — qualquer exceção aparece num
 // overlay discreto (app pessoal: diagnóstico > estética)
+function bboxDe(pts: [number, number][]): [[number, number], [number, number]] {
+  let x0 = 180, y0 = 90, x1 = -180, y1 = -90;
+  for (const [x, y] of pts) {
+    if (x < x0) x0 = x;
+    if (y < y0) y0 = y;
+    if (x > x1) x1 = x;
+    if (y > y1) y1 = y;
+  }
+  return [[x0, y0], [x1, y1]];
+}
+
 function showError(msg: string): void {
   let el = document.getElementById("errOverlay");
   if (!el) {
@@ -30,21 +44,34 @@ window.addEventListener("unhandledrejection", (e) =>
   showError(`Erro: ${e.reason?.message ?? e.reason}`),
 );
 
-// a origem :8027 já serviu o app legado com service worker cache-first;
-// qualquer SW residual dessa era intercepta os requests — remove todos
-// (o app novo ganhará SW próprio via vite-plugin-pwa em outra rodada)
+// Service worker: é ele que faz o app abrir dentro do pavilhão, onde o wifi
+// do evento não vence a multidão e o 4G não atravessa a laje. Sem isso, o
+// projeto inteiro depende de uma rede que a gente sabe que não vai ter.
+//
+// Só no build: em dev o SW serviria a versão em cache e esconderia a edição.
+// O arquivo é gerado por vite.config.ts com a lista real do bundle.
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .getRegistrations()
-    .then((rs) => rs.forEach((r) => r.unregister()))
-    .catch(() => {});
+  if (import.meta.env.PROD) {
+    addEventListener("load", () => {
+      // BASE_URL e não import.meta.url: o bundle mora em assets/, e registrar
+      // relativo a ele deixaria o escopo do SW preso em /assets/
+      navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
+    });
+  } else {
+    // a origem :8027 já serviu o app legado com SW cache-first; em dev,
+    // qualquer registro residual (dele ou do build) intercepta os requests
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((rs) => rs.forEach((r) => r.unregister()))
+      .catch(() => {});
+  }
 }
 
 /**
  * Marco 1 do app novo: MapLibre rodando 100% local (nenhum tile/fonte externo),
  * com o pavilhão real do Anhembi georreferenciado (OSM way 203621978) como
  * primeira camada. As camadas do mapa da Bienal entram por cima nas próximas
- * etapas, geradas de data/structure.json.
+ * etapas, transcritas do PDF oficial por tools/build_map.py.
  */
 
 /** Contorno do pavilhão (lng/lat). Carregado do GeoJSON versionado. */
@@ -52,9 +79,13 @@ const VENUE_URL = `${import.meta.env.BASE_URL}data/venue.geojson`;
 
 /** Centro e rotação: o prédio é ~4° torto em relação ao norte; giramos a
  * câmera para o pavilhão aparecer "endireitado", como apps de arena fazem. */
-const VENUE_BOUNDS: [[number, number], [number, number]] = [
-  [-46.6385, -23.5181],
-  [-46.6343, -23.5151],
+// Enquadrar pelo polígono do prédio deixava um terço da tela vazio: o desenho
+// oficial não cobre o Distrito Anhembi inteiro. O bbox abaixo é só o palpite
+// inicial — assim que o mapa.geojson chega, `frameVenue` reenquadra pelo bbox
+// real dos dados, para a constante nunca mais envelhecer junto com a escala.
+let VENUE_BOUNDS: [[number, number], [number, number]] = [
+  [-46.63802, -23.51712],
+  [-46.6348, -23.515476],
 ];
 // azimute do lado norte do prédio ≈ 94° (leste, 4° pro sul); para ele ficar
 // horizontal na tela o topo do mapa aponta pra 94−90 = +4°
@@ -92,12 +123,113 @@ map.addControl(
   "bottom-right",
 );
 
-// mapa de pavilhão: rotação e inclinação livres só desorientam — travadas.
-// O bearing fixo "endireita" o prédio (ele é ~4° torto em relação ao norte).
-map.dragRotate.disable();
-map.touchZoomRotate.disableRotation();
+// Girar o mapa é liberado de propósito. O visitante está de pé dentro do
+// pavilhão olhando para uma direção física, e o único jeito de casar o mapa com
+// o que ele vê é girar até bater. Não dá para fazer isso pela bússola do
+// aparelho: o telhado é metálico e distorce o magnetômetro — o mesmo motivo que
+// tirou o GPS do caminho crítico. O dedo funciona sem sinal nenhum.
+//
+// A inclinação continua travada: um mapa de planta baixa em perspectiva só
+// esconde o fundo da tela e não acrescenta nada.
+map.touchZoomRotate.enableRotation();
 map.touchPitch.disable();
-map.keyboard.disableRotation();
+
+/**
+ * Volta o mapa para o prédio endireitado.
+ *
+ * Sem este botão, liberar o giro seria uma armadilha: dá para girar até se
+ * perder e não existe nada no desenho que devolva a referência — o pavilhão é
+ * um retângulo quase simétrico e os rótulos ficam de pé em qualquer ângulo.
+ *
+ * A agulha aponta para o prédio, não para o norte geográfico, porque é essa a
+ * referência do resto do app: as ruas A–K são horizontais e o passo a passo
+ * fala nos eixos do prédio. Mostrar o norte só neste canto da tela seria
+ * introduzir um segundo referencial que nada mais usa.
+ */
+const bussola = document.createElement("button");
+bussola.id = "bussola";
+bussola.type = "button";
+bussola.hidden = true;
+bussola.title = "Endireitar o mapa";
+bussola.setAttribute("aria-label", "Endireitar o mapa");
+bussola.innerHTML =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 16.8 20.4 12 16.7 7.2 20.4Z"/></svg>';
+document.body.appendChild(bussola);
+bussola.addEventListener("click", () => map.easeTo({ bearing: bearingBase(), duration: 300 }));
+
+/**
+ * A orientação em que o desenho cabe melhor na tela que existe.
+ *
+ * O pavilhão é 290 x 143 m — deitado, quase 2:1. Um celular em pé é 1:2,2. Com
+ * o prédio sempre "endireitado", enquadrá-lo inteiro deixava o mapa ocupando
+ * **23% da altura** da tela e o resto vazio, com os rótulos pequenos demais
+ * para ler andando. Deitando o prédio ao longo do celular a mesma coisa ocupa
+ * 94%, ou seja, o dobro de escala linear.
+ *
+ * Então a orientação de partida é medida, não escolhida: das duas que deixam o
+ * prédio reto na tela, vale a que dá mais zoom no viewport atual. Num monitor
+ * largo continua a de sempre; num celular em pé o prédio nasce em pé. É a
+ * mesma conta do `fitBounds`, feita antes para decidir por onde entrar.
+ */
+function bearingBase(): number {
+  const el = document.getElementById("map");
+  const larguraTela = el?.clientWidth ?? 0;
+  const alturaTela = el?.clientHeight ?? 0;
+  if (!larguraTela || !alturaTela) return VENUE_BEARING;
+  const [[x0, y0], [x1, y1]] = VENUE_BOUNDS;
+  // graus de longitude encolhem com a latitude; sem isso o prédio parece mais
+  // largo do que é e a comparação sai errada justamente perto do empate
+  const largura = (x1 - x0) * Math.cos((((y0 + y1) / 2) * Math.PI) / 180);
+  const altura = y1 - y0;
+  const deitado = Math.min(larguraTela / largura, alturaTela / altura);
+  const emPe = Math.min(larguraTela / altura, alturaTela / largura);
+  return emPe > deitado ? VENUE_BEARING + 90 : VENUE_BEARING;
+}
+
+/** o quanto o mapa está torto em relação ao prédio, em graus, em (-180, 180] */
+function torto(): number {
+  let d = (map.getBearing() - bearingBase()) % 360;
+  if (d > 180) d -= 360;
+  if (d <= -180) d += 360;
+  return d;
+}
+
+// só aparece com o mapa torto: com o prédio no lugar, o botão não faria nada
+map.on("rotate", () => {
+  const d = torto();
+  bussola.hidden = Math.abs(d) < 0.5;
+  bussola.style.setProperty("--giro", `${-d}deg`);
+});
+
+// Encaixe no endireitado. O `bearingSnap` do MapLibre encaixa no norte
+// geográfico, que aqui é justamente o ângulo errado — por isso ele está zerado
+// no construtor e o encaixe é feito à mão, no eixo do prédio. Sem isso não há
+// como voltar ao alinhamento exato com o dedo, só com o botão.
+const SNAP_GRAUS = 7;
+let girouSozinho = false;
+map.on("rotateend", () => {
+  const d = torto();
+  if (girouSozinho || d === 0 || Math.abs(d) > SNAP_GRAUS) return;
+  girouSozinho = true;
+  map.easeTo({ bearing: bearingBase(), duration: 180 });
+  map.once("moveend", () => {
+    girouSozinho = false;
+  });
+});
+
+/**
+ * O giro escolhido pelo visitante sobrevive a voos e reenquadramentos.
+ *
+ * Este é o defeito que anda junto com liberar a rotação: cada `flyTo` e cada
+ * `fitBounds` do app carregava `bearing: VENUE_BEARING`, então bastava tocar
+ * num estande para o mapa desfazer o alinhamento que a pessoa tinha acabado de
+ * fazer com o dedo. Enquadrar não é motivo para reorientar.
+ */
+let usuarioGirou = false;
+map.on("rotatestart", (e) => {
+  if ("originalEvent" in e && e.originalEvent) usuarioGirou = true;
+});
+const bearingAtual = (): number => (usuarioGirou ? map.getBearing() : bearingBase());
 
 // Enquadramento inicial robusto: fitBounds com container 0x0 manda a câmera
 // pra zoom máximo num ponto qualquer (tela "vazia"). Só enquadra com medida
@@ -106,15 +238,28 @@ let cameraSet = false;
 function frameVenue(): void {
   const el = document.getElementById("map")!;
   if (!el.clientWidth || !el.clientHeight) return;
-  map.fitBounds(VENUE_BOUNDS, { padding: 24, bearing: VENUE_BEARING, animate: false });
+  map.fitBounds(VENUE_BOUNDS, { padding: 24, bearing: bearingAtual(), animate: false });
   cameraSet = true;
 }
 
 // o container pode medir 0x0 no primeiro paint (webview/painel abrindo);
 // garante que o canvas acompanhe o tamanho real assim que ele existir
+let baseEnquadrada = bearingBase();
 new ResizeObserver(() => {
   map.resize();
-  if (!cameraSet) frameVenue();
+  if (!cameraSet) {
+    frameVenue();
+    baseEnquadrada = bearingBase();
+    return;
+  }
+  // virar o aparelho troca a orientação que cabe melhor; reenquadrar aqui é o
+  // que faz o prédio continuar ocupando a tela em vez de encolher na diagonal.
+  // Só vale para quem não girou o mapa: se girou, a escolha é dele.
+  const base = bearingBase();
+  if (base !== baseEnquadrada && !usuarioGirou) {
+    baseEnquadrada = base;
+    frameVenue();
+  }
 }).observe(document.getElementById("map")!);
 
 // acesso de debug no console (sem efeito em produção)
@@ -126,16 +271,19 @@ declare global {
 window.__map = map;
 
 const MAPA_URL = `${import.meta.env.BASE_URL}data/mapa.geojson`;
+const MALHA_URL = `${import.meta.env.BASE_URL}data/malha.json`;
 
 map.on("load", async () => {
   // o `bounds` do construtor aplica a câmera com bearing 0 (reset assíncrono);
   // reenquadra com o bearing que endireita o prédio, sem animação
   frameVenue();
 
-  const [venue, mapa] = await Promise.all([
+  const [venue, mapa, malha] = await Promise.all([
     fetch(VENUE_URL).then((r) => r.json()),
     fetch(MAPA_URL).then((r) => r.json()),
+    fetch(MALHA_URL).then((r) => r.json()),
   ]);
+  const rotas = new Rotas(malha as Malha);
 
   map.addSource("venue", { type: "geojson", data: venue });
   map.addLayer({
@@ -152,6 +300,25 @@ map.on("load", async () => {
   });
 
   map.addSource("mapa", { type: "geojson", data: mapa });
+
+  // bbox real do que foi transcrito -> reenquadra. Feito depois do fetch e
+  // antes das camadas, para o primeiro frame já sair no lugar certo.
+  let x0 = 180, y0 = 90, x1 = -180, y1 = -90;
+  const varre = (c: unknown): void => {
+    if (typeof (c as number[])[0] === "number") {
+      const [x, y] = c as number[];
+      if (x < x0) x0 = x;
+      if (y < y0) y0 = y;
+      if (x > x1) x1 = x;
+      if (y > y1) y1 = y;
+    } else for (const f of c as unknown[]) varre(f);
+  };
+  for (const f of mapa.features) varre(f.geometry.coordinates);
+  if (x0 < x1 && y0 < y1) {
+    VENUE_BOUNDS = [[x0, y0], [x1, y1]];
+    cameraSet = false;
+    frameVenue();
+  }
 
   // piso da tenda do anexo (mesma linguagem visual do prédio)
   map.addLayer({
@@ -170,12 +337,30 @@ map.on("load", async () => {
   });
 
   map.addLayer({
-    id: "ruas",
+    id: "circulacao",
     type: "fill",
     source: "mapa",
-    filter: ["==", ["get", "kind"], "rua"],
-    paint: { "fill-color": "#ddd6c8" },
+    filter: ["==", ["get", "kind"], "circulacao"],
+    paint: { "fill-color": "#f4f1ea" },
   });
+  // as vias derivadas viram fita clara: o corredor lê como rua, não como sobra
+  map.addLayer({
+    id: "vias",
+    type: "line",
+    source: "mapa",
+    filter: ["==", ["get", "kind"], "via"],
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": "#ffffff",
+      "line-opacity": 0.75,
+      "line-width": ["interpolate", ["exponential", 2], ["zoom"],
+        15, ["*", ["get", "largura_m"], 0.06],
+        20, ["*", ["get", "largura_m"], 2.0]],
+    },
+  });
+
+  // as setas do PDF não são mais desenhadas: viraram as vias acima. Ficam no
+  // dado como procedência do nome, não como pintura.
   // chão quieto: fills suaves — a cor forte fica no pin/rótulo (padrão GMaps)
   map.addLayer({
     id: "areas",
@@ -221,7 +406,17 @@ map.on("load", async () => {
     type: "fill",
     source: "mapa",
     filter: ["==", ["get", "kind"], "estande"],
-    paint: { "fill-color": "#ffffff" },
+    paint: {
+      // expositor fica branco (chão quieto); as categorias da legenda oficial
+      // ganham um tom suave — cor com função, não decoração
+      "fill-color": [
+        "match", ["get", "cat"],
+        "patrocinador", "#fff6c9",
+        "entidade", "#efe4f4",
+        "travessa", "#f5f1e8",
+        "#ffffff",
+      ],
+    },
   });
   map.addLayer({
     id: "estandes-borda",
@@ -229,7 +424,12 @@ map.on("load", async () => {
     source: "mapa",
     filter: ["==", ["get", "kind"], "estande"],
     paint: {
-      "line-color": "#d3cfc7",
+      "line-color": [
+        "match", ["get", "cat"],
+        "patrocinador", "#d9b93a",
+        "entidade", "#a98bbd",
+        "#d3cfc7",
+      ],
       // borda hairline que só engrossa de leve com o zoom
       "line-width": ["interpolate", ["linear"], ["zoom"], 16, 0.4, 20, 1.2],
     },
@@ -327,7 +527,12 @@ map.on("load", async () => {
     filter: ["==", ["get", "kind"], "poi"],
     minzoom: 15,
     layout: {
-      "icon-image": ["case", ["==", ["get", "cat"], "saida"], "poi-saida", "poi-entrada"],
+      "icon-image": [
+        "match", ["get", "cat"],
+        "saida", "poi-saida",
+        "escolas", "poi-cultural",
+        "poi-entrada",
+      ],
       "icon-size": ["interpolate", ["linear"], ["zoom"], 15, 0.72, 18, 1],
       "text-field": ["get", "name"],
       "text-font": ["Klokantech Noto Sans Bold"],
@@ -350,7 +555,7 @@ map.on("load", async () => {
     id: "ruas-nome",
     type: "symbol",
     source: "mapa",
-    filter: ["==", ["get", "kind"], "rua-eixo"],
+    filter: ["==", ["get", "kind"], "via"],
     minzoom: 16,
     layout: {
       "symbol-placement": "line",
@@ -362,8 +567,8 @@ map.on("load", async () => {
     },
     paint: {
       "text-color": "#8a857b",
-      "text-halo-color": "#ddd6c8",
-      "text-halo-width": 1.2,
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.4,
     },
   }, "areas-poi");
 
@@ -450,6 +655,92 @@ map.on("load", async () => {
     },
   }, "areas-poi");
 
+  // ---- rota ----
+  // desenhada acima de tudo: é resposta a uma pergunta do visitante, não
+  // contexto. Duas linhas, uma mais grossa por baixo, para o traço se destacar
+  // tanto do piso claro quanto dos blocos.
+  map.addSource("rota", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({
+    id: "rota-halo",
+    type: "line",
+    source: "rota",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": "#ffffff", "line-width": 9, "line-opacity": 0.9 },
+  });
+  map.addLayer({
+    id: "rota-linha",
+    type: "line",
+    source: "rota",
+    layout: { "line-cap": "round", "line-join": "round" },
+    // trechos alternam entre dois azuis: com paradas, um traço de cor única
+    // vira um emaranhado onde não se enxerga onde um pedaço acaba
+    paint: {
+      "line-color": ["case", ["==", ["%", ["get", "trecho"], 2], 0], "#1a73e8", "#5b9bf5"],
+      "line-width": 5,
+    },
+  });
+  // setas ao longo do traçado: sem elas a ordem das paradas só existe na
+  // lista, e o visitante tem que voltar a ler para saber para que lado ir
+  map.addLayer({
+    id: "rota-seta",
+    type: "symbol",
+    source: "rota",
+    layout: {
+      "symbol-placement": "line",
+      "symbol-spacing": 60,
+      "text-field": "▶",
+      "text-font": ["Klokantech Noto Sans Bold"],
+      "text-size": 11,
+      "text-keep-upright": false,
+      "text-allow-overlap": true,
+    },
+    paint: { "text-color": "#ffffff", "text-halo-color": "#1a73e8", "text-halo-width": 1 },
+  });
+
+  const setRota = (features: GeoJSON.Feature[]) =>
+    (map.getSource("rota") as import("maplibre-gl").GeoJSONSource).setData({
+      type: "FeatureCollection",
+      features,
+    });
+
+  // ---- marcadores das paradas ----
+  map.addSource("pontos", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({
+    id: "pontos-circulo",
+    type: "circle",
+    source: "pontos",
+    paint: {
+      "circle-radius": 11,
+      "circle-color": [
+        "match",
+        ["get", "papel"],
+        "origem", "#1a73e8",
+        "destino", "#d93025",
+        "#f29900",
+      ],
+      "circle-stroke-color": "#ffffff",
+      "circle-stroke-width": 2.5,
+    },
+  });
+  map.addLayer({
+    id: "pontos-letra",
+    type: "symbol",
+    source: "pontos",
+    layout: {
+      "text-field": ["get", "letra"],
+      "text-font": ["Klokantech Noto Sans Bold"],
+      "text-size": 12,
+      "text-allow-overlap": true,
+    },
+    paint: { "text-color": "#ffffff" },
+  });
+
+  const setPontos = (features: GeoJSON.Feature[]) =>
+    (map.getSource("pontos") as import("maplibre-gl").GeoJSONSource).setData({
+      type: "FeatureCollection",
+      features,
+    });
+
   // ---- busca + seleção ----
   const setSel = (features: GeoJSON.Feature[]) =>
     (map.getSource("sel") as import("maplibre-gl").GeoJSONSource).setData({
@@ -459,28 +750,123 @@ map.on("load", async () => {
 
   const sheet = document.createElement("div");
   sheet.id = "sheet";
-  sheet.innerHTML = `<div class="handle"></div><div id="sheetTitle"></div><div id="sheetSub"></div>`;
+  sheet.innerHTML =
+    `<div class="handle"></div><div id="sheetTitle"></div><div id="sheetSub"></div>` +
+    `<button id="sheetRota" type="button">Como chegar</button>`;
   document.body.appendChild(sheet);
+
+  const btnRota = document.getElementById("sheetRota") as HTMLButtonElement;
 
   function openSheet(title: string, sub: string): void {
     (document.getElementById("sheetTitle") as HTMLElement).textContent = title;
     (document.getElementById("sheetSub") as HTMLElement).textContent = sub;
     sheet.classList.add("open");
+    // as duas gavetas dividem a borda de baixo: a ficha manda enquanto está
+    // aberta e o percurso recolhe, senão o botão dela fica sob o painel
+    document.body.classList.add("ficha");
   }
   function closeSheet(): void {
     sheet.classList.remove("open");
+    document.body.classList.remove("ficha");
     setSel([]);
+    // o traçado NÃO some junto: a ficha é sobre um lugar, o percurso é sobre
+    // o trajeto. Fechar a ficha para enxergar o mapa é o gesto natural de
+    // quem está seguindo a rota.
+    if (!percurso.aberto) setRota([]);
   }
-  sheet.addEventListener("click", closeSheet);
+  // o clique no botão não pode fechar a ficha junto
+  sheet.addEventListener("click", (e) => {
+    if (e.target !== btnRota) closeSheet();
+  });
+
+  // ---- percurso com paradas ----
+  const pontoDe = (h: Hit): Ponto | null => {
+    const cel = rotas.acesso(h.code ?? h.name);
+    return cel ? { rotulo: h.name, cel } : null;
+  };
+
+  const index = buildIndex(mapa);
+  // as vias saem do PDF e viram régua das instruções; convertidas uma vez só
+  const vias = viasDaMalha(mapa, rotas);
+
+  const percurso = new Percurso({
+    rotas,
+    // um traço por trecho, e não um traço só emendado: com paradas o visitante
+    // precisa enxergar onde um pedaço acaba e o outro começa
+    desenhaRota: (trechos) =>
+      setRota(
+        trechos.map((cels, i) => ({
+          type: "Feature",
+          properties: { trecho: i },
+          geometry: { type: "LineString", coordinates: cels.map((c) => rotas.lngLat(c)) },
+        })),
+      ),
+    desenhaPontos: (paradas) =>
+      setPontos(
+        paradas
+          .map((p, i) => ({ p, i }))
+          .filter(({ p }) => p)
+          .map(({ p, i }) => ({
+            type: "Feature",
+            properties: {
+              papel: i === 0 ? "origem" : i === paradas.length - 1 ? "destino" : "parada",
+              letra: String.fromCharCode(65 + (i % 26)),
+            },
+            geometry: { type: "Point", coordinates: rotas.lngLat(p!.cel) },
+          })),
+      ),
+    enquadra: (cels) =>
+      map.fitBounds(bboxDe(cels.map((c) => rotas.lngLat(c))), {
+        padding: { top: 90, bottom: 300, left: 40, right: 40 },
+        bearing: bearingAtual(),
+        duration: 700,
+      }),
+    instrucoes: (cels, destino) => instrucoes(cels, vias, rotas, destino),
+    aoEscolher: (i) => {
+      document.body.classList.toggle("escolhendo", i !== null);
+      if (i !== null) closeSheet();
+    },
+  });
+
+  let alvoRota: Hit | null = null;
+  btnRota.addEventListener("click", () => {
+    if (!alvoRota) return;
+    const p = pontoDe(alvoRota);
+    if (!p) {
+      (document.getElementById("sheetSub") as HTMLElement).textContent =
+        "sem ponto de acesso na malha";
+      return;
+    }
+    sheet.classList.remove("open");
+    document.body.classList.remove("ficha");
+    setSel([]);
+    percurso.abrir(p);
+  });
 
   function pick(h: Hit, fly: boolean): void {
+    // em modo de escolha, tocar num lugar preenche o campo em vez de abrir
+    // a ficha — é o mesmo gesto do fluxo normal, com outro destino
+    if (percurso.escolhendo !== null) {
+      const p = pontoDe(h);
+      if (p) {
+        percurso.define(p);
+        return;
+      }
+    }
     setSel([h.feature]);
+    if (!percurso.aberto) setRota([]);
+    alvoRota = h;
+    btnRota.hidden = !pontoDe(h);
+    // com percurso montado, o gesto natural do visitante é "e depois quero ir
+    // ali também" — o mesmo botão passa a acrescentar em vez de recomeçar
+    btnRota.textContent =
+      percurso.aberto && percurso.preenchidas >= 2 ? "Adicionar ao percurso" : "Como chegar";
     openSheet(h.name, subtitle(h));
     if (fly) {
       map.flyTo({
         center: h.center,
         zoom: h.kind === "area" ? 17.8 : 19.4,
-        bearing: VENUE_BEARING,
+        bearing: bearingAtual(),
         duration: 900,
         // sheet cobre a base da tela: puxa o alvo um pouco pra cima
         offset: [0, -40],
@@ -488,7 +874,6 @@ map.on("load", async () => {
     }
   }
 
-  const index = buildIndex(mapa);
   attachSearchUI(index, (h) => pick(h, true));
 
   // tap num estande/área do mapa abre a ficha (sem voo)
@@ -508,6 +893,15 @@ map.on("load", async () => {
     map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
   }
   map.on("click", (e) => {
-    if (!e.defaultPrevented) closeSheet();
+    if (e.defaultPrevented) return;
+    // toque em área livre durante a escolha vira ponto do percurso, com snap
+    // para a célula caminhável mais próxima: dedo em tela de celular erra o
+    // corredor com facilidade, e ponto em cima de estande não gera rota
+    if (percurso.escolhendo !== null) {
+      const cel = rotas.maisProximaLivre(e.lngLat.lng, e.lngLat.lat, 25);
+      if (cel) percurso.define({ rotulo: "Ponto no mapa", cel });
+      return;
+    }
+    closeSheet();
   });
 });

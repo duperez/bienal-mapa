@@ -1,66 +1,501 @@
 # Mapa Bienal do Livro SP 2026
 
 App pessoal de mapa da 28ª Bienal (Distrito Anhembi, 4–13/09/2026): mapa vetorial
-redesenhado a partir do PDF oficial, offline-first, com busca de expositor e (futuro)
-rota entre pontos + GPS difuso.
+**transcrito** do PDF oficial, offline-first, com busca de expositor e (futuro) rota
+entre pontos, com paradas múltiplas.
 
-## Estado atual (fase 1 — renderização, SEM rota)
+## A decisão que define o projeto
 
-Funcionando, verificado no browser:
-- Extração automática do PDF oficial (`reference/mapa-oficial.pdf`, vetorial do Illustrator):
-  **244 estandes** com código (A70/AA18/K4/K76 duplicados — ver pendências), **280 nomes**
-  no diretório, **48** da Travessa Literária, **54 áreas** (alimentação/cultural/serviço),
-  **55 faixas de rua**, grafo de corredores com 70 nós/104 arestas.
-- App (`app/index.html`): SVG com pan/zoom/pinch, tiers de zoom (Z0–Z3), busca
-  (estandes + áreas + travessa), seleção com bottom sheet, toggle do grafo, light/dark,
-  service worker offline (só registra em https). Design system em `docs/design-system.md`.
-- Revisado por `reviewer` + `ui-reviewer`; achados relevantes aplicados (tap via pointerup —
-  clique real testado —, pan de 2 dedos, SW stale-while-revalidate versionado, busca de áreas,
-  labels forçados em seleção/busca).
+As tentativas anteriores **sintetizavam** o mapa: partiam de constantes de design
+(largura de estande, passo de fileira, gutter) e encaixavam os dados nesse grid.
+O erro de cada célula somava com o da vizinha, então o fim da fileira saía longe
+do lugar — e cada exceção do PDF real virava um caso especial no gerador.
+
+O pipeline atual **transcreve**: a geometria sai dos paths vetoriais do próprio PDF
+(2767 paths, 745 retângulos), em metros, e só depois recebe semântica (categoria,
+código, nome) como metadado pendurado por cima. Se a classificação errar, o desenho
+continua no lugar certo. O erro para de se propagar.
+
+Consequência prática: o PDF oficial **não desenha a divisa entre estandes vizinhos** —
+imprime vários códigos dentro de um retângulo só. Era isso que empurrava para inventar
+um grid. A solução é cortar o bloco nos pontos médios reais entre os rótulos
+(`subdividir()`), o que mantém o erro **dentro do bloco** em vez de espalhar pela fileira.
+
+A outra pegadinha: patrocinadores e atividades culturais são desenhados como
+**prismas "3D"**. A face de topo — a que tem a cor da legenda — fica ~1,4 m acima e
+à esquerda da posição real; a área ocupada é a **base**. `desextrudar()` reconhece o
+prisma pelas duas faces auxiliares e translada o topo para cima da base, o que põe
+esses blocos de volta na fileira.
+
+## Estado atual
+
+`web/public/data/mapa.geojson` — 423 features geradas do PDF:
+
+```
+expositor 199   travessa 48   cultural 17   piso 19   infra 10
+patrocinador 7  alimentacao 6 entidade 5    rua 55    via 26   circulacao 2
+POIs: entrada 11, saída 16, escolas 1, entrada-expositor 1
+282 com código · 387 com nome · 25 portas em 14 nomes
+```
+
+Teste de aceite (`tools/verify_map.py`, vetorial com shapely):
+
+```
+alimentacao 6/6  cultural 17/17  entidade 5/5  expositor 198/198
+infra 10/10  patrocinador 7/7  rua 55/55  travessa 48/48   -> 100%
+piso 18/19 (94,7%; a forma restante tem IoU 0,963 - ambiguidade de casamento)
+deriva máxima de centroide: 2,02 cm
+
+vias: 26, sendo as 14 ruas nomeadas no PDF
+nenhuma via atravessa bloco · 0/286 blocos navegáveis sem circulação ao lado
+escala: desvio ao módulo de 1 m = 13,8 cm em 1173 lados (acaso seria 25,0 cm)
+fora do prédio: 0 blocos
+```
+
+### Escala
+
+A escala do desenho não podia sair do prédio: o PDF da Bienal é peça de
+divulgação, é cortado à esquerda e no rodapé, e nem nomeia o local. Casar a
+largura do recorte com os 322 m do Distrito Anhembi era palpite — e estava 11%
+grande.
+
+O que resolveu foi evidência interna. Estande de feira é modular: as frentes são
+múltiplos inteiros de 1 m. Varrendo a escala, o desvio médio dos lados ao
+múltiplo mais próximo tem mínimo em **0,194875 m/pt**.
+
+O sinal fica muito mais nítido separando os eixos, que é o que
+`tools/anisotropia.py` faz — e `calibra.py` não fazia, o que diluía a evidência.
+Os dois eixos do desenho não se comportam igual: medido só nos lados
+**verticais**, o mínimo é agudo e profundo em **s=1,0002** (8,1 cm de desvio
+contra 25,0 cm de acaso, com o alias ×2 esperado em s=2,00); nos horizontais a
+curva é quase plana com módulo de 1 m, e só ganha forma com módulo de painel de
+1,2 m. Os comprimentos verticais mais frequentes saem em **6,0 m (93×), 3,0 m
+(59×) e 1,0 m (48×)** — medidas de feira. Se a escala estivesse 1,36× errada,
+seriam 8,2 m e 4,1 m, que não são medida de nada.
+
+A escala é dada em metros por ponto do PDF, não como largura do salão: amarrá-la
+ao enquadramento fazia a janela de leitura virar régua, e a janela é arbitrária.
+Ela hoje é só um filtro (o que é planta, o que é cabeçalho) e tem folga — a
+versão anterior cortava 23 pt de estandes reais, que ficavam com coordenada
+negativa e apareciam do lado de fora da parede no app.
+
+Reproduzir com `python tools/anisotropia.py` (por eixo, é o que vale) ou
+`python tools/calibra.py` (junta os eixos e dilui o sinal). O teste de aceite mede o desvio a cada
+build, então a escala não pode regredir em silêncio.
+
+### Rota
+
+O visitante pergunta "como chego lá", então existe `web/public/data/malha.json`:
+a superfície caminhável amostrada a cada **0,5 m** (601 x 300 células, 75.938
+livres) mais o ponto de acesso de cada bloco. O A* roda **no navegador** — a
+origem de uma rota é o visitante, e ela muda a cada passo.
+
+Grade em vez de grafo das vias porque as vias são o *rótulo* dos corredores, não
+a topologia deles: não se nodam nos cruzamentos, não chegam à porta do estande e
+não cobrem praça nem avental. Costurar isso à mão é justamente o que o projeto
+se proíbe. A grade é a própria superfície livre, amostrada.
+
+```
+283 destinos · 0 ilhados das portas
+300 pares estande->estande · 0 sem rota · mediana 114 m · máx 319 m
+12,4 curvas por rota · 2,3 ms por par
+folga média até a parede 2,44 m · 4,4% do percurso colado
+malha.json: 34,5 KB
+```
+
+Detalhes que custaram cuidado: diagonal só passa se os dois ortogonais também
+estiverem livres (senão a rota corta a quina do estande); e o caminho cru é uma
+escada de 0,5 m, que precisa ser enxugada — sem isso o traço sai serrilhado e
+daria um "vire à esquerda" a cada meio metro.
+
+**O traçado tem que correr pelo meio da rua, e isso não sai de graça.** Durante
+boa parte do projeto ele cortava os quarteirões na diagonal. A rota era válida —
+nunca atravessava parede, e por isso nenhuma verificação de validade acusava
+nada; o defeito só aparecia no olho. Eram duas causas somadas, e as duas são
+instrutivas:
+
+1. **O custo do A* era distância pura.** Dentro de um corredor, uma corda de
+   quina a quina tem o mesmo comprimento do percurso pelo meio. Empatados, o A*
+   devolve qualquer um. Hoje o custo do passo ganha um desconto por folga:
+   `passo * (1 + PENA_PAREDE * (1 - conforto))`, com `conforto` saturando em
+   `CONFORTO_M = 3,0 m` — que é a meia-largura de rua *medida* (ver "Ruas"), não
+   um número escolhido. A folga vem de um chanfro de duas varreduras calculado
+   no navegador (~10 ms), porque gravá-la no `malha.json` levaria o arquivo de
+   34 KB para mais de 200. Como o custo do passo é sempre ≥ a distância, a
+   heurística octile continua admissível.
+
+2. **O enxugamento desfazia o trabalho, e esta era a causa maior.** Ele usava
+   visibilidade: "dá para ir reto de A até C sem bater? então corta o B". Só que
+   dentro de um corredor o outro extremo é visível desde o começo — então o
+   percurso centrado que o A* tinha achado era trocado por exatamente a corda
+   que a correção (1) existia para evitar. Era o *desenho* errando, não a rota.
+   Hoje o critério é Douglas-Peucker: só se descarta um vértice que fique a
+   menos de `DESVIO_MAX = 1,0` célula da reta. Uma célula é o tamanho exato da
+   escada de uma grade de 0,5 m com 8 vizinhos, então isso apaga o serrilhado e
+   nada além dele.
+
+O número que fecha o caso: **folga média até a parede de 0,29 m antes e 2,44 m
+depois; percurso colado na parede de 96,5% para 4,4%.** As curvas por rota
+subiram de 6,8 para 12,4 — é o preço de contornar em vez de cortar, e a fusão de
+trechos do passo a passo absorve. Efeito colateral que não era esperado: os
+passos sem nome de rua caíram de 13,7% para 9,6%, porque o traçado passou a
+correr dentro das faixas das vias. `test-rota.mjs` mede a folga média e reprova
+abaixo de 2 m, para o defeito não voltar sem ninguém ver.
+
+### Percurso: paradas apontadas, sem GPS
+
+O evento é indoor, sob telhado metálico. O navegador devolve fixes com **10 a
+50 m** de erro e o corredor mais largo do pavilhão tem **7 m**: uma posição
+errada apontaria a direção errada com toda a confiança do mundo. Posição errada
+é pior que posição nenhuma.
+
+Então o visitante **aponta** onde está — por busca ("estou no estande E60", que
+é a placa que ele tem na frente dos olhos) ou por toque no mapa, com snap para a
+célula caminhável mais próxima. Todas as paradas são simétricas, e a origem fica
+sempre escrita na tela: o app nunca roteia de um lugar que o visitante não
+escolheu sem ele perceber. Para não cobrar duas marcações no caso comum ("acabei
+de entrar, onde fica X"), a origem já vem preenchida com a última usada ou com a
+porta mais próxima do destino — e é trocável em um toque.
+
+Isso tem um ganho estrutural além do offline: com todos os pontos escolhidos
+sobre o desenho, o erro de georreferência do desenho dentro do prédio (defeitos
+4 e 8) **se cancela**. A rota sai certa mesmo com a âncora errada, porque as
+paradas vivem no mesmo sistema de coordenadas do traçado. Só a **legenda** em
+metros herda o erro de escala.
+
+**Houve uma camada de GPS opcional; foi retirada por decisão explícita do dono
+do projeto** ("está dando dor de cabeça demais para uma feature que apesar de
+legal, não é incrível"). Ela ordenava candidatos a partir do fix, nunca
+filtrava, e vinha com simulação para teste. O aprendizado que ficou: a regra
+"porta a menos de 35 m decide sozinha" foi derrubada pelo próprio teste, porque
+no meio do salão quase sempre há uma saída nesse raio e o app escolhia por conta
+própria um lugar onde o visitante não estava.
+
+### Girar o mapa com o dedo
+
+O visitante está de pé dentro do pavilhão olhando para uma direção física, e o
+mapa na mão dele aponta para outra. Casar os dois é o gesto mais básico de quem
+se localiza — e por muito tempo o app proibia: `dragRotate` desligado, `bearing`
+travado no ângulo que endireita o prédio.
+
+Não dá para resolver isso pela bússola do aparelho. O telhado é metálico e
+distorce o magnetômetro, que é o mesmo motivo que tirou o GPS do caminho
+crítico. O dedo é a única entrada que funciona sem sinal nenhum, então é ela que
+manda. A inclinação continua travada: planta baixa em perspectiva só esconde o
+fundo da tela.
+
+Liberar o gesto é uma linha. O que custou foram duas coisas em volta:
+
+**O giro tem que sobreviver ao uso do app.** Cada `flyTo` e cada `fitBounds`
+carregava `bearing: VENUE_BEARING`, então bastava tocar num estande ou montar
+uma rota para o mapa desfazer o alinhamento que a pessoa tinha acabado de fazer.
+Enquadrar não é motivo para reorientar. Esse defeito não aparece em tela parada,
+só girando e depois usando o app normalmente — é o que `test-mapa.mjs` cobre.
+
+**Tem que existir caminho de volta.** O pavilhão é um retângulo quase simétrico
+e os rótulos ficam de pé em qualquer ângulo, então dá para girar até se perder
+sem nada no desenho denunciar. Daí a bússola, que só aparece com o mapa torto.
+Ela aponta para o **prédio**, não para o norte geográfico: as ruas A–K são
+horizontais e o passo a passo fala nos eixos do prédio, então mostrar o norte só
+naquele canto da tela seria introduzir um segundo referencial que nada mais usa.
+Pelo mesmo motivo o encaixe de fim de gesto é feito à mão — o `bearingSnap` do
+MapLibre encaixa no norte, que aqui é justamente o ângulo errado, e por isso ele
+está zerado.
+
+Um detalhe que já estava certo e que só o giro colocaria à prova: as setas da
+rota são o texto `▶` com `symbol-placement: line`, e o MapLibre gira rótulos de
+linha 180° para mantê-los legíveis. Numa seta isso seria apontar **para trás**.
+`text-keep-upright: false` impede, e o teste verifica — porque é o tipo de erro
+que o mapa não denuncia.
+
+### A orientação de partida é medida, não escolhida
+
+O pavilhão é **290 x 143 m** — deitado, quase 2:1. Um celular em pé é 1:2,2. Com
+o prédio sempre endireitado do mesmo jeito, enquadrá-lo inteiro deixava o mapa
+ocupando **23% da altura** da tela, com o resto vazio e os rótulos pequenos
+demais para ler andando. É o defeito mais grave que o app tinha para quem ia
+usá-lo de verdade, e ele não aparece em nenhum monitor.
+
+A correção é a mesma conta do `fitBounds`, feita antes para decidir por onde
+entrar: das duas orientações que deixam o prédio reto na tela, vale a que dá
+mais zoom no viewport atual. Num monitor largo continua a de sempre; num celular
+em pé o prédio nasce deitado ao longo da tela. Medido na mesma tela, o ganho é
+**0,83 nível de zoom, ou 1,78x de escala linear** — e o teste mede assim, nas
+duas orientações do mesmo viewport, porque comparar zoom entre telas de tamanhos
+diferentes não diz nada.
+
+Virar o aparelho reenquadra — mas só para quem não girou o mapa com o dedo. Quem
+girou escolheu, e a escolha dele manda. Pelo mesmo motivo a bússola volta para o
+reto **daquela tela**, não para um ângulo fixo no código.
+
+O `manifest.webmanifest` deixou de travar `orientation: portrait`. Travar era
+contraditório: o mapa agora se vira sozinho, e a tela deitada é a que mais
+mostra do prédio.
+
+### Paradas múltiplas e a melhor ordem
+
+Numa Bienal ninguém vai a um lugar só. O caso real é "quero passar na Companhia
+das Letras, na Intrínseca e depois no banheiro", e a ordem em que se faz isso
+muda bastante a distância andada. Então o percurso é uma **lista de até 8
+paradas**, não um par origem/destino: cada uma pode ser movida (↑ ↓), removida
+(×) ou trocada de lugar, e o comprimento de cada trecho aparece **entre** as
+duas paradas, que é onde a pergunta nasce.
+
+`Melhor ordem` reordena só as paradas do **meio**: origem e destino ficam
+presos, porque são as duas que o visitante escolheu por um motivo — de onde está
+e onde quer terminar. Trocá-las seria o app decidindo o passeio dele. A
+distância entre pares é a do **A\* sobre a malha, não a linha reta**: num
+pavilhão com fileiras de estandes duas coisas a 10 m uma da outra podem ficar a
+80 m de caminhada, e é a caminhada que dói no pé. Até 7 paradas do meio a busca
+é exaustiva (exata e instantânea); acima disso cai para 2-opt. No teste
+automatizado um roteiro de 4 paradas encolheu de **119 m para 57 m** só
+reordenando.
+
+No mapa, cada trecho é uma feature própria com cor alternada e setas ao longo do
+traçado: com várias paradas, um traço de cor única vira um emaranhado em que não
+se enxerga onde um pedaço acaba nem para que lado ir. O roteiro inteiro fica no
+`localStorage`, e no carregamento cada ponto lembrado é conferido contra a malha
+atual antes de voltar — a grade muda a cada build.
+
+### Ruas e circulação
+
+O PDF não desenha ruas: desenha setas com o nome delas. As setas cobrem só 9,7%
+do espaço livre — a seta é o rótulo da rua, não a rua. Então a circulação é
+derivada por morfologia (fecho de 12 m sobre os blocos, menos os blocos, com
+abertura de 2 m) e as vias saem da largura local do vão, entre 2 e 12 m. Uma
+seta que a varredura não alcança vira semente: o PDF afirma que a rua existe,
+então ela entra pelo corredor que passa por baixo da seta. Nada é desenhado à
+mão — se um corredor sair errado, conserta-se a regra.
+
+App (`web/`): MapLibre GL 100% local (nenhum tile ou fonte externa), pavilhão real do
+Anhembi (OSM way 203621978) como base, busca, seleção com bottom sheet, ícones de POI
+desenhados em canvas. Screenshots de verificação em `web/shot-*.png`.
 
 ## Como rodar
 
 ```bash
-sh tools/build.sh        # PDF -> data/map.json -> app/ (com versão do SW)
-python3 -m http.server 8027 -d app     # ou preview "bienal-app" no .claude/launch.json
+python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt
+sh tools/build.sh            # PDF -> mapa.geojson + malha.json + teste de aceite
+sh tools/build.sh --aceitar  # regrava a baseline (só quando a mudança for intencional)
+
+cd web && npm install && npm run dev
+node test-shots.mjs <porta>       # screenshots do app real via Playwright
+node test-rota.mjs <porta>        # percurso na UI + carga de 300 pares
+node test-instrucoes.mjs <porta>  # passo a passo, com a lateralidade conferida
+node test-mapa.mjs <porta>        # câmera: girar o mapa e o giro sobreviver
+node test-pages.mjs              # o app servido em subcaminho, como no Pages
+node test-offline.mjs             # sobe o build, mata o servidor e usa o app
+node gera-icones.mjs              # refaz o ícone a partir do mapa
 ```
 
-Python: venv em `.venv` com `pymupdf`.
+`test-offline.mjs` é o único que roda contra o build, não contra o dev server:
+em desenvolvimento o service worker não é registrado, senão ele serviria a
+versão em cache e esconderia a edição.
 
-## Pendências (próxima sessão)
+`tools/transcribe.py` gera a prova de conceito da transcrição
+(`reference/transcrito.png`, 89,6% dos pixels idênticos ao PDF, IoU 0,92) — serve
+para conferir a olho que a leitura do PDF está correta.
 
-1. **Blocos 3D fora do grid** (pedido do Eduardo): patrocinadores/atividades culturais são
-   cubos "3D" no PDF e ficaram deslocados — alinhar à fileira vizinha no build (achatar).
-2. **GPS não calibrado**: `GEO_REF = null` em `app/index.html`. Polígono real do pavilhão
-   (OSM way 203621978, ~322×220m, proporção bate com o hall do mapa 1.47):
-   N `-23.5155046,-46.6372162` / NE `-23.5156621,-46.6347654` /
-   SE `-23.5176723,-46.6349189` / SW `-23.5174697,-46.6380735`.
-   Falta decidir orientação (que lado real = topo do mapa) — Marginal Tietê fica ao SUL do
-   prédio; hipótese: entrada pública/Acesso Halls (base do mapa) = lado sul. Confirmar no
-   satélite antes de preencher a afim; caso contrário o GPS sai espelhado.
-3. **Curadoria de dados** (pós-auditoria de fidelidade de 02/09, 9 regiões vs PDF
-   original com 5 agentes): restam apenas — A70 duplicado (o próprio PDF oficial
-   imprime 2x, sem candidato claro); B65/K29 no diretório sem estande desenhado no
-   original; overlap pontual Chambril D20 x Editora BOC E21; banheiros sem
-   classificação própria (ícone genérico de serviço); entradas/portões/setas e
-   paredes do pavilhão não viram POIs/geometria.
-   [RESOLVIDO 02/09 — auditoria] snap de grid agora valida tamanho/centro antes de
-   aplicar (banheiros não são mais esmagados, K24/K26 não se fundem, cluster
-   IF14/04/15/16/04A intacto); polígonos em "L" legítimos preservados (IF10, K20);
-   códigos quebrados em 2 linhas no PDF fundidos (K40/K42); divisa de estandes
-   multi-código no ponto médio real dos rótulos (D80/D70); sub-áreas para códigos
-   extras (K18, K20, IF04, IF15, IF16, IF04A); EXT02 desduplicado; typos do mapa
-   oficial corrigidos via diretório (AA18→AA20, K76→K74); DD10 Cordel/DD20
-   Autógrafos e banheiro do anexo recuperados (filtro de legenda estava largo);
-   INDIGO capturada; painéis instagramáveis sintetizados do texto; marcadores
-   coloridos de ponta de fileira e calçada externa da Praça renderizados;
-   CC26/CC28 na fileira certa (desempate de linha pondera Y).
-   [RESOLVIDO 02/09] Travessa Literária extraída (área + 48 mini-lugares TL01–TL48,
-   buscáveis); faixa de rua sintética onde o original só tem o texto (RUA H col
-   676–783); rótulos com "cabe?" dinâmico por zoom e quebra de linha via CSS
-   translate em `em` (o atributo SVG dy="em" resolvia contra 16px no iOS).
-4. **Rota (fase 2)**: A* sobre `graph` + snap de origem/destino; grafo ainda precisa de
-   ajuste fino (anexo sem verticais, sem ligação hall↔anexo) — ideal via editor visual.
-5. **Deploy https** (GitHub Pages ou similar) pra service worker + geolocalização valerem.
-6. Achados menores dos reviewers não aplicados: bucketização frágil do diretório (ok pra
-   este PDF), `path_points` só 1º retângulo, halo/bordas conferir em aparelho real.
+## O que ainda não está resolvido
+
+1. **`data/expositores.json` é o único insumo que não vem do PDF** — dá o nome
+   do expositor por código e os nomes da Travessa. O PDF imprime o código na
+   forma, não o nome, então isto é metadado pendurado por cima: se um verbete
+   estiver errado, o mapa continua certo e o nome fica errado.
+
+   Ele substitui o `data/structure.json`, que foi auditado e removido. Das dez
+   chaves daquele arquivo, o build usava duas. As outras oito eram do gerador
+   legado: `meta.constantes` trazia `banda_m`, `rua_m` e
+   `celula_profundidade_m` — exatamente as constantes de design que este
+   projeto existe para não usar — e `fileiras`, `areas`, `ancorados`, `pois` e
+   `ruas_anexo` traziam coordenadas em metros no referencial **antigo**, de
+   antes do giro de 180 graus. Ficar lá era convite a alguém reintroduzir o
+   legado por engano.
+
+   A auditoria vive dentro do arquivo, no campo `_auditoria`: hoje são 280
+   verbetes, 20 sem forma no mapa (códigos que o PDF de 2026 não desenha) mais
+   os 30 `TI01..TI30` do jeito antigo de numerar a Travessa. **Nenhuma forma do
+   mapa ficou sem verbete.**
+
+   Chegar a zero exigiu consertar uma leitura. As células do miolo têm 9 m2 e o
+   código não cabe: o PDF escreve `K40` como `K4` numa linha e `0` na de baixo,
+   em blocos de texto diferentes. Lendo span a span, o `0` sumia e duas formas
+   diferentes ficavam ambas com o código inexistente `K4`. `junta_quebrados()`
+   emenda o pedaço de baixo quando ele está alinhado, encostado e o resultado
+   casa com o padrão de código — se não casar, nada é emendado.
+2. **Numeração TL01–TL48 é derivada**, não impressa no PDF. As features carregam
+   `numeracao_derivada: true`. Se estiver errada, troca-se o rótulo, não o desenho.
+3. **Estandes sem código** e áreas de infra sem nome — o PDF não imprime.
+   Hoje ficam sem rótulo no app (melhor que rótulo inventado).
+4. **A orientação foi resolvida; a posição exata, não.** O desenho entra
+   **girado 180 graus**, e isso já está aplicado em `build_map.assentamento()`.
+   Três rótulos independentes dizem a mesma coisa, e nenhum depende de parecer
+   com alguma forma:
+
+   - a borda de baixo do PDF da Bienal diz `ENTRADA PÚBLICO`; a de cima diz
+     `ACESSO SERVIÇO HALL 01..05` com os portões 7, 8 e 9, que a planta
+     oficial põe do lado da Marginal. A marquise do público é a face que no
+     nosso referencial é o norte, então a borda de baixo tem que ir para lá;
+   - o `ACESSO HALL 01` está à direita no PDF, e a planta técnica o põe no
+     Expo 01, colado na Alameda de Conexão, que é a face oeste;
+   - as três saídas da borda esquerda batem com o Expo 05, único pavilhão
+     com sanitários laterais na especificação do Anhembi.
+
+   É rotação, não espelhamento: ninguém imprime mapa espelhado. A métrica de
+   distância às marquises preferia o espelhamento (10,2 m contra 26,0 m),
+   mas ela não sabe distinguir uma coisa da outra — os rótulos sabem. Por isso
+   `tools/afere_ancora.py` parou de caçar orientação: ele agora só **afere** o
+   assentamento aplicado, com um critério de duas pontas (porta de público
+   perto da marquise, porta de serviço perto da fachada oposta).
+
+   O que sobra é a posição fina. Hoje as 14 portas de público ficam a **28 m**
+   da marquise e as 15 de serviço a **74 m** da fachada de trás. Varrendo todos
+   os deslocamentos possíveis dentro da folga, nenhum melhora a média: a âncora
+   atual já é ótima. O resíduo não é erro de encaixe, é **tamanho** — ver o
+   defeito 8. Nada no PDF diz onde o desenho encosta; só uma planta cotada do
+   piso resolve isso de vez.
+
+5. **Instrução passo a passo: feita, com 14% dos passos sem nome.** O caminho
+   agora vira texto ("siga pela RUA G por 40 m, vire à direita na Transversal
+   04"). Um trecho só recebe nome se uma via do PDF cobrir a maior parte dele;
+   sem isso o passo sai sem nome, em vez de ganhar um nome plausível.
+
+   A primeira versão deixava 23% dos passos anônimos, e eu tinha atribuído isso
+   às pontas (porta do estande até a rua). Medindo, era falso: a mediana do
+   passo anônimo era 19,5 m e a maioria estava no **meio** da rota. Eram dois
+   defeitos somados.
+
+   O primeiro estava no build. `eixos()` descartava vão acima de `LARG_MAX`
+   (12 m) chamando de praça, mas praça é larga nos **dois** eixos — e o que
+   estava sendo descartado era um corredor de 17,5 m de largura por 36 m de
+   comprimento. Erodindo os buracos de cobertura, nenhum passava de 20 m de
+   largura local: não havia praça nenhuma ali. O teto passou para
+   `LARG_ABERTA` (20 m), que `semente` já usava pela mesma razão, e acima disso
+   nada mais aparece — é patamar do dado. Cobertura do corredor: 72% -> 80%.
+
+   O segundo estava na regra de casamento. Ângulo mais o ponto do meio dentro
+   da faixa reprovava quem anda pela rua em diagonal, que é como o A* devolve
+   um corredor. Trocado por **fração do trecho dentro da faixa**: andar pela
+   rua cobre quase tudo, atravessar cobre a largura dela dividida pelo tamanho
+   do passo. Some a constante de ângulo, e a folga lateral deixou de ser
+   arbitrária: 3,0 m é o maior valor em que as faixas de duas ruas vizinhas
+   ainda não se encostam, medido em seis pares seguidos do miolo (passo de
+   11,1 a 11,4 m entre centros).
+
+   `tools/cobertura_vias.py` mede isso sem depender de rota sorteada: pergunta
+   que fração do corredor derivado tem via em cima.
+
+   O que exigiu cuidado foi a lateralidade. O frame de células da malha é
+   espelhado em relação a leste/norte, e com o sinal trocado **todo** "vire à
+   esquerda" sairia invertido em silêncio — o traçado desenhado continua certo,
+   então nada no mapa denuncia. O sinal vem de `Rotas.orientacao()`, medido do
+   `ex`/`ey` que o build gravou, e `web/test-instrucoes.mjs` recalcula cada
+   virada em coordenadas geográficas para comparar. Invertendo o sinal de
+   propósito, o teste reprova 35 das 112 rotas.
+
+6. **`LARG_MIN = 2 m` e `AVENTAL = 6 m` são julgamento meu**, não saem do PDF.
+   As 9 transversais e 1 alameda sem seta carregam `nome_derivado: true`; a RUA
+   AA corre na borda do anexo e carrega `borda_aberta: true`.
+7. **Offline: feito.** O app abre e roteia sem servidor nenhum. O service
+   worker é gerado no build (`web/vite.config.ts`) com a lista real do que o
+   bundle produziu — 16 arquivos, 2,1 MB, incluindo o mapa, a malha e os
+   glifos. Lista escrita à mão erra calada: some um glifo e o defeito só
+   aparece no dia do evento, offline, sem conserto.
+
+   A versão do cache é o hash do conteúdo de tudo, então publicar sem mudar
+   nada não invalida o cache de ninguém, e qualquer mudança real invalida.
+
+   Dois detalhes custaram tempo e ficam registrados porque nenhum dos dois dá
+   erro visível:
+
+   - `caches.match` precisa de `ignoreVary: true`. O servidor responde com
+     `Vary`, e sem isso a mesma URL dá MISS quando a request vem de uma tag
+     `<script>` (que manda `Origin`) em vez de um `fetch()`. O app abria com os
+     dados e sem código nem estilo.
+   - `context.setOffline()` do Playwright derruba subresource antes de a
+     request chegar ao service worker: ele reprova um app que funciona. Por
+     isso `test-offline.mjs` **mata o servidor**. E mata o binário direto, não
+     via `npx`, senão o processo fica órfão e o teste "offline" roda com rede.
+
+   **Publicado.** O app está no ar em <https://duperez.github.io/bienal-mapa/>,
+   por workflow do Actions a cada push na `main`. O que faltava era https, sem o
+   qual o service worker não registra fora de localhost — mas publicar num
+   subcaminho (`/bienal-mapa/`) é uma segunda armadilha, e silenciosa: `vite
+   dev` e `vite preview` servem na raiz, então todos os outros testes passam com
+   o app publicado quebrado. `test-pages.mjs` sobe um servidor estático próprio
+   embaixo do prefixo, com `Vary` e com 404 seco (sem fallback de SPA, que é o
+   que o Pages faz), e confere que nada é pedido fora do prefixo, que o escopo
+   do service worker é o subcaminho, que o precache não guarda URL de raiz e
+   que, morto o servidor, o app ainda abre e traça rota.
+
+8. **A escala está confirmada; o que não fecha é o polígono do prédio.**
+   A suspeita de que `ESCALA_M_PT = 0.194875` estivesse 35% pequena caiu com
+   medição melhor, e vale registrar por que a suspeita existia: ela vinha de
+   duas inferências encadeadas — calibrar o Auditório B da planta técnica em
+   0,917 m/pt e multiplicar pela razão dos vãos entre os documentos. O
+   Auditório B foi mal medido. Com a escala de hoje o vão real dá 35,9 m e a
+   planta técnica sai em 0,676 m/pt, não 0,917.
+
+   O que derruba a suspeita de vez é `tools/anisotropia.py`. Ele separa os
+   lados por eixo antes de calibrar, coisa que `calibra.py` não fazia — e a
+   diferença importa, porque os dois eixos do desenho não se comportam igual.
+   Os lados **verticais** dão mínimo agudo e profundo em **s=1,0002** (8,1 cm
+   contra 25,0 cm de acaso), com o alias ×2 esperado em s=2,00, e caem em
+   **6,0 m (93×), 3,0 m (59×) e 1,0 m (48×)** — medidas de feira. Se a escala
+   estivesse 1,36× errada, seriam 8,2 m e 4,1 m, que não são medida de nada.
+   Os **horizontais** são mais frouxos porque a frente do estande é negociada
+   caso a caso; com módulo de painel de 1,2 m (ou de 0,5 m) o mínimo também
+   cai em s≈0,995. `calibra.py` juntava os dois eixos e diluía o sinal.
+
+   O que continua aberto é outra coisa: o desenho mede 290,6 × 143,3 m
+   (razão 2,03) e o polígono do OSM mede 322,8 × 224,3 m (razão 1,44). Como o
+   desenho é isotrópico e a escala está certa, a conclusão é que **o desenho
+   não preenche o `venue.geojson`** — sobram uns 81 m de profundidade. A
+   brochura do Anhembi diz "mais de 76 mil m² … dividido em Pavilhão Norte,
+   Sul e Oeste", e as cotas oficiais (A 236 m, B 246 m, C 221 m, D 73 m)
+   batem com o polígono, não com o desenho. A hipótese é que o polígono seja o
+   Pavilhão de Exposições inteiro e a Bienal ocupe só parte dele. Isso também
+   explica os cinco `ACESSO HALL`: eles estão a 35,9 m entre si e cobrem 780
+   dos 1491 pt de largura, ou seja, são as cinco portas de **um hall**, não os
+   cinco pavilhões.
+
+   Consequência prática: as distâncias e os tempos a pé estão certos dentro do
+   desenho. O que está errado é a moldura em volta dele.
+
+9. **`MAP_CLIP`: resolvido.** A janela de leitura começava em `y=140` e os
+   rótulos da borda de serviço estão em `y≈112`; faltavam 5 `ACESSO SERVIÇO
+   HALL` e 10 `SAÍDA DE EMERGÊNCIA`. Baixando para `y=105`, as portas foram de
+   10 para **25, em 14 nomes**, e a aferição da âncora deixou de parecer
+   assimétrica.
+
+   Recuperar as formas foi a parte fácil; dar nome a elas expôs dois filtros
+   calibrados com folga de menos. O raio que amarra rótulo a POI estava em 6 m:
+   medidos os 35 triângulos, os que têm dono ficam entre 2,03 e 3,93 m e o
+   primeiro órfão está a 14,59 m — 8 m separa os dois grupos com sobra. E o
+   corte de tamanho de rótulo em 1,0 m descartava `AUDITÓRIO`, `LOCKERS` e
+   toda a borda de serviço, que estão em 0,97 m; abaixo de 0,9 m só há
+   numeração de travessa e tradução em inglês.
+
+   O primeiro conserto produziu nomes-frankenstein
+   (`"Saída de Emergência Acesso Serviço Hall 03"`) porque a montagem varria
+   ±22 m para os lados. O certo era agrupar por **linha** do PDF, que é como o
+   documento separa um rótulo do outro — `rotulos(..., por_linha=True)`.
+
+## Layout
+
+```
+tools/build_map.py    PDF -> mapa.geojson (transcrição + classificação)
+tools/verify_map.py   teste de aceite vetorial contra o PDF
+tools/build_route.py  superfície caminhável -> malha.json (grade + acessos)
+tools/calibra.py      mede a escala pelo módulo dos estandes (junta os eixos)
+tools/anisotropia.py  mede a escala eixo a eixo — é a medição que vale
+tools/afere_ancora.py afere o assentamento do desenho contra as marquises reais
+tools/transcribe.py   prova de conceito PDF -> SVG -> PNG
+web/                  app MapLibre (Vite + TypeScript)
+web/src/rotas.ts      A* sobre a malha, snap e inversa da afim
+web/src/percurso.ts   lista de paradas, trechos e a melhor ordem
+web/src/instrucoes.ts traçado + vias do PDF -> passo a passo falado
+web/vite.config.ts    gera o service worker com a lista real do bundle
+reference/            PDF oficial e artefatos de comparação
+legacy/               app e geradores sintéticos anteriores (referência)
+```

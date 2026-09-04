@@ -137,7 +137,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 12;
+  z-index: 14;
   background: var(--surface);
   border-radius: 16px 16px 0 0;
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.25);
@@ -168,4 +168,311 @@ body {
   font-size: 13px;
   color: var(--text-2);
   margin-top: 4px;
+}
+
+#sheetRota {
+  margin-top: 14px;
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #1a73e8;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#sheetRota[hidden] {
+  display: none;
+}
+
+/* ---- percurso: lista de paradas ---- */
+#rota {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 13;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.25);
+  padding: 12px 16px calc(env(safe-area-inset-bottom) + 12px);
+  transform: translateY(105%);
+  transition: transform 0.22s ease;
+}
+
+#rota.open {
+  transform: none;
+}
+
+/* com a ficha de um lugar aberta, o percurso sai de cena em vez de brigar
+   pela mesma borda: os dois voltam juntos quando a ficha fecha */
+body.ficha #rota.open {
+  transform: translateY(105%);
+}
+
+#rotaCab {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+#rotaTitulo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+#rotaTotal {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a73e8;
+  white-space: nowrap;
+}
+
+/* a lista rola: com 8 paradas ela passa da metade da tela de um celular */
+#rotaParadas {
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.rota-linha {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rota-campo {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  background: #fafaf8;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text-1);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rota-campo.vazio .rota-texto {
+  color: var(--text-2);
+}
+
+/* o campo em escolha precisa gritar: enquanto ele está ativo, o toque no
+   mapa muda de significado, e isso tem que estar óbvio na tela */
+.rota-campo.ativo {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.rota-texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rota-marca {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+
+/* mesmas três cores dos marcadores no mapa: a ponte entre a lista e o
+   desenho é a cor, não a leitura do rótulo */
+.rota-marca-origem {
+  background: #1a73e8;
+}
+
+.rota-marca-parada {
+  background: #f29900;
+}
+
+.rota-marca-destino {
+  background: #d93025;
+}
+
+.rota-acoes {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+.rota-acoes button {
+  width: 30px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.rota-acoes button[disabled] {
+  opacity: 0.25;
+  cursor: default;
+}
+
+/* os metros do trecho ficam ENTRE as duas paradas, alinhados com a coluna das
+   marcas, de modo que a lista se leia como um itinerário e não como um form */
+.rota-emenda {
+  padding: 3px 0 3px 22px;
+  border-left: 2px dotted var(--divider);
+  margin-left: 22px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+/* o "40 m" entre duas paradas vira botão: é o gancho natural para os passos,
+   e assim não entra mais um controle na barra já cheia */
+.rota-mais {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.rota-mais:hover {
+  background: var(--surface-2, rgba(127, 127, 127, 0.12));
+}
+
+.rota-seta {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.rota-passos {
+  margin: 4px 0 2px;
+  padding: 0;
+  list-style: none;
+  counter-reset: passo;
+}
+
+.rota-passo {
+  position: relative;
+  padding: 3px 0 3px 20px;
+  line-height: 1.35;
+  color: var(--text-1, inherit);
+}
+
+/* a seta da manobra é o que se lê de relance andando; o texto vem depois */
+.rota-passo::before {
+  position: absolute;
+  left: 0;
+  width: 16px;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.passo-partida::before { content: "▲"; }
+.passo-frente::before { content: "↑"; }
+.passo-esquerda::before { content: "↰"; }
+.passo-direita::before { content: "↱"; }
+.passo-chegada::before { content: "◎"; }
+.passo-chegada { font-weight: 600; }
+
+.rota-derivado {
+  margin-left: 4px;
+  opacity: 0.5;
+  cursor: help;
+}
+
+#rotaAviso:not(:empty) {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+#rotaBarra {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+#rotaBarra button {
+  flex: 1;
+  padding: 11px;
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+  cursor: pointer;
+}
+
+#rotaBarra button[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#rotaInverte {
+  flex: 0 0 44px;
+}
+
+/* mira no cursor durante a escolha, para o toque no mapa parecer intencional */
+body.escolhendo .maplibregl-canvas {
+  cursor: crosshair;
+}
+
+/* ---- bússola ---- */
+/* Fica abaixo da busca, do lado direito: o polegar alcança e não cobre o mapa
+   nem a ficha. Só existe na tela quando o mapa está torto. */
+#bussola {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 74px);
+  right: 12px;
+  z-index: 11;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text-2);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+#bussola[hidden] {
+  display: none;
+}
+
+/* a agulha desgira o quanto o mapa girou, então aponta sempre para o "cima"
+   do prédio — é o que o botão devolve ao ser tocado */
+#bussola svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+  transform: rotate(var(--giro, 0deg));
+}
+
+/* vermelho porque a agulha tem que ser lida de relance, com o mapa girando */
+#bussola svg path {
+  fill: #d93025;
 }
