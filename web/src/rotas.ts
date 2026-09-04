@@ -40,6 +40,23 @@ export class Rotas {
     return [origem[0] + i * ex[0] + j * ey[0], origem[1] + i * ex[1] + j * ey[1]];
   }
 
+  /**
+   * Orientação do frame de células: +1 se um giro anti-horário em (i,j) é
+   * anti-horário no mundo, -1 se o frame é espelhado.
+   *
+   * Sem isso, "vire à esquerda" tem 50% de chance de sair trocado — e sai
+   * trocado calado, porque o traçado desenhado continua certo. O sinal é
+   * medido do próprio `ex`/`ey` que o build gravou, então acompanha qualquer
+   * mudança de referencial sem ninguém precisar lembrar de ajustar.
+   */
+  orientacao(): 1 | -1 {
+    const { ex, ey, origem } = this.m;
+    // lng vira metro multiplicando por cos(lat); sem isso o sinal do
+    // determinante ainda sairia certo, mas a conta deixaria de ser geométrica
+    const k = Math.cos((origem[1] * Math.PI) / 180);
+    return ex[0] * k * ey[1] - ex[1] * (ey[0] * k) > 0 ? 1 : -1;
+  }
+
   acesso(chave: string): [number, number] | undefined {
     return this.m.acessos[chave];
   }

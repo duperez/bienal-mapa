@@ -338,6 +338,67 @@ body.ficha #rota.open {
   color: var(--text-2);
 }
 
+/* o "40 m" entre duas paradas vira botão: é o gancho natural para os passos,
+   e assim não entra mais um controle na barra já cheia */
+.rota-mais {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.rota-mais:hover {
+  background: var(--surface-2, rgba(127, 127, 127, 0.12));
+}
+
+.rota-seta {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.rota-passos {
+  margin: 4px 0 2px;
+  padding: 0;
+  list-style: none;
+  counter-reset: passo;
+}
+
+.rota-passo {
+  position: relative;
+  padding: 3px 0 3px 20px;
+  line-height: 1.35;
+  color: var(--text-1, inherit);
+}
+
+/* a seta da manobra é o que se lê de relance andando; o texto vem depois */
+.rota-passo::before {
+  position: absolute;
+  left: 0;
+  width: 16px;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.passo-partida::before { content: "▲"; }
+.passo-frente::before { content: "↑"; }
+.passo-esquerda::before { content: "↰"; }
+.passo-direita::before { content: "↱"; }
+.passo-chegada::before { content: "◎"; }
+.passo-chegada { font-weight: 600; }
+
+.rota-derivado {
+  margin-left: 4px;
+  opacity: 0.5;
+  cursor: help;
+}
+
 #rotaAviso:not(:empty) {
   margin-top: 8px;
   font-size: 13px;

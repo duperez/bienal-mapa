@@ -19,6 +19,7 @@
  */
 
 import type { Rotas } from "./rotas";
+import type { Passo } from "./instrucoes";
 
 export interface Ponto {
   rotulo: string;
@@ -34,6 +35,8 @@ export interface Contexto {
   enquadra(cels: [number, number][]): void;
   /** avisa o app que o próximo toque/busca preenche esta parada */
   aoEscolher(indice: number | null): void;
+  /** passos falados de um trecho; o app injeta porque as vias vêm do geojson */
+  instrucoes(cels: [number, number][], destino: string): Passo[];
 }
 
 const LEMBRETE = "bienal.percurso";
@@ -56,6 +59,8 @@ export class Percurso {
   /** sempre com pelo menos duas posições; `null` é posição ainda não escolhida */
   private paradas: (Ponto | null)[] = [null, null];
   private escolha: number | null = null;
+  /** trechos com a lista de passos aberta; fechado por padrão para a tela caber */
+  private abertos = new Set<number>();
 
   constructor(ctx: Contexto) {
     this.ctx = ctx;
@@ -266,13 +271,18 @@ export class Percurso {
     const acao = b.dataset.acao;
     if (acao === "escolher") this.escolher(i);
     else if (acao === "remove") this.remover(i);
+    else if (acao === "passos") this.alternaPassos(i);
     else if (acao === "sobe") this.mover(i, -1);
     else if (acao === "desce") this.mover(i, 1);
   }
 
   // ------------------------------------------------------------------ desenho
 
-  private atualiza(): void {
+  /**
+   * `enquadrar=false` para mudanças que não mexem no traçado (abrir os passos
+   * de um trecho): reenquadrar o mapa ali roubaria o zoom de quem está lendo.
+   */
+  private atualiza(enquadrar = true): void {
     const n = this.paradas.length;
     const trechos: Trecho[] = [];
     for (let i = 0; i + 1 < n; i++) {
@@ -308,7 +318,36 @@ export class Percurso {
       `${Math.round(metros)} m · ${Math.max(1, Math.round(metros / M_POR_MIN))} min a pé`;
     this.avisa("");
     this.lembra();
-    this.ctx.enquadra(feitos.flatMap((t) => t.cels));
+    if (enquadrar) this.ctx.enquadra(feitos.flatMap((t) => t.cels));
+  }
+
+  private alternaPassos(i: number): void {
+    if (this.abertos.has(i)) this.abertos.delete(i);
+    else this.abertos.add(i);
+    this.atualiza(false);
+  }
+
+    /**
+   * Passos falados de um trecho.
+   *
+   * Ficam recolhidos porque a lista de paradas é o que se consulta o tempo
+   * todo e os passos só na hora de andar; abrir tudo empurraria o roteiro para
+   * fora da tela do celular. Rua com nome derivado sai marcada — o visitante
+   * não vai achar essa placa pendurada no corredor.
+   */
+  private passos(i: number, antes: NonNullable<Trecho>): string {
+    if (!this.abertos.has(i)) return "";
+    const destino = this.paradas[i]?.rotulo ?? "destino";
+    const lista = this.ctx.instrucoes(antes.cels, destino);
+    if (!lista.length) return "";
+    return `<ol class="rota-passos">${lista
+      .map(
+        (s) =>
+          `<li class="rota-passo passo-${s.virar}">${escapa(s.texto)}` +
+          (s.derivado ? '<span class="rota-derivado" title="nome derivado: o PDF numera mas não rotula esta via">~</span>' : "") +
+          `</li>`,
+      )
+      .join("")}</ol>`;
   }
 
   private linha(p: Ponto | null, i: number, n: number, antes?: Trecho): string {
@@ -316,7 +355,15 @@ export class Percurso {
     // a pergunta nasce: "quanto tem daqui até a próxima?"
     const emenda =
       i > 0
-        ? `<div class="rota-emenda">${antes ? `${Math.round(antes.metros)} m` : "—"}</div>`
+        ? `<div class="rota-emenda" data-i="${i}">` +
+          (antes
+            ? `<button class="rota-mais" type="button" data-acao="passos"` +
+              ` aria-expanded="${this.abertos.has(i)}">` +
+              `${Math.round(antes.metros)} m` +
+              `<span class="rota-seta">${this.abertos.has(i) ? "▾" : "▸"}</span></button>` +
+              this.passos(i, antes)
+            : "—") +
+          `</div>`
         : "";
     const papel = i === 0 ? "origem" : i === n - 1 ? "destino" : "parada";
     const vazio = i === 0 ? "Onde você está?" : i === n - 1 ? "Para onde vai?" : "Passar por…";

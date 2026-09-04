@@ -3,6 +3,7 @@ import { attachSearchUI, buildIndex, subtitle, type Hit } from "./search";
 import { addPoiIcons } from "./icons";
 import { Rotas, type Malha } from "./rotas";
 import { Percurso, type Ponto } from "./percurso";
+import { instrucoes, viasDaMalha } from "./instrucoes";
 import "maplibre-gl/dist/maplibre-gl.css";
 // O worker do MapLibre v6 vive num arquivo separado resolvido via
 // import.meta.url — no dev do Vite esse caminho não existe no diretório de
@@ -658,6 +659,8 @@ map.on("load", async () => {
   };
 
   const index = buildIndex(mapa);
+  // as vias saem do PDF e viram régua das instruções; convertidas uma vez só
+  const vias = viasDaMalha(mapa, rotas);
 
   const percurso = new Percurso({
     rotas,
@@ -691,6 +694,7 @@ map.on("load", async () => {
         bearing: VENUE_BEARING,
         duration: 700,
       }),
+    instrucoes: (cels, destino) => instrucoes(cels, vias, rotas, destino),
     aoEscolher: (i) => {
       document.body.classList.toggle("escolhendo", i !== null);
       if (i !== null) closeSheet();
