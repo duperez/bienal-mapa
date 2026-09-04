@@ -2,7 +2,7 @@
 
 App pessoal de mapa da 28ª Bienal (Distrito Anhembi, 4–13/09/2026): mapa vetorial
 **transcrito** do PDF oficial, offline-first, com busca de expositor e (futuro) rota
-entre pontos + GPS.
+entre pontos, com paradas múltiplas.
 
 ## A decisão que define o projeto
 
@@ -100,7 +100,7 @@ estiverem livres (senão a rota corta a quina do estande); e o caminho cru é um
 escada de 0,5 m, enxugada por varredura de visibilidade — sem isso o traço sai
 serrilhado e daria um "vire à esquerda" a cada meio metro.
 
-### Percurso: por que o GPS não manda
+### Percurso: paradas apontadas, sem GPS
 
 O evento é indoor, sob telhado metálico. O navegador devolve fixes com **10 a
 50 m** de erro e o corredor mais largo do pavilhão tem **7 m**: uma posição
@@ -109,35 +109,50 @@ errada apontaria a direção errada com toda a confiança do mundo. Posição er
 
 Então o visitante **aponta** onde está — por busca ("estou no estande E60", que
 é a placa que ele tem na frente dos olhos) ou por toque no mapa, com snap para a
-célula caminhável mais próxima. Origem e destino são simétricos, e a origem fica
+célula caminhável mais próxima. Todas as paradas são simétricas, e a origem fica
 sempre escrita na tela: o app nunca roteia de um lugar que o visitante não
 escolheu sem ele perceber. Para não cobrar duas marcações no caso comum ("acabei
 de entrar, onde fica X"), a origem já vem preenchida com a última usada ou com a
 porta mais próxima do destino — e é trocável em um toque.
 
-O GPS entra como camada opcional, e mesmo assim para **ordenar** candidatos,
-nunca para filtrar. O motivo é o defeito 4: a âncora do desenho dentro do prédio
-tem ~30 m de folga, então um raio traçado a partir do fix sairia descentrado por
-mais do que o próprio erro do sensor e poderia excluir justamente o estande
-certo. Ordenando, o erro de âncora piora a ordem da lista e nunca esconde a
-resposta. Regras: fix acima de 100 m de erro é descartado; espera de 5 s com relógio
-próprio e cai para o manual (fix pendurado — nem sucesso nem erro — é o desfecho
-mais comum indoor, e o `timeout` da API nem sempre é respeitado); e o GPS só
-decide sozinho quando **uma porta é a coisa mais próxima do fix**. Essa última
-regra começou como "porta a menos de 35 m" e o teste derrubou: no meio do salão
-quase sempre há uma saída nesse raio, e o app escolhia por conta própria um
-lugar onde o visitante não estava.
+Isso tem um ganho estrutural além do offline: com todos os pontos escolhidos
+sobre o desenho, o erro de georreferência do desenho dentro do prédio (defeitos
+4 e 8) **se cancela**. A rota sai certa mesmo com a âncora errada, porque as
+paradas vivem no mesmo sistema de coordenadas do traçado. Só a **legenda** em
+metros herda o erro de escala.
 
-Como o GPS não dá para exercitar sentado, `web/src/gps.ts` isola a leitura de
-posição e aceita simulação por `?gps=sim` (shift+clique larga um fix, `&erro=NN`
-define a precisão fingida). A simulação é sempre visível — tarja roxa na tela,
-rótulo do botão trocado e "· simulado" na mensagem —, porque um fix falso
-passando por verdadeiro seria o pior defeito possível neste app.
+**Houve uma camada de GPS opcional; foi retirada por decisão explícita do dono
+do projeto** ("está dando dor de cabeça demais para uma feature que apesar de
+legal, não é incrível"). Ela ordenava candidatos a partir do fix, nunca
+filtrava, e vinha com simulação para teste. O aprendizado que ficou: a regra
+"porta a menos de 35 m decide sozinha" foi derrubada pelo próprio teste, porque
+no meio do salão quase sempre há uma saída nesse raio e o app escolhia por conta
+própria um lugar onde o visitante não estava.
 
-`test-gps.mjs` cobre 8 cenários com a emulação de geolocalização do próprio
-navegador (não com o modo de simulação): fix na porta, fix no meio do salão,
-sinal fraco, fora do pavilhão, permissão negada, fix pendurado e a simulação
-se anunciando.
+### Paradas múltiplas e a melhor ordem
+
+Numa Bienal ninguém vai a um lugar só. O caso real é "quero passar na Companhia
+das Letras, na Intrínseca e depois no banheiro", e a ordem em que se faz isso
+muda bastante a distância andada. Então o percurso é uma **lista de até 8
+paradas**, não um par origem/destino: cada uma pode ser movida (↑ ↓), removida
+(×) ou trocada de lugar, e o comprimento de cada trecho aparece **entre** as
+duas paradas, que é onde a pergunta nasce.
+
+`Melhor ordem` reordena só as paradas do **meio**: origem e destino ficam
+presos, porque são as duas que o visitante escolheu por um motivo — de onde está
+e onde quer terminar. Trocá-las seria o app decidindo o passeio dele. A
+distância entre pares é a do **A\* sobre a malha, não a linha reta**: num
+pavilhão com fileiras de estandes duas coisas a 10 m uma da outra podem ficar a
+80 m de caminhada, e é a caminhada que dói no pé. Até 7 paradas do meio a busca
+é exaustiva (exata e instantânea); acima disso cai para 2-opt. No teste
+automatizado um roteiro de 4 paradas encolheu de **119 m para 57 m** só
+reordenando.
+
+No mapa, cada trecho é uma feature própria com cor alternada e setas ao longo do
+traçado: com várias paradas, um traço de cor única vira um emaranhado em que não
+se enxerga onde um pedaço acaba nem para que lado ir. O roteiro inteiro fica no
+`localStorage`, e no carregamento cada ponto lembrado é conferido contra a malha
+atual antes de voltar — a grade muda a cada build.
 
 ### Ruas e circulação
 
@@ -163,10 +178,6 @@ sh tools/build.sh --aceitar  # regrava a baseline (só quando a mudança for int
 cd web && npm install && npm run dev
 node test-shots.mjs <porta>  # screenshots do app real via Playwright
 node test-rota.mjs <porta>   # percurso na UI + carga de 300 pares de estandes
-node test-gps.mjs <porta>    # 8 cenários de GPS com emulação real do navegador
-
-# testar GPS à mão, sem estar no Anhembi: shift+clique larga um fix falso
-open 'http://localhost:5173/?gps=sim&erro=25'
 ```
 
 `tools/transcribe.py` gera a prova de conceito da transcrição
@@ -258,8 +269,7 @@ tools/calibra.py      mede a escala pelo módulo dos estandes
 tools/transcribe.py   prova de conceito PDF -> SVG -> PNG
 web/                  app MapLibre (Vite + TypeScript)
 web/src/rotas.ts      A* sobre a malha, snap e inversa da afim
-web/src/percurso.ts   escolha de origem/destino e camada opcional de GPS
-web/src/gps.ts        leitura de posição, com simulação para teste
+web/src/percurso.ts   lista de paradas, trechos e a melhor ordem
 reference/            PDF oficial e artefatos de comparação
 legacy/               app e geradores sintéticos anteriores (referência)
 ```

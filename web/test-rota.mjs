@@ -1,4 +1,4 @@
-// Teste da rota: um percurso real ponta a ponta no app, e depois carga.
+// Teste do percurso: um roteiro real ponta a ponta no app, e depois carga.
 // O A* roda no navegador, então o teste também precisa rodar lá — medir a
 // versão Python não diria nada sobre o que o visitante usa.
 //
@@ -18,37 +18,48 @@ const buscar = async (termo) => {
   await p.click("#searchResults > *:first-child");
   await p.waitForTimeout(1000);
 };
+const campo = (i) => p.textContent(`.rota-linha[data-i="${i}"] .rota-texto`).then((s) => s.trim());
+const total = () => p.textContent("#rotaTotal");
+const paradas = () => p.locator(".rota-linha").count();
+const clicaCampo = async (i) => {
+  await p.click(`.rota-linha[data-i="${i}"] .rota-campo`);
+  await p.waitForTimeout(300);
+};
 
 // 1. destino primeiro, origem assumida — o caminho comum
 await buscar("Companhia das Letras");
 console.log("ficha :", await p.textContent("#sheetTitle"), "|", await p.textContent("#sheetSub"));
 await p.click("#sheetRota");
 await p.waitForTimeout(1600);
-console.log("origem:", (await p.textContent("#rotaOrigem .rota-texto")).trim());
-console.log("rota  :", await p.textContent("#rotaResumo"));
+console.log("A→B   :", await campo(0), "->", await campo(1), "|", await total());
 await p.screenshot({ path: "shot-rota.png" });
 
 // 2. trocar a origem por busca: "estou no estande X"
-await p.click("#rotaOrigem");
-await p.waitForTimeout(300);
-console.log("dica  :", await p.textContent("#rotaResumo"));
+await clicaCampo(0);
 await buscar("Sextante");
 await p.waitForTimeout(1400);
-console.log("origem:", (await p.textContent("#rotaOrigem .rota-texto")).trim());
-console.log("rota  :", await p.textContent("#rotaResumo"));
-await p.screenshot({ path: "shot-percurso.png" });
+console.log("origem:", await campo(0), "|", await total());
 
-// 3. inverter
-const antes = await p.textContent("#rotaResumo");
-await p.click("#rotaTrocar");
-await p.waitForTimeout(1200);
-console.log(`trocar: ${antes} -> ${await p.textContent("#rotaResumo")}`);
+// 3. terceira parada pelo botão da ficha: o gesto de montar roteiro
+await buscar("Intrínseca");
+const rotulo = await p.textContent("#sheetRota");
+await p.click("#sheetRota");
+await p.waitForTimeout(1600);
+const tresParadas = await paradas();
+console.log(`anexa : botão "${rotulo}" -> ${tresParadas} paradas |`, await total());
+console.log("       ", await campo(0), "->", await campo(1), "->", await campo(2));
 
-// 3b. toque livre em corredor vira "Ponto no mapa" (o snap resolve o dedo
-// impreciso). Alvo escolhido pela própria malha e projetado para pixel, para
-// o teste não depender de eu adivinhar um vão na tela.
-await p.click("#rotaOrigem");
-await p.waitForTimeout(300);
+// 3b. cada trecho aparece entre as paradas, e a soma tem que fechar com o total
+const emendas = (await p.locator(".rota-emenda").allTextContents()).map((s) => parseInt(s, 10));
+const soma = emendas.reduce((a, c) => a + c, 0);
+const totalM = parseInt(await total(), 10);
+console.log(`trechos: ${emendas.join(" + ")} = ${soma} m (total ${totalM} m)`);
+
+// 4. quarta parada por toque livre no mapa: o snap resolve o dedo impreciso.
+// Alvo escolhido pela própria malha e projetado para pixel, para o teste não
+// depender de eu adivinhar um vão na tela.
+await p.click("#rotaAdd");
+await p.waitForTimeout(400);
 const alvo = await p.evaluate(async () => {
   const m = await (await fetch("/data/malha.json")).json();
   const { Rotas } = await import("/src/rotas.ts");
@@ -57,36 +68,55 @@ const alvo = await p.evaluate(async () => {
   for (let j = 0; j < m.h; j++) {
     for (let i = 0; i < m.w; i++) {
       // exige vizinhança toda livre: garante corredor, não borda de estande
-      if (![-2, 0, 2].every((a) => [-2, 0, 2].every((b) => R.livreEm(i + a, j + b)))) continue;
+      if (![-2, 0, 2].every((a) => [-2, 0, 2].every((c) => R.livreEm(i + a, j + c)))) continue;
       const pt = map.project(R.lngLat([i, j]));
-      if (pt.x > 120 && pt.x < 780 && pt.y > 120 && pt.y < 700) return [pt.x, pt.y];
+      if (pt.x > 120 && pt.x < 780 && pt.y > 120 && pt.y < 620) return [pt.x, pt.y];
     }
   }
   return null;
 });
 await p.mouse.click(alvo[0], alvo[1]);
-await p.waitForTimeout(1200);
-const porToque = (await p.textContent("#rotaOrigem .rota-texto")).trim();
-console.log("toque :", porToque, "|", await p.textContent("#rotaResumo"));
+await p.waitForTimeout(1400);
+const porToque = await campo(3);
+console.log("toque :", porToque, "|", await total(), `| ${await paradas()} paradas`);
+await p.screenshot({ path: "shot-percurso.png" });
 
-// 3c. e volta para um estande, que é a origem que o teste seguinte espera
-await p.click("#rotaOrigem");
-await p.waitForTimeout(300);
-await buscar("Companhia das Letras");
-await p.waitForTimeout(1200);
+// 5. melhor ordem: só aparece com 4+ paradas e nunca pode piorar o total
+const antesOrdem = parseInt(await total(), 10);
+const temBotao = await p.isVisible("#rotaOtimiza");
+await p.click("#rotaOtimiza");
+await p.waitForTimeout(1600);
+const depoisOrdem = parseInt(await total(), 10);
+console.log(
+  `ordem : ${antesOrdem} -> ${depoisOrdem} m | "${(await p.textContent("#rotaAviso")).trim()}"`,
+);
 
-// 4. a origem tem que sobreviver ao reload (visitante não redefine a cada
-// busca). Depois do passo 3 a origem lembrada é a Companhia das Letras, que
-// virou origem ao inverter o percurso.
+// 6. inverter mantém o total (o grafo é simétrico) e troca as pontas
+const pontaA = await campo(0);
+await p.click("#rotaInverte");
+await p.waitForTimeout(1400);
+const inverteu = (await campo((await paradas()) - 1)) === pontaA;
+const totalInv = parseInt(await total(), 10);
+console.log(`inverte: ponta trocada ${inverteu} | ${totalInv} m`);
+
+// 7. remover uma parada do meio encolhe a lista e o total
+const nAntes = await paradas();
+await p.click('.rota-linha[data-i="1"] button[data-acao="remove"]');
+await p.waitForTimeout(1200);
+const nDepois = await paradas();
+console.log(`remove : ${nAntes} -> ${nDepois} paradas |`, await total());
+
+// 8. o roteiro sobrevive ao reload (visitante não redefine a cada busca)
+const origemAntes = await campo(0);
 await p.reload({ waitUntil: "networkidle" });
 await p.waitForTimeout(2500);
-await buscar("Intrínseca");
+await buscar("Record");
 await p.click("#sheetRota");
 await p.waitForTimeout(1500);
-const lembrada = (await p.textContent("#rotaOrigem .rota-texto")).trim();
-console.log("lembra:", lembrada, "|", await p.textContent("#rotaResumo"));
+const lembrada = await campo(0);
+console.log(`lembra : "${origemAntes}" -> "${lembrada}"`);
 
-// 5. carga: rota entre pares de estandes quaisquer, que é o uso real agora
+// 9. carga: rota entre pares de estandes quaisquer, que é o uso real agora
 const r = await p.evaluate(async () => {
   const m = await (await fetch("/data/malha.json")).json();
   const { Rotas } = await import("/src/rotas.ts");
@@ -138,6 +168,20 @@ console.log(
     `máx ${r.max_m} m · ${r.curvas_medias} curvas · ${r.ms_por_par} ms/par · snap ${r.snap}`,
 );
 await b.close();
-const ok = porToque === "Ponto no mapa" && !r.falhas && !r.semPorta && r.snap && lembrada.includes("Companhia");
-if (!ok) console.log("FALHOU");
-process.exit(ok ? 0 : 1);
+
+const checa = [
+  ["anexa vira 3 paradas", tresParadas === 3],
+  ["rótulo do botão muda", rotulo === "Adicionar ao percurso"],
+  ["trechos somam o total", Math.abs(soma - totalM) <= emendas.length],
+  ["toque vira ponto no mapa", porToque === "Ponto no mapa"],
+  ["botão de ordem com 4 paradas", temBotao],
+  ["melhor ordem não piora", depoisOrdem <= antesOrdem],
+  ["inverter troca as pontas", inverteu],
+  ["inverter mantém o total", Math.abs(totalInv - depoisOrdem) <= 2],
+  ["remover encolhe a lista", nDepois === nAntes - 1],
+  ["roteiro lembrado", lembrada === origemAntes],
+  ["nenhum destino ilhado", !r.semPorta && !r.falhas && r.snap],
+];
+const maus = checa.filter(([, ok]) => !ok);
+for (const [nome] of maus) console.log("FALHOU:", nome);
+process.exit(maus.length ? 1 : 0);

@@ -1,23 +1,24 @@
 /**
- * Percurso: escolher origem e destino e ver a rota entre eles.
+ * Percurso: uma lista ordenada de paradas e o caminho que passa por todas.
  *
- * A regra do projeto é que o GPS não manda. O evento é indoor, sob telhado
- * metálico: o navegador devolve fixes com 10 a 50 m de erro, e o corredor
- * mais largo do pavilhão tem 7 m. Uma posição errada apontaria a direção
- * errada com toda a confiança do mundo — pior do que não ter posição.
+ * O evento é indoor, sob telhado metálico, e o navegador devolve fixes de 10 a
+ * 50 m num pavilhão cujo corredor mais largo tem 7 m. Posição errada aponta a
+ * direção errada com toda a confiança do mundo, então aqui o visitante APONTA
+ * onde está — por busca (o código do estande é a placa que ele tem diante dos
+ * olhos) ou por toque no mapa. Não há GPS neste arquivo, de propósito.
  *
- * Então o visitante APONTA onde está (busca ou toque no mapa) e o GPS entra
- * só como camada opcional, e mesmo assim para ORDENAR candidatos, nunca para
- * filtrar. O motivo de ordenar em vez de filtrar é o defeito nº 4: a âncora
- * do desenho dentro do prédio ainda é palpite com ~30 m de folga em x e ~75 m
- * em y. Um raio desenhado a partir do GPS sairia descentrado por mais do que
- * o próprio erro do sensor e poderia excluir justamente o estande certo.
- * Ordenando, o erro de âncora piora a ordem da lista e nunca esconde a
- * resposta.
+ * O ganho estrutural disso é grande: com todos os pontos escolhidos sobre o
+ * desenho, o erro de georreferência do desenho dentro do prédio (defeitos 4 e
+ * 8) se cancela. A rota é exata mesmo com a âncora errada, porque origem,
+ * paradas e destino vivem no mesmo sistema de coordenadas do traçado.
+ *
+ * Por que lista e não par origem/destino: numa Bienal ninguém vai a um lugar
+ * só. O caso real é "quero passar na Companhia das Letras, na Intrínseca e
+ * depois no banheiro" — e a ordem em que se faz isso muda bastante a distância
+ * andada. Daí `otimizar()`.
  */
 
 import type { Rotas } from "./rotas";
-import { posicao, simulando } from "./gps";
 
 export interface Ponto {
   rotulo: string;
@@ -26,80 +27,60 @@ export interface Ponto {
 
 export interface Contexto {
   rotas: Rotas;
-  /** traçado da rota (null limpa) */
-  desenhaRota(cels: [number, number][] | null): void;
-  /** marcadores de origem e destino */
-  desenhaPontos(origem: Ponto | null, destino: Ponto | null): void;
-  /** círculo de incerteza do GPS, em metros (null limpa) */
-  desenhaIncerteza(cel: [number, number] | null, raio: number): void;
+  /** um traçado por trecho entre paradas consecutivas */
+  desenhaRota(trechos: [number, number][][]): void;
+  /** marcadores das paradas, na ordem (posições vazias entram como null) */
+  desenhaPontos(paradas: (Ponto | null)[]): void;
   enquadra(cels: [number, number][]): void;
-  /**
-   * Locais roteáveis dentro de um raio, ordenados por distância.
-   *
-   * O raio vem do `accuracy` do fix, então a lista encolhe quando o sinal é
-   * bom e cresce quando é ruim — que é a informação honesta a dar. `min`
-   * garante que uma leitura muito precisa ainda ofereça alternativa, e `max`
-   * impede a lista de virar o índice inteiro.
-   */
-  candidatos(cel: [number, number], raio: number, min: number, max: number): Ponto[];
-  /** avisa o app que o próximo toque/busca preenche este campo */
-  aoEscolher(campo: Campo | null): void;
+  /** avisa o app que o próximo toque/busca preenche esta parada */
+  aoEscolher(indice: number | null): void;
 }
 
-export type Campo = "origem" | "destino";
-
-const LEMBRETE = "bienal.origem";
-/** fix pendurado é o desfecho mais comum indoor; não dá para travar a tela */
-const ESPERA_MS = 6000;
+const LEMBRETE = "bienal.percurso";
 /**
- * Precisão a partir da qual não vale seguir esperando: metade da menor rua do
- * mapa (LARG_MIN = 2 m) seria fantasia indoor, então o critério é o vão entre
- * fileiras — com ±12 m o círculo já cabe em poucas fileiras e a lista é curta.
+ * Teto de paradas. Não é limite técnico — `otimizar()` aguenta mais — é limite
+ * de tela e de utilidade: um roteiro de dez pontos numa feira lotada não
+ * sobrevive ao primeiro imprevisto.
  */
-const BOM_M = 12;
-/** quanto esperar por um fix melhor depois que o primeiro chegou */
-const ASSENTA_MS = 1500;
-/** a lista de candidatos precisa caber na tela e ainda dar escolha */
-const MIN_OPCOES = 3;
-const MAX_OPCOES = 12;
+const MAX_PARADAS = 8;
+/** acima disto a busca exaustiva da melhor ordem sai cara; abaixo é instantânea */
+const EXAUSTIVO_ATE = 7;
+/** passo de gente andando em feira cheia, olhando para os lados: ~1,25 m/s */
+const M_POR_MIN = 75;
+
+type Trecho = { cels: [number, number][]; metros: number } | null;
 
 export class Percurso {
   private ctx: Contexto;
   private el: HTMLElement;
-  private origem: Ponto | null = null;
-  private destino: Ponto | null = null;
-  private campo: Campo | null = null;
-  /** motivo de estar pedindo a origem — some assim que ela é definida */
-  private aviso: string | null = null;
+  /** sempre com pelo menos duas posições; `null` é posição ainda não escolhida */
+  private paradas: (Ponto | null)[] = [null, null];
+  private escolha: number | null = null;
 
   constructor(ctx: Contexto) {
     this.ctx = ctx;
     this.el = document.createElement("div");
     this.el.id = "rota";
     this.el.innerHTML = `
-      <div id="rotaLinhas">
-        <button id="rotaOrigem" class="rota-campo" type="button">
-          <span class="rota-marca rota-marca-a">A</span><span class="rota-texto"></span>
-        </button>
-        <button id="rotaDestino" class="rota-campo" type="button">
-          <span class="rota-marca rota-marca-b">B</span><span class="rota-texto"></span>
-        </button>
-        <button id="rotaTrocar" class="rota-icone" type="button" aria-label="Inverter">⇅</button>
+      <div id="rotaCab">
+        <div id="rotaTitulo">Seu percurso</div>
+        <div id="rotaTotal"></div>
       </div>
-      <div id="rotaResumo"></div>
-      <div id="rotaLista" hidden></div>
+      <div id="rotaParadas"></div>
+      <div id="rotaAviso"></div>
       <div id="rotaBarra">
-        <button id="rotaGps" type="button">Usar minha posição</button>
+        <button id="rotaAdd" type="button">+ Parada</button>
+        <button id="rotaOtimiza" type="button">Melhor ordem</button>
+        <button id="rotaInverte" type="button" aria-label="Inverter a ordem">⇅</button>
         <button id="rotaFechar" type="button">Fechar</button>
       </div>`;
     document.body.appendChild(this.el);
 
-    this.$("rotaOrigem").addEventListener("click", () => this.escolher("origem"));
-    this.$("rotaDestino").addEventListener("click", () => this.escolher("destino"));
-    this.$("rotaTrocar").addEventListener("click", () => this.trocar());
-    if (simulando()) this.$("rotaGps").textContent = "Usar posição simulada";
-    this.$("rotaGps").addEventListener("click", () => void this.usarGps());
+    this.$("rotaAdd").addEventListener("click", () => this.adicionar());
+    this.$("rotaOtimiza").addEventListener("click", () => this.otimizar());
+    this.$("rotaInverte").addEventListener("click", () => this.inverter());
     this.$("rotaFechar").addEventListener("click", () => this.fechar());
+    this.$("rotaParadas").addEventListener("click", (e) => this.clique(e));
   }
 
   private $(id: string): HTMLElement {
@@ -110,217 +91,286 @@ export class Percurso {
     return this.el.classList.contains("open");
   }
 
-  get escolhendo(): Campo | null {
-    return this.campo;
+  /** índice da parada em escolha; `null` quando nenhum campo espera um toque */
+  get escolhendo(): number | null {
+    return this.escolha;
   }
 
+  /** quantas paradas já têm lugar definido */
+  get preenchidas(): number {
+    return this.paradas.filter(Boolean).length;
+  }
+
+  // ------------------------------------------------------------ ciclo de vida
+
   /**
-   * Abre o percurso já com o destino escolhido — é o caminho comum: a pessoa
-   * procurou uma editora e quer saber como chegar. A origem vem da última
-   * usada; se não houver, da porta mais próxima do destino. Nos dois casos
-   * fica escrita na tela e trocável, para nunca rotear de um lugar que o
-   * visitante não escolheu sem ele perceber.
+   * Entrada pelo botão da ficha de um lugar.
+   *
+   * Fechado, monta o par comum: destino escolhido e origem pré-preenchida com
+   * a última usada ou a porta mais próxima — sempre escrita na tela, para o
+   * app nunca rotear de um lugar que o visitante não escolheu sem perceber.
+   *
+   * Já aberto, o lugar entra como nova parada FINAL. É o gesto natural de
+   * quem monta roteiro: procura, adiciona, procura de novo. O que era destino
+   * vira parada do meio sozinho.
    */
-  abrir(destino: Ponto): void {
-    this.destino = destino;
-    this.campo = null;
-    this.ctx.aoEscolher(null);
-    this.ctx.desenhaIncerteza(null, 0);
-    this.esconderLista();
-    if (!this.origem) this.origem = this.lembrada() ?? this.portaPara(destino);
-    this.el.classList.add("open");
-    this.atualiza();
+  abrir(p: Ponto): void {
+    if (this.aberto && this.preenchidas >= 2) {
+      this.anexar(p);
+      return;
+    }
+    if (this.paradas.length === 2 && !this.paradas[1]) {
+      this.paradas[1] = p;
+      if (!this.paradas[0]) this.paradas[0] = this.lembrada() ?? this.portaPara(p);
+      this.escolha = null;
+      this.ctx.aoEscolher(null);
+      this.el.classList.add("open");
+      this.atualiza();
+    } else {
+      this.anexar(p);
+    }
   }
 
   fechar(): void {
     this.el.classList.remove("open");
-    this.campo = null;
-    this.destino = null;
+    this.escolha = null;
     this.ctx.aoEscolher(null);
-    this.ctx.desenhaRota(null);
-    this.ctx.desenhaPontos(null, null);
-    this.ctx.desenhaIncerteza(null, 0);
-    this.esconderLista();
+    this.ctx.desenhaRota([]);
+    this.ctx.desenhaPontos([]);
   }
 
-  escolher(campo: Campo, aviso: string | null = null): void {
-    this.aviso = aviso;
-    this.campo = this.campo === campo ? null : campo;
-    this.ctx.aoEscolher(this.campo);
-    this.esconderLista();
-    this.atualiza();
-  }
-
-  /** preenche o campo em escolha (ou o indicado) e recalcula */
-  define(ponto: Ponto, campo: Campo | null = null): void {
-    const alvo = campo ?? this.campo ?? "destino";
-    if (alvo === "origem") {
-      this.origem = ponto;
-      this.lembra(ponto);
-    } else {
-      this.destino = ponto;
+  /** preenche a parada em escolha (ou a primeira vaga) e recalcula */
+  define(p: Ponto): void {
+    const i = this.escolha ?? this.paradas.findIndex((x) => !x);
+    if (i < 0) {
+      this.anexar(p);
+      return;
     }
-    this.campo = null;
-    this.aviso = null;
+    this.paradas[i] = p;
+    this.escolha = null;
     this.ctx.aoEscolher(null);
-    this.esconderLista();
     if (!this.aberto) this.el.classList.add("open");
     this.atualiza();
   }
 
-  private trocar(): void {
-    const a = this.origem;
-    this.origem = this.destino;
-    this.destino = a;
-    if (this.origem) this.lembra(this.origem);
-    this.esconderLista();
+  // --------------------------------------------------------------- comandos
+
+  private anexar(p: Ponto): void {
+    if (this.paradas.length >= MAX_PARADAS) {
+      // substituir o fim é menos ruim que ignorar o toque em silêncio
+      this.paradas[this.paradas.length - 1] = p;
+    } else {
+      this.paradas.push(p);
+    }
+    this.escolha = null;
+    this.ctx.aoEscolher(null);
+    if (!this.aberto) this.el.classList.add("open");
     this.atualiza();
   }
 
+  private adicionar(): void {
+    if (this.paradas.length >= MAX_PARADAS) return;
+    this.paradas.push(null);
+    this.escolher(this.paradas.length - 1);
+  }
+
+  private escolher(i: number): void {
+    this.escolha = this.escolha === i ? null : i;
+    this.ctx.aoEscolher(this.escolha);
+    this.atualiza();
+  }
+
+  private remover(i: number): void {
+    if (this.paradas.length > 2) this.paradas.splice(i, 1);
+    else this.paradas[i] = null;
+    if (this.escolha !== null && this.escolha >= this.paradas.length) this.escolha = null;
+    else if (this.escolha === i) this.escolha = null;
+    this.ctx.aoEscolher(this.escolha);
+    this.atualiza();
+  }
+
+  private mover(i: number, passo: number): void {
+    const j = i + passo;
+    if (j < 0 || j >= this.paradas.length) return;
+    const t = this.paradas[i];
+    this.paradas[i] = this.paradas[j];
+    this.paradas[j] = t;
+    this.escolha = null;
+    this.ctx.aoEscolher(null);
+    this.atualiza();
+  }
+
+  private inverter(): void {
+    this.paradas.reverse();
+    this.escolha = null;
+    this.ctx.aoEscolher(null);
+    this.atualiza();
+  }
+
+  /**
+   * Reordena as paradas do meio para andar menos, com origem e destino presos.
+   *
+   * Presos porque são as duas que o visitante escolheu por um motivo: de onde
+   * está e onde quer terminar. Trocá-las seria o app decidindo o passeio dele.
+   *
+   * A distância entre pares é a do A* sobre a malha, não a linha reta: num
+   * pavilhão com fileiras de estandes duas coisas a 10 m uma da outra podem
+   * ficar a 80 m de caminhada, e é a caminhada que dói no pé.
+   */
+  private otimizar(): void {
+    const pts = this.paradas;
+    if (pts.length < 4 || pts.some((p) => !p)) return;
+    const cheio = pts as Ponto[];
+    const n = cheio.length;
+
+    const d: number[][] = Array.from({ length: n }, () => new Array<number>(n).fill(Infinity));
+    for (let i = 0; i < n; i++) {
+      d[i][i] = 0;
+      for (let j = i + 1; j < n; j++) {
+        const r = this.ctx.rotas.rota(cheio[i].cel, cheio[j].cel);
+        d[i][j] = d[j][i] = r ? r.metros : Infinity;
+      }
+    }
+
+    const meio = Array.from({ length: n - 2 }, (_, k) => k + 1);
+    const custo = (ordem: number[]): number => {
+      let t = 0;
+      let a = 0;
+      for (const b of ordem) {
+        t += d[a][b];
+        a = b;
+      }
+      return t + d[a][n - 1];
+    };
+
+    const melhor = meio.length <= EXAUSTIVO_ATE ? exaustivo(meio, custo) : doisOpt(meio, custo);
+    const antes = custo(meio);
+    const depois = custo(melhor);
+    if (!(depois < antes - 0.5)) {
+      this.avisa("Esta já é a melhor ordem");
+      return;
+    }
+    this.paradas = [cheio[0], ...melhor.map((k) => cheio[k]), cheio[n - 1]];
+    this.atualiza();
+    this.avisa(`Ordem trocada: ${Math.round(antes - depois)} m a menos`);
+  }
+
+  // ----------------------------------------------------------------- eventos
+
+  private clique(e: Event): void {
+    const b = (e.target as HTMLElement).closest<HTMLElement>("button[data-acao]");
+    if (!b) return;
+    const linha = b.closest<HTMLElement>("[data-i]");
+    if (!linha) return;
+    const i = Number(linha.dataset.i);
+    const acao = b.dataset.acao;
+    if (acao === "escolher") this.escolher(i);
+    else if (acao === "remove") this.remover(i);
+    else if (acao === "sobe") this.mover(i, -1);
+    else if (acao === "desce") this.mover(i, 1);
+  }
+
+  // ------------------------------------------------------------------ desenho
+
   private atualiza(): void {
-    const texto = (id: string, p: Ponto | null, vazio: string) => {
-      const b = this.$(id);
-      (b.querySelector(".rota-texto") as HTMLElement).textContent = p ? p.rotulo : vazio;
-      b.classList.toggle("vazio", !p);
-      b.classList.toggle("ativo", this.campo === (id === "rotaOrigem" ? "origem" : "destino"));
-    };
-    texto("rotaOrigem", this.origem, "Onde você está?");
-    texto("rotaDestino", this.destino, "Para onde vai?");
-    this.ctx.desenhaPontos(this.origem, this.destino);
-
-    const resumo = this.$("rotaResumo");
-    if (this.campo) {
-      const dica =
-        this.campo === "origem"
-          ? "busque ou toque no mapa onde você está"
-          : "busque ou toque no mapa aonde quer ir";
-      resumo.textContent = this.aviso
-        ? `${this.aviso} — ${dica}`
-        : dica[0].toUpperCase() + dica.slice(1);
-      this.ctx.desenhaRota(null);
-      return;
-    }
-    if (!this.origem || !this.destino) {
-      resumo.textContent = "";
-      this.ctx.desenhaRota(null);
-      return;
-    }
-    const r = this.ctx.rotas.rota(this.origem.cel, this.destino.cel);
-    if (!r) {
-      resumo.textContent = "Sem caminho entre esses dois pontos";
-      this.ctx.desenhaRota(null);
-      return;
-    }
-    // ~1,25 m/s é passo de gente andando em feira cheia, olhando para os lados
-    const min = Math.max(1, Math.round(r.metros / 75));
-    resumo.textContent = `${Math.round(r.metros)} m · cerca de ${min} min a pé`;
-    this.ctx.desenhaRota(r.cels);
-    this.ctx.enquadra(r.cels);
-  }
-
-  // ---- GPS: opcional, degradável, nunca fonte de verdade ----
-
-  private async usarGps(): Promise<void> {
-    const resumo = this.$("rotaResumo");
-    resumo.textContent = simulando() ? "Lendo posição simulada…" : "Procurando sinal…";
-    const fix = await posicao(ESPERA_MS, BOM_M, ASSENTA_MS);
-
-    if (typeof fix === "string") {
-      // negado, indisponível e pendurado terminam igual: o visitante aponta.
-      // Distinguir só serve para a mensagem não mentir sobre a causa.
-      const motivo = {
-        negado: "Sem permissão de localização",
-        indisponivel: "Este navegador não dá acesso à localização",
-        demorou: "Sem sinal de GPS aqui dentro",
-      }[fix];
-      this.escolher("origem", motivo);
-      return;
+    const n = this.paradas.length;
+    const trechos: Trecho[] = [];
+    for (let i = 0; i + 1 < n; i++) {
+      const a = this.paradas[i];
+      const b = this.paradas[i + 1];
+      trechos.push(a && b ? this.ctx.rotas.rota(a.cel, b.cel) : null);
     }
 
-    const marca = fix.simulado ? " · simulado" : "";
-    const { rotas } = this.ctx;
-    // Um círculo maior que metade do menor lado do salão cobre boa parte das
-    // fileiras: ordenar por ele não diria nada. O limite sai da própria malha
-    // em vez de ser um número escolhido por mim.
-    const limite = Math.min(...rotas.extensao()) / 2;
-    if (fix.erro > limite) {
-      this.escolher("origem", `Sinal fraco (± ${Math.round(fix.erro)} m${marca})`);
-      return;
-    }
-
-    const cel = rotas.celula(fix.lng, fix.lat);
-    // o alcance da busca por chão caminhável também sai do fix: com ±10 m não
-    // faz sentido varrer 50 m, e com ±80 m varrer 50 m descartaria o certo
-    if (!rotas.maisProximaLivre(fix.lng, fix.lat, Math.max(fix.erro, 15))) {
-      this.escolher("origem", `Você parece estar fora do pavilhão${marca}`);
-      return;
-    }
-
-    // Único caso em que o GPS decide sozinho: a porta é a coisa mais próxima
-    // do fix. É onde o sensor é confiável (portão é área aberta, com céu à
-    // vista) e onde a resposta é óbvia (quem acabou de entrar está na porta).
-    // Bastar "porta a menos de 35 m" não serve: no meio do salão quase sempre
-    // há uma saída nesse raio, e o app escolheria por conta própria um lugar
-    // onde o visitante não está.
-    const perto = this.ctx.candidatos(cel, fix.erro, MIN_OPCOES, MAX_OPCOES);
-    const dPerto = perto.length ? rotas.distancia(perto[0].cel, cel) : Infinity;
-    const porta = rotas
-      .portas()
-      .map((p) => ({ ...p, d: rotas.distancia(p.cel, cel) }))
-      .sort((a, b) => a.d - b.d)[0];
-    if (porta && porta.d <= Math.max(fix.erro, BOM_M) && porta.d <= dPerto) {
-      this.ctx.desenhaIncerteza(null, 0);
-      this.define({ rotulo: porta.nome, cel: porta.cel }, "origem");
-      resumo.textContent =
-        `${resumo.textContent} · origem pelo GPS${marca} (± ${Math.round(fix.erro)} m)`;
-      return;
-    }
-
-    // longe de porta: o GPS não escolhe, só ordena. O círculo é honesto sobre
-    // o tamanho da dúvida e a lista continua rolável até o fim do índice.
-    this.ctx.desenhaIncerteza(cel, fix.erro);
-    resumo.textContent =
-      `Você está por aqui (± ${Math.round(fix.erro)} m${marca}). Qual destes está mais perto de você?`;
-    const lista = this.$("rotaLista");
-    lista.hidden = false;
-    lista.innerHTML = perto
-      .map(
-        (p, i) =>
-          `<button class="rota-op" data-i="${i}">${escapa(p.rotulo)}<span>${Math.round(
-            rotas.distancia(p.cel, cel),
-          )} m</span></button>`,
-      )
+    this.$("rotaParadas").innerHTML = this.paradas
+      .map((p, i) => this.linha(p, i, n, i > 0 ? trechos[i - 1] : undefined))
       .join("");
-    lista.onclick = (e) => {
-      const b = (e.target as HTMLElement).closest<HTMLElement>(".rota-op");
-      if (!b) return;
-      this.ctx.desenhaIncerteza(null, 0);
-      this.define(perto[Number(b.dataset.i)], "origem");
-    };
+
+    this.ctx.desenhaPontos(this.paradas);
+    this.$("rotaAdd").toggleAttribute("disabled", n >= MAX_PARADAS);
+    this.$("rotaOtimiza").hidden = n < 4;
+
+    const feitos = trechos.filter((t): t is NonNullable<Trecho> => !!t);
+    this.ctx.desenhaRota(feitos.map((t) => t.cels));
+
+    const total = this.$("rotaTotal");
+    if (!this.paradas.every(Boolean)) {
+      total.textContent = "";
+      this.dica();
+      return;
+    }
+    if (feitos.length < trechos.length) {
+      total.textContent = "";
+      this.avisa("Não há caminho entre duas das paradas");
+      return;
+    }
+    const metros = feitos.reduce((s, t) => s + t.metros, 0);
+    total.textContent =
+      `${Math.round(metros)} m · ${Math.max(1, Math.round(metros / M_POR_MIN))} min a pé`;
+    this.avisa("");
+    this.lembra();
+    this.ctx.enquadra(feitos.flatMap((t) => t.cels));
   }
 
-  private esconderLista(): void {
-    const lista = this.$("rotaLista");
-    lista.hidden = true;
-    lista.innerHTML = "";
+  private linha(p: Ponto | null, i: number, n: number, antes?: Trecho): string {
+    // o comprimento do trecho anterior fica ENTRE as duas paradas, que é onde
+    // a pergunta nasce: "quanto tem daqui até a próxima?"
+    const emenda =
+      i > 0
+        ? `<div class="rota-emenda">${antes ? `${Math.round(antes.metros)} m` : "—"}</div>`
+        : "";
+    const papel = i === 0 ? "origem" : i === n - 1 ? "destino" : "parada";
+    const vazio = i === 0 ? "Onde você está?" : i === n - 1 ? "Para onde vai?" : "Passar por…";
+    const classe = `rota-campo${p ? "" : " vazio"}${this.escolha === i ? " ativo" : ""}`;
+    return `${emenda}
+      <div class="rota-linha" data-i="${i}">
+        <button class="${classe}" type="button" data-acao="escolher">
+          <span class="rota-marca rota-marca-${papel}">${letra(i)}</span>
+          <span class="rota-texto">${escapa(p ? p.rotulo : vazio)}</span>
+        </button>
+        <div class="rota-acoes">
+          <button type="button" data-acao="sobe" aria-label="Subir" ${i === 0 ? "disabled" : ""}>↑</button>
+          <button type="button" data-acao="desce" aria-label="Descer" ${i === n - 1 ? "disabled" : ""}>↓</button>
+          <button type="button" data-acao="remove" aria-label="Remover">×</button>
+        </div>
+      </div>`;
   }
 
-  // ---- origem lembrada ----
+  private dica(): void {
+    if (this.escolha === null) {
+      this.avisa("Toque num campo para escolher o lugar");
+      return;
+    }
+    const n = this.paradas.length;
+    this.avisa(
+      this.escolha === 0
+        ? "Busque ou toque no mapa onde você está"
+        : this.escolha === n - 1
+          ? "Busque ou toque no mapa aonde quer ir"
+          : "Busque ou toque no mapa por onde quer passar",
+    );
+  }
 
-  private lembra(p: Ponto): void {
+  private avisa(texto: string): void {
+    this.$("rotaAviso").textContent = texto;
+  }
+
+  // ------------------------------------------------------- roteiro lembrado
+
+  private lembra(): void {
     try {
-      localStorage.setItem(LEMBRETE, JSON.stringify(p));
+      localStorage.setItem(LEMBRETE, JSON.stringify(this.paradas));
     } catch {
       /* modo privado: seguir sem lembrar é aceitável */
     }
   }
 
-  /** só devolve se a célula ainda for livre — a malha muda a cada build */
+  /** só devolve o que ainda existe: a malha muda a cada build */
   private lembrada(): Ponto | null {
     try {
       const cru = localStorage.getItem(LEMBRETE);
       if (!cru) return null;
-      const p = JSON.parse(cru) as Ponto;
+      const ps = JSON.parse(cru) as (Ponto | null)[];
+      const p = ps?.[0];
       if (!p?.cel || !this.ctx.rotas.livreEm(p.cel[0], p.cel[1])) return null;
       return p;
     } catch {
@@ -332,6 +382,59 @@ export class Percurso {
     const r = this.ctx.rotas.daPortaMaisProxima(destino.cel);
     return r ? { rotulo: r.porta, cel: r.cel } : null;
   }
+}
+
+// --------------------------------------------------------------- utilitários
+
+function letra(i: number): string {
+  return String.fromCharCode(65 + (i % 26));
+}
+
+/** todas as permutações: exato, e para até 7 paradas do meio é instantâneo */
+function exaustivo(base: number[], custo: (o: number[]) => number): number[] {
+  let melhor = base;
+  let menor = custo(base);
+  const perm = (resto: number[], atual: number[]): void => {
+    if (!resto.length) {
+      const c = custo(atual);
+      if (c < menor) {
+        menor = c;
+        melhor = atual;
+      }
+      return;
+    }
+    for (let k = 0; k < resto.length; k++) {
+      perm([...resto.slice(0, k), ...resto.slice(k + 1)], [...atual, resto[k]]);
+    }
+  };
+  perm(base, []);
+  return melhor;
+}
+
+/** inversão de trechos até não melhorar mais: aproximado, para listas grandes */
+function doisOpt(base: number[], custo: (o: number[]) => number): number[] {
+  let melhor = [...base];
+  let menor = custo(melhor);
+  let mudou = true;
+  while (mudou) {
+    mudou = false;
+    for (let i = 0; i < melhor.length - 1; i++) {
+      for (let j = i + 1; j < melhor.length; j++) {
+        const alt = [
+          ...melhor.slice(0, i),
+          ...melhor.slice(i, j + 1).reverse(),
+          ...melhor.slice(j + 1),
+        ];
+        const c = custo(alt);
+        if (c < menor - 1e-9) {
+          melhor = alt;
+          menor = c;
+          mudou = true;
+        }
+      }
+    }
+  }
+  return melhor;
 }
 
 function escapa(s: string): string {

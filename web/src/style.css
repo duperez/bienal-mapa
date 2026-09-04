@@ -137,7 +137,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 12;
+  z-index: 14;
   background: var(--surface);
   border-radius: 16px 16px 0 0;
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.25);
@@ -188,7 +188,7 @@ body {
   display: none;
 }
 
-/* ---- percurso (origem -> destino) ---- */
+/* ---- percurso: lista de paradas ---- */
 #rota {
   position: fixed;
   left: 0;
@@ -198,7 +198,7 @@ body {
   background: var(--surface);
   border-radius: 16px 16px 0 0;
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.25);
-  padding: 14px 16px calc(env(safe-area-inset-bottom) + 14px);
+  padding: 12px 16px calc(env(safe-area-inset-bottom) + 12px);
   transform: translateY(105%);
   transition: transform 0.22s ease;
 }
@@ -207,20 +207,52 @@ body {
   transform: none;
 }
 
-#rotaLinhas {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
-  gap: 6px 8px;
+/* com a ficha de um lugar aberta, o percurso sai de cena em vez de brigar
+   pela mesma borda: os dois voltam juntos quando a ficha fecha */
+body.ficha #rota.open {
+  transform: translateY(105%);
+}
+
+#rotaCab {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+#rotaTitulo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+#rotaTotal {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a73e8;
+  white-space: nowrap;
+}
+
+/* a lista rola: com 8 paradas ela passa da metade da tela de um celular */
+#rotaParadas {
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.rota-linha {
+  display: flex;
   align-items: center;
+  gap: 6px;
 }
 
 .rota-campo {
   display: flex;
+  flex: 1;
   align-items: center;
   gap: 10px;
-  width: 100%;
-  padding: 10px 12px;
+  min-width: 0;
+  padding: 9px 12px;
   border: 1px solid var(--divider);
   border-radius: 10px;
   background: #fafaf8;
@@ -260,61 +292,56 @@ body {
   text-align: center;
 }
 
-.rota-marca-a {
+/* mesmas três cores dos marcadores no mapa: a ponte entre a lista e o
+   desenho é a cor, não a leitura do rótulo */
+.rota-marca-origem {
   background: #1a73e8;
 }
 
-.rota-marca-b {
+.rota-marca-parada {
+  background: #f29900;
+}
+
+.rota-marca-destino {
   background: #d93025;
 }
 
-.rota-icone {
-  grid-row: 1 / 3;
-  grid-column: 2;
-  width: 40px;
-  height: 40px;
+.rota-acoes {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+.rota-acoes button {
+  width: 30px;
+  height: 34px;
   border: 0;
-  border-radius: 50%;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-2);
-  font-size: 20px;
-  cursor: pointer;
-}
-
-#rotaResumo:not(:empty) {
-  margin-top: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-1);
-}
-
-#rotaLista {
-  margin-top: 10px;
-  max-height: 40vh;
-  overflow-y: auto;
-  border-top: 1px solid var(--divider);
-}
-
-.rota-op {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 4px;
-  border: 0;
-  border-bottom: 1px solid var(--divider);
-  background: none;
-  font: inherit;
   font-size: 15px;
-  color: var(--text-1);
-  text-align: left;
   cursor: pointer;
 }
 
-.rota-op span {
-  flex: none;
+.rota-acoes button[disabled] {
+  opacity: 0.25;
+  cursor: default;
+}
+
+/* os metros do trecho ficam ENTRE as duas paradas, alinhados com a coluna das
+   marcas, de modo que a lista se leia como um itinerário e não como um form */
+.rota-emenda {
+  padding: 3px 0 3px 22px;
+  border-left: 2px dotted var(--divider);
+  margin-left: 22px;
+  font-size: 12px;
   color: var(--text-2);
+}
+
+#rotaAviso:not(:empty) {
+  margin-top: 8px;
   font-size: 13px;
+  color: var(--text-2);
 }
 
 #rotaBarra {
@@ -336,28 +363,16 @@ body {
   cursor: pointer;
 }
 
-#rotaGps {
-  border-color: #1a73e8 !important;
-  color: #1a73e8;
+#rotaBarra button[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#rotaInverte {
+  flex: 0 0 44px;
 }
 
 /* mira no cursor durante a escolha, para o toque no mapa parecer intencional */
 body.escolhendo .maplibregl-canvas {
   cursor: crosshair;
-}
-
-/* aviso da simulação de posição: precisa ser impossível de confundir com o
-   app normal, senão um fix falso passa por verdadeiro */
-#avisoSim {
-  position: fixed;
-  left: 12px;
-  top: calc(env(safe-area-inset-top) + 14px);
-  z-index: 20;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: #9334e6;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  pointer-events: none;
 }
