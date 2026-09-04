@@ -22,7 +22,8 @@ from shapely.ops import unary_union
 
 PDF = "reference/mapa-oficial.pdf"
 VENUE = "data/venue.geojson"
-STRUCT = "data/structure.json"
+# camada semântica: nome do expositor por código. A geometria não depende dela.
+EXPOSITORES = "data/expositores.json"
 OUT = "web/public/data/mapa.geojson"
 
 # Janela de LEITURA do PDF: separa a planta do cabeçalho e do rodapé.
@@ -282,6 +283,40 @@ def rotulos(page, box, m_per_pt, por_linha=False):
                     "size": sp["size"] * m_per_pt,
                 })
     return out
+
+
+def junta_quebrados(labels):
+    """Códigos que o PDF quebrou em duas linhas voltam a ser um.
+
+    As células do miolo têm 9 m2 e o código não cabe: o PDF escreve `K40` como
+    `K4` numa linha e `0` na de baixo, em blocos de texto diferentes. Lendo span
+    a span, o `0` era descartado (não casa com CODE_RE) e o `K4` virava um
+    código que não existe — duas formas ficaram ambas com `K4` e o `K40` e o
+    `K42` reais sumiram do mapa.
+
+    A emenda só acontece quando o pedaço de baixo fica embaixo mesmo: dentro da
+    faixa horizontal do de cima, encostado nele na vertical, e o resultado tem
+    que casar com CODE_RE. Se não casar, nada é emendado — o pedaço solto
+    continua solto, e o estande fica sem código, que é o comportamento honesto.
+    """
+    fim = [l for l in labels if CODE_RE.fullmatch(l["txt"])]
+    soltos = [l for l in labels if re.fullmatch(r"\d{1,2}", l["txt"])]
+    for cabeca in fim:
+        alt = cabeca.get("size", 1.0)
+        for cauda in soltos:
+            if cauda.get("emendado"):
+                continue
+            dy = cauda["y"] - cabeca["y"]
+            # embaixo, a menos de uma altura de linha, e alinhado na horizontal
+            if not (0 < dy <= alt * 1.2) or abs(cauda["x"] - cabeca["x"]) > alt:
+                continue
+            junto = cabeca["txt"] + cauda["txt"]
+            if not CODE_RE.fullmatch(junto):
+                continue
+            cabeca["txt"] = junto
+            cauda["emendado"] = True
+            break
+    return fim
 
 
 # ------------------------------------------------------------ georreferência
@@ -634,7 +669,7 @@ def main():
     formas, m_per_pt = extrair(page, box)
     labels = rotulos(page, box, m_per_pt)
     linhas_txt = rotulos(page, box, m_per_pt, por_linha=True)
-    codigos = [l for l in labels if CODE_RE.fullmatch(l["txt"])]
+    codigos = junta_quebrados(labels)
     # o corte de tamanho separa rótulo de planta de miudeza de desenho. Estava
     # em 1,0 m e derrubava a faixa de 0,97 m inteira — que não é miudeza: são
     # AUDITÓRIO, ESPAÇO EDUCAÇÃO, ESPAÇO BEM-ESTAR, PAPO DE MERCADO, PODCAST,
@@ -650,7 +685,7 @@ def main():
     def na_legenda(r):
         return all(lx0 <= x <= lx1 and ly0 <= y <= ly1 for x, y in r)
 
-    directory = json.load(open(STRUCT)).get("directory", {})
+    directory = json.load(open(EXPOSITORES)).get("expositores", {})
 
     para_predio, _ = assentamento(formas, box, m_per_pt)
     base = georef()
@@ -768,7 +803,7 @@ def main():
     # O PDF não imprime TL01..TL48 nas cabines. A ordem de leitura é uma
     # suposição, marcada como tal — se estiver errada, troca o rótulo, não o
     # desenho. É a diferença entre metadado errado e mapa errado.
-    travessa = json.load(open(STRUCT)).get("travessa", {})
+    travessa = json.load(open(EXPOSITORES)).get("travessa", {})
     tl_cells.sort(key=lambda t: (round(t[0] / 2), t[1]))
     for i, (_, _, ring) in enumerate(tl_cells, start=1):
         nome = travessa.get(str(i))

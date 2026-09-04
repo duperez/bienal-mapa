@@ -71,7 +71,7 @@ if ("serviceWorker" in navigator) {
  * Marco 1 do app novo: MapLibre rodando 100% local (nenhum tile/fonte externo),
  * com o pavilhão real do Anhembi georreferenciado (OSM way 203621978) como
  * primeira camada. As camadas do mapa da Bienal entram por cima nas próximas
- * etapas, geradas de data/structure.json.
+ * etapas, transcritas do PDF oficial por tools/build_map.py.
  */
 
 /** Contorno do pavilhão (lng/lat). Carregado do GeoJSON versionado. */

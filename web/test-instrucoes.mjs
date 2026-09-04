@@ -64,35 +64,28 @@ const r = await pagina.evaluate(async (PARES) => {
     const soma = passos.reduce((s, p) => s + p.metros, 0);
     if (Math.abs(soma - rota.metros) > 0.5) saida.somaRuim++;
 
-    // recalcula as viradas no traçado geográfico. Os vértices do traçado são
-    // os mesmos; o que muda é o referencial em que o giro é medido.
-    const pts = rota.cels.map(geo);
-    const giros = [];
-    for (let k = 1; k + 1 < pts.length; k++) {
-      const u = [pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]];
-      const v = [pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1]];
-      const cross = u[0] * v[1] - u[1] * v[0];
-      const cos =
-        (u[0] * v[0] + u[1] * v[1]) / (Math.hypot(...u) * Math.hypot(...v) || 1);
-      const ang = (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI;
-      if (ang >= 30) giros.push({ lado: cross > 0 ? "esquerda" : "direita", ang });
-    }
-    const ditos = passos.filter((p) => p.virar === "esquerda" || p.virar === "direita");
-
-    // a fusão de trechos junta manobras, então a lista dita é mais curta que a
-    // crua; o que tem que bater é a SEQUÊNCIA dos lados que sobrevive
-    const seq = giros.map((g) => g.lado);
-    let i = 0;
-    for (const d of ditos) {
-      const achou = seq.indexOf(d.virar, i);
-      if (achou === -1) {
+    // A lateralidade é o único ponto que erra em silêncio: com o sinal
+    // trocado o traçado desenhado continua certo e só quem está no corredor
+    // percebe. Cada passo publica os dois rumos que decidiram o lado, em
+    // células; aqui eles são convertidos para metros de verdade (leste/norte)
+    // e o lado é recalculado do zero, sem tocar no frame da malha.
+    //
+    // Varrer vértice a vértice, como este teste fazia antes, media outra coisa:
+    // duas guinadas de 20 graus seguidas somam 40 depois da fusão de trechos,
+    // e o teste acusava a instrução certa de estar sobrando.
+    for (const p of passos) {
+      if (!p.giro) continue;
+      const o = geo(p.giro.base);
+      const uu = geo([p.giro.base[0] + p.giro.u[0], p.giro.base[1] + p.giro.u[1]]);
+      const vv = geo([p.giro.base[0] + p.giro.v[0], p.giro.base[1] + p.giro.v[1]]);
+      const u = [uu[0] - o[0], uu[1] - o[1]];
+      const v = [vv[0] - o[0], vv[1] - o[1]];
+      const lado = u[0] * v[1] - u[1] * v[0] > 0 ? "esquerda" : "direita";
+      if (lado !== p.virar) {
         saida.ladoTrocado++;
-        if (saida.exemplos.length < 3) {
-          saida.exemplos.push({ dito: ditos.map((x) => x.virar), cru: seq });
-        }
+        if (saida.exemplos.length < 3) saida.exemplos.push({ dito: p.virar, real: lado, texto: p.texto });
         break;
       }
-      i = achou + 1;
     }
 
     for (const p of passos) {

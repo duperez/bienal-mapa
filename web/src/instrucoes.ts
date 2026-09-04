@@ -33,6 +33,17 @@ export interface Passo {
   derivado: boolean;
   metros: number;
   texto: string;
+  /**
+   * O giro que decidiu "esquerda" ou "direita", em coordenadas de célula.
+   *
+   * O app não desenha isto. Existe porque a lateralidade é a única parte do
+   * passo a passo que pode estar errada em silêncio — o traçado na tela
+   * continua certo com o sinal trocado — e sem os dois rumos publicados o teste
+   * teria que reimplementar a fusão de trechos para conferir, o que é
+   * reimplementar o que ele deveria estar checando. Com eles, o teste converte
+   * os dois rumos para metros de verdade e olha só o sinal.
+   */
+  giro?: { base: [number, number]; u: [number, number]; v: [number, number] };
 }
 
 /** ângulo mínimo, em graus, para virar de fato — abaixo disso é desvio de corredor */
@@ -245,6 +256,7 @@ export function instrucoes(
     const t = juntos[k];
     const dist = arredonda(t.m);
     let virar: Passo["virar"] = "frente";
+    let giro: Passo["giro"];
     if (k === 0) {
       virar = "partida";
     } else {
@@ -252,6 +264,7 @@ export function instrucoes(
       const v = t.dir;
       const ang = anguloEntre(u, v);
       if (ang >= VIRADA_MIN) {
+        giro = { base: t.a, u, v };
         // o produto vetorial dá o sentido do giro em coordenadas de célula;
         // `mao` traduz isso para o mundo, porque o frame da malha é espelhado
         // em relação a (leste, norte) e sem a correção a instrução sai trocada
@@ -273,7 +286,8 @@ export function instrucoes(
           : virar === "frente"
             ? `Continue${onde || " em frente"} por ${dist} m`
             : `Vire à ${virar}${onde} e siga ${dist} m`;
-    out.push({ virar, via: t.via?.nome ?? null, derivado: t.via?.derivado ?? false, metros: t.m, texto });
+    out.push({ virar, via: t.via?.nome ?? null, derivado: t.via?.derivado ?? false,
+               metros: t.m, texto, giro });
   }
 
   out.push({

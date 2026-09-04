@@ -200,9 +200,31 @@ para conferir a olho que a leitura do PDF está correta.
 
 ## O que ainda não está resolvido
 
-1. **`data/structure.json` é o único insumo que não vem do PDF** — fornece o
-   diretório (código → nome do expositor) e os nomes da Travessa. Veio da extração
-   legada; não foi reauditado.
+1. **`data/expositores.json` é o único insumo que não vem do PDF** — dá o nome
+   do expositor por código e os nomes da Travessa. O PDF imprime o código na
+   forma, não o nome, então isto é metadado pendurado por cima: se um verbete
+   estiver errado, o mapa continua certo e o nome fica errado.
+
+   Ele substitui o `data/structure.json`, que foi auditado e removido. Das dez
+   chaves daquele arquivo, o build usava duas. As outras oito eram do gerador
+   legado: `meta.constantes` trazia `banda_m`, `rua_m` e
+   `celula_profundidade_m` — exatamente as constantes de design que este
+   projeto existe para não usar — e `fileiras`, `areas`, `ancorados`, `pois` e
+   `ruas_anexo` traziam coordenadas em metros no referencial **antigo**, de
+   antes do giro de 180 graus. Ficar lá era convite a alguém reintroduzir o
+   legado por engano.
+
+   A auditoria vive dentro do arquivo, no campo `_auditoria`: hoje são 280
+   verbetes, 20 sem forma no mapa (códigos que o PDF de 2026 não desenha) mais
+   os 30 `TI01..TI30` do jeito antigo de numerar a Travessa. **Nenhuma forma do
+   mapa ficou sem verbete.**
+
+   Chegar a zero exigiu consertar uma leitura. As células do miolo têm 9 m2 e o
+   código não cabe: o PDF escreve `K40` como `K4` numa linha e `0` na de baixo,
+   em blocos de texto diferentes. Lendo span a span, o `0` sumia e duas formas
+   diferentes ficavam ambas com o código inexistente `K4`. `junta_quebrados()`
+   emenda o pedaço de baixo quando ele está alinhado, encostado e o resultado
+   casa com o padrão de código — se não casar, nada é emendado.
 2. **Numeração TL01–TL48 é derivada**, não impressa no PDF. As features carregam
    `numeracao_derivada: true`. Se estiver errada, troca-se o rótulo, não o desenho.
 3. **Estandes sem código** e áreas de infra sem nome — o PDF não imprime.
